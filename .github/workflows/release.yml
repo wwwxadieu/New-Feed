@@ -5,6 +5,13 @@ name: Phát hành
 on:
   push:
     tags: ["v*"]
+  # Chạy tay khi không đẩy thẻ được, ví dụ token chỉ có quyền ghi nhánh.
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Số phiên bản, không kèm chữ v (ví dụ 0.1.0)"
+        required: true
+        default: "0.1.0"
 
 permissions:
   contents: write
@@ -41,8 +48,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tagName: ${{ github.ref_name }}
-          releaseName: News Feed ${{ github.ref_name }}
+          tagName: ${{ github.event_name == 'workflow_dispatch' && format('v{0}', inputs.version) || github.ref_name }}
+          releaseName: News Feed ${{ github.event_name == 'workflow_dispatch' && format('v{0}', inputs.version) || github.ref_name }}
           releaseDraft: false
           prerelease: false
           releaseBody: |
