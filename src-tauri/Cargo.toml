@@ -1,0 +1,39 @@
+[package]
+name = "news-feed"
+version = "0.1.0"
+description = "Ứng dụng đọc tin công nghệ dạng dashboard"
+authors = ["News Feed"]
+edition = "2021"
+rust-version = "1.77"
+
+[lib]
+name = "news_feed_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+tauri-plugin-opener = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "sync", "time"] }
+futures = "0.3"
+chrono = { version = "0.4", features = ["serde"] }
+url = "2"
+scraper = "0.23"
+feed-rs = "2"
+
+[dependencies.reqwest]
+version = "0.12"
+default-features = false
+features = ["gzip", "brotli", "rustls-tls", "charset"]
+
+[profile.release]
+# Bản build nhẹ và ổn định: tối ưu kích thước, bỏ symbol, panic gọn.
+opt-level = "s"
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true

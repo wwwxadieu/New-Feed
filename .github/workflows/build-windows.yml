@@ -1,0 +1,48 @@
+name: Build Windows
+
+# Bản cài Windows được dựng trên máy ảo Windows của GitHub, nên không cần
+# cài Rust hay Visual Studio trên máy cá nhân.
+on:
+  push:
+    branches: ["main", "claude/**"]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - name: Cài phụ thuộc
+        run: npm ci
+
+      - name: Kiểm tra kiểu TypeScript
+        run: npm run typecheck
+
+      - name: Chạy kiểm thử Rust
+        run: cargo test --manifest-path src-tauri/Cargo.toml
+
+      - name: Dựng bản cài
+        run: npm run app:build
+
+      - name: Tải lên bản cài
+        uses: actions/upload-artifact@v4
+        with:
+          name: news-feed-windows
+          path: |
+            src-tauri/target/release/bundle/nsis/*.exe
+            src-tauri/target/release/bundle/msi/*.msi
+            src-tauri/target/release/News Feed.exe
+          if-no-files-found: error
