@@ -15,7 +15,7 @@ nó cho thấy thứ mà một danh sách một cột không diễn đạt đư�
 
 | Thành phần | Lựa chọn | Lý do |
 | --- | --- | --- |
-| Khung ứng dụng | **Tauri v2** | Bản cài ~4–8 MB, RAM ~80 MB, dùng WebView2 có sẵn trong Windows. Electron cho cùng chức năng nặng ~120–150 MB. |
+| Khung ứng dụng | **Tauri v2** | Bản chạy đã đo được **8,2 MB** (xem mục dưới), dùng WebView2 có sẵn trong Windows. Electron cho cùng chức năng nặng ~120–150 MB. |
 | Backend | **Rust** | Tải nguồn, bóc tách HTML và gộp cụm chạy native, không chặn giao diện. |
 | Giao diện | **React 19 + TypeScript + Vite** | Bundle nhỏ, dựng lại nhanh, kiểu chặt. |
 | Phông chữ | **Inter Variable** (đóng gói kèm) | Hỗ trợ đầy đủ dấu tiếng Việt, tải từ trong ứng dụng nên chạy được offline. |
@@ -46,6 +46,13 @@ nguồn và đọc bài thật chỉ hoạt động ở chế độ desktop.
 npm install
 npm run app:build
 ```
+
+### Kích thước đã đo
+
+Bản release dựng trên Linux (`opt-level = "s"`, LTO, `panic = "abort"`, đã
+strip symbol) cho ra bản chạy **8,2 MB** đã bao gồm toàn bộ giao diện nhúng
+sẵn bên trong. Bản Windows thường nhỏ hơn con số này vì không phải liên kết
+GTK/WebKit — WebView2 đã có sẵn trong hệ điều hành.
 
 Kết quả nằm ở `src-tauri/target/release/bundle/`:
 
