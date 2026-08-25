@@ -1,0 +1,55 @@
+name: Phát hành
+
+# Gắn thẻ phiên bản (ví dụ v0.1.0) là ứng dụng được dựng và phát hành kèm
+# bộ cài, để người dùng tải thẳng thay vì phải vào Actions tìm artifact.
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - name: Cài phụ thuộc
+        run: npm ci
+
+      - name: Kiểm tra kiểu TypeScript
+        run: npm run typecheck
+
+      - name: Chạy kiểm thử Rust
+        run: cargo test --manifest-path src-tauri/Cargo.toml
+
+      - name: Dựng và phát hành
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: ${{ github.ref_name }}
+          releaseName: News Feed ${{ github.ref_name }}
+          releaseDraft: false
+          prerelease: false
+          releaseBody: |
+            Ứng dụng đọc tin công nghệ dạng dashboard cho Windows.
+
+            **Tải về:** chọn tệp `.exe` để cài bằng bộ cài, hoặc `.msi` nếu
+            bạn triển khai qua chính sách nhóm.
+
+            Ứng dụng chạy hoàn toàn trên máy: không có máy chủ, không có tài
+            khoản, dữ liệu nằm trong `%APPDATA%/app.newsfeed.desktop`.
