@@ -10,6 +10,7 @@ import { ClusterCard } from "./components/ClusterCard";
 import { InsightRail } from "./components/InsightRail";
 import { ReaderSheet } from "./components/ReaderSheet";
 import { SourceManager } from "./components/SourceManager";
+import { SourcesContext } from "./components/SourceLogo";
 import { PlusIcon, RefreshIcon, SearchIcon } from "./components/Icons";
 
 type SortKey = "hot" | "sources" | "new";
@@ -150,18 +151,25 @@ export default function App() {
     return sorted;
   }, [snapshot, topic, sort, windowHours, query]);
 
+  const sourceMap = useMemo(
+    () => new Map((snapshot?.sources ?? []).map((source) => [source.id, source])),
+    [snapshot],
+  );
+
+  // Bất kỳ tấm trượt nào đang mở thì nội dung phía sau đều phải lùi lại.
+  const sheetOpen = reader !== null || sourcesOpen;
   const windowLabel = WINDOWS.find((w) => w.value === windowHours)?.label ?? "24 giờ";
   const articlesInView = clusters.reduce((sum, c) => sum + c.articles.length, 0);
 
   return (
-    <>
+    <SourcesContext.Provider value={sourceMap}>
       <div className="ambient" aria-hidden="true">
         <span />
         <span />
         <span />
       </div>
 
-      <div className="window">
+      <div className={`window${sheetOpen ? " behind-sheet" : ""}`} aria-hidden={sheetOpen}>
         <TitleBar />
 
         <div className="shell">
@@ -293,6 +301,6 @@ export default function App() {
           {toast.message}
         </div>
       )}
-    </>
+    </SourcesContext.Provider>
   );
 }

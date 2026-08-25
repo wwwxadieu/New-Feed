@@ -1,6 +1,7 @@
 import type { Cluster } from "../lib/types";
 import { TOPIC_LABEL } from "../lib/types";
-import { hoursSince, initials, relativeTime } from "../lib/format";
+import { hoursSince, relativeTime } from "../lib/format";
+import { SourceLogo } from "./SourceLogo";
 
 const TOPIC_TINT: Record<string, string> = {
   ai: "var(--indigo)",
@@ -23,10 +24,10 @@ interface Props {
 
 export function ClusterCard({ cluster, index, lead, onOpen }: Props) {
   const image = cluster.articles.find((a) => a.image)?.image ?? null;
-  // Một báo có thể có nhiều bài trong cùng cụm, nhưng chỉ nên hiện tên một lần.
-  const uniqueNames = [...new Set(cluster.articles.map((a) => a.sourceTitle))];
-  const names = uniqueNames.slice(0, 3);
-  const extra = uniqueNames.length - names.length;
+  // Một báo có thể có nhiều bài trong cùng cụm, nhưng chỉ nên hiện một lần.
+  const uniqueSources = [...new Map(cluster.articles.map((a) => [a.sourceId, a.sourceTitle])).entries()];
+  const names = uniqueSources.slice(0, 3).map(([, title]) => title);
+  const extra = uniqueSources.length - names.length;
   const rising = cluster.sourceCount >= 4 && hoursSince(cluster.newest) < 6;
 
   return (
@@ -65,10 +66,8 @@ export function ClusterCard({ cluster, index, lead, onOpen }: Props) {
 
         <span className="c-foot">
           <span className="avatar-stack">
-            {uniqueNames.slice(0, 4).map((name) => (
-              <span className="avatar" key={name} title={name}>
-                {initials(name)}
-              </span>
+            {uniqueSources.slice(0, 4).map(([id, name]) => (
+              <SourceLogo key={id} sourceId={id} name={name} />
             ))}
           </span>
           <span className="source-line">

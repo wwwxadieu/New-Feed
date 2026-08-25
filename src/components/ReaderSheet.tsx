@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import type { CleanedArticle, Cluster } from "../lib/types";
 import { TOPIC_LABEL } from "../lib/types";
 import { api } from "../lib/api";
-import { formatNumber, hostOf, initials, relativeTime } from "../lib/format";
+import { hostOf, relativeTime } from "../lib/format";
+import { SourceLogo } from "./SourceLogo";
 import { CloseIcon, ExternalIcon } from "./Icons";
 
 interface Props {
@@ -70,20 +71,9 @@ export function ReaderSheet({ cluster, onClose }: Props) {
         <div className="sheet-body">
           <div className="reader-grid">
             <article>
-              {content && (
-                <div className="clean-strip">
-                  <span>
-                    Đã loại bỏ <b>{content.removedAds}</b> khối quảng cáo · <b>{content.removedPopups}</b> popup ·{" "}
-                    <b>{content.removedTrackers}</b> script theo dõi
-                  </span>
-                  <span className="tail">
-                    giữ lại {content.images.length} ảnh · {formatNumber(content.wordCount)} từ
-                  </span>
-                </div>
-              )}
-
               <h1 className="reader-title">{article.title}</h1>
               <div className="reader-byline">
+                <SourceLogo sourceId={article.sourceId} name={article.sourceTitle} size={18} />
                 <span className="src">{article.sourceTitle}</span>
                 <span>·</span>
                 <span>{hostOf(article.url)}</span>
@@ -149,7 +139,7 @@ export function ReaderSheet({ cluster, onClose }: Props) {
                     onClick={() => setSelected(index)}
                     title={item.title}
                   >
-                    <span className="avatar">{initials(item.sourceTitle)}</span>
+                    <SourceLogo sourceId={item.sourceId} name={item.sourceTitle} />
                     <span
                       style={{
                         minWidth: 0,

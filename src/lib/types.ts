@@ -8,6 +8,7 @@ export interface Source {
   lastFetched: string | null;
   lastError: string | null;
   articleCount: number;
+  logo: string | null;
 }
 
 export interface Article {

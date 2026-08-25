@@ -25,6 +25,9 @@ pub struct Source {
     pub last_error: Option<String>,
     #[serde(default)]
     pub article_count: usize,
+    /// Logo của nguồn, lưu thẳng dạng data URI để hiển thị được cả khi offline.
+    #[serde(default)]
+    pub logo: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

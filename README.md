@@ -21,6 +21,10 @@ nó cho thấy thứ mà một danh sách một cột không diễn đạt đư�
 | Phông chữ | **Inter Variable** (đóng gói kèm) | Hỗ trợ đầy đủ dấu tiếng Việt, tải từ trong ứng dụng nên chạy được offline. |
 | Hiệu ứng | CSS thuần | Không thêm thư viện animation nào — bundle giữ ở mức ~72 KB gzip. |
 
+Bề mặt đọc là nền đục hoàn toàn, không phải kính mờ: chữ dài không thể đọc
+trên nền trong suốt. Chất liệu kính chỉ dùng cho phần khung (thanh bên, thanh
+công cụ, thẻ tin). Khi mở một bài, cả khung phía sau được làm mờ mềm 13px.
+
 ## Chạy thử
 
 ```bash
@@ -87,8 +91,14 @@ kho tin thì càng nặng, nên tên riêng quyết định việc gộp. Hai b�
 **Bóc tách** (`src-tauri/src/extract.rs`). Xoá thẻ script/iframe/nav/footer, xoá
 phần tử có lớp hoặc id khớp mẫu quảng cáo, popup và tường thu phí, rồi chọn
 khối có mật độ chữ cao nhất làm thân bài. Ảnh được lấy cả từ `data-src` và
-`srcset`. **Số khối bị loại bỏ hiện trên màn hình đọc là số đếm thật**, không
-phải con số minh hoạ.
+`srcset`. Số khối bị loại bỏ vẫn được đếm và trả về trong `CleanedArticle`,
+nhưng không hiển thị trên màn hình đọc — trang đọc chỉ có nội dung bài.
+
+**Logo nguồn.** Mỗi nguồn được lấy icon từ chính trang của nó (ưu tiên
+`apple-touch-icon` vì thường là PNG 180px, sau đó tới `<link rel="icon">`, cuối
+cùng là `/favicon.ico`) rồi nhúng thẳng vào dữ liệu dạng data URI. Nhờ vậy huy
+hiệu nguồn vẫn hiện khi không có mạng và không phải gọi ra ngoài mỗi lần vẽ
+lại. Nguồn nào chưa lấy được thì lùi về chữ viết tắt của tên báo.
 
 **Lưu trữ.** Toàn bộ dữ liệu nằm trong `%APPDATA%/app.newsfeed.desktop/state.json`
 trên máy người dùng. Không có máy chủ, không có tài khoản, không gửi dữ liệu đi

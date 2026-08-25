@@ -1,12 +1,16 @@
 //! Tải nguồn tin: tự dò feed từ địa chỉ trang chủ, đọc feed, tải trang bài viết.
 
 use crate::model::{stable_id, Article, CleanedArticle, Source};
+use base64::engine::general_purpose::STANDARD as BASE64;
+use base64::Engine;
 use chrono::{SecondsFormat, Utc};
 use scraper::{Html, Selector};
 use std::time::Duration;
 use url::Url;
 
 const USER_AGENT: &str = "NewsFeed/0.1 (ung dung doc tin ca nhan)";
+/// Logo lớn hơn mức này thì bỏ qua — huy hiệu nguồn chỉ hiển thị ở 20–28px.
+const MAX_LOGO_BYTES: usize = 120_000;
 const COMMON_FEED_PATHS: &[&str] = &["/feed", "/rss", "/rss.xml", "/feed.xml", "/atom.xml", "/index.xml", "/feeds/posts/default"];
 
 pub fn client() -> Result<reqwest::Client, String> {
@@ -63,7 +67,9 @@ pub async fn discover(client: &reqwest::Client, input: &str) -> Result<Source, S
     // Trường hợp 1: người dùng dán thẳng địa chỉ feed.
     if looks_like_feed(&body) {
         let title = feed_title(&body).unwrap_or_else(|| host_label(&base));
-        return Ok(make_source(title, base.as_str(), base.as_str()));
+        let mut source = make_source(title, base.as_str(), base.as_str());
+        source.logo = fetch_logo(client, base.as_str()).await;
+        return Ok(source);
     }
 
     let page = scan_html(&body, &base);
@@ -71,7 +77,9 @@ pub async fn discover(client: &reqwest::Client, input: &str) -> Result<Source, S
 
     // Trường hợp 2: trang khai báo feed trong thẻ <link rel="alternate">.
     if let Some(feed_url) = &page.declared_feed {
-        return Ok(make_source(title, base.as_str(), feed_url.as_str()));
+        let mut source = make_source(title, base.as_str(), feed_url.as_str());
+        source.logo = fetch_logo(client, base.as_str()).await;
+        return Ok(source);
     }
 
     // Trường hợp 3: đoán đường dẫn feed. Nhiều báo Việt Nam đặt feed theo
@@ -88,7 +96,9 @@ pub async fn discover(client: &reqwest::Client, input: &str) -> Result<Source, S
         let Ok(candidate) = base.join(&path) else { continue };
         if let Some(found) = try_feed(client, &candidate).await {
             let title = page.site_title.clone().or(found).unwrap_or_else(|| host_label(&base));
-            return Ok(make_source(title, base.as_str(), candidate.as_str()));
+            let mut source = make_source(title, base.as_str(), candidate.as_str());
+            source.logo = fetch_logo(client, base.as_str()).await;
+            return Ok(source);
         }
     }
 
@@ -96,7 +106,9 @@ pub async fn discover(client: &reqwest::Client, input: &str) -> Result<Source, S
     for candidate in page.linked_feeds.iter().take(4) {
         if let Some(found) = try_feed(client, candidate).await {
             let title = page.site_title.clone().or(found).unwrap_or_else(|| host_label(&base));
-            return Ok(make_source(title, base.as_str(), candidate.as_str()));
+            let mut source = make_source(title, base.as_str(), candidate.as_str());
+            source.logo = fetch_logo(client, base.as_str()).await;
+            return Ok(source);
         }
     }
 
@@ -178,10 +190,30 @@ fn feed_title(body: &str) -> Option<String> {
     feed.title.map(|t| t.content.trim().to_string()).filter(|t| !t.is_empty())
 }
 
+/// Rút tên thương hiệu từ thẻ <title>.
+///
+/// Thẻ title của báo thường là "Tên báo - khẩu hiệu dài" hoặc "khẩu hiệu dài
+/// | Tên báo". Đoạn ngắn nhất gần như luôn là tên báo, bất kể nó nằm bên nào.
+fn brand_name(raw: &str) -> String {
+    let segments: Vec<&str> = raw
+        .split(['|', '-', '–', '—', '·', '«', '»'])
+        .map(str::trim)
+        .filter(|part| part.chars().count() >= 3)
+        .collect();
+
+    let picked = segments
+        .iter()
+        .min_by_key(|part| part.chars().count())
+        .copied()
+        .unwrap_or(raw);
+
+    picked.chars().take(60).collect()
+}
+
 fn make_source(title: String, home_url: &str, feed_url: &str) -> Source {
     Source {
         id: stable_id(feed_url),
-        title: title.chars().take(80).collect(),
+        title: brand_name(&title),
         home_url: home_url.to_string(),
         feed_url: feed_url.to_string(),
         enabled: true,
@@ -189,7 +221,85 @@ fn make_source(title: String, home_url: &str, feed_url: &str) -> Source {
         last_fetched: None,
         last_error: None,
         article_count: 0,
+        logo: None,
     }
+}
+
+/// Tải logo của nguồn và trả về dạng data URI.
+///
+/// Ảnh được nhúng thẳng vào dữ liệu thay vì lưu địa chỉ, để huy hiệu nguồn
+/// vẫn hiện khi không có mạng và không phải gọi ra ngoài mỗi lần vẽ lại.
+pub async fn fetch_logo(client: &reqwest::Client, page_url: &str) -> Option<String> {
+    let base = Url::parse(page_url).ok()?;
+
+    let mut candidates: Vec<Url> = Vec::new();
+    if let Ok((final_url, body)) = get_page(client, base.as_str()).await {
+        candidates.extend(icon_links(&body, &final_url));
+        if let Ok(root) = final_url.join("/favicon.ico") {
+            candidates.push(root);
+        }
+    }
+    if let Ok(root) = base.join("/favicon.ico") {
+        if !candidates.contains(&root) {
+            candidates.push(root);
+        }
+    }
+
+    for candidate in candidates.into_iter().take(5) {
+        if let Some(data_uri) = download_icon(client, &candidate).await {
+            return Some(data_uri);
+        }
+    }
+    None
+}
+
+/// Các thẻ <link> khai báo icon, xếp ảnh to lên trước vì nét hơn khi phóng.
+fn icon_links(body: &str, base: &Url) -> Vec<Url> {
+    let doc = Html::parse_document(body);
+    let Ok(sel) = Selector::parse(r#"link[rel~="icon"], link[rel~="apple-touch-icon"], link[rel~="apple-touch-icon-precomposed"]"#)
+    else {
+        return Vec::new();
+    };
+
+    let mut found: Vec<(u32, Url)> = Vec::new();
+    for el in doc.select(&sel) {
+        let Some(href) = el.value().attr("href") else { continue };
+        let Ok(url) = base.join(href) else { continue };
+        let rel = el.value().attr("rel").unwrap_or_default().to_lowercase();
+        // apple-touch-icon thường là PNG 180px, đẹp hơn favicon.ico 16px.
+        let mut rank = if rel.contains("apple-touch-icon") { 400 } else { 0 };
+        if let Some(sizes) = el.value().attr("sizes") {
+            if let Some(px) = sizes.split(&['x', 'X'][..]).next().and_then(|v| v.trim().parse::<u32>().ok()) {
+                rank = rank.max(px);
+            }
+        }
+        if !found.iter().any(|(_, existing)| existing == &url) {
+            found.push((rank, url));
+        }
+    }
+    found.sort_by(|a, b| b.0.cmp(&a.0));
+    found.into_iter().map(|(_, url)| url).collect()
+}
+
+async fn download_icon(client: &reqwest::Client, url: &Url) -> Option<String> {
+    let res = client.get(url.as_str()).send().await.ok()?;
+    if !res.status().is_success() {
+        return None;
+    }
+    let mime = res
+        .headers()
+        .get(reqwest::header::CONTENT_TYPE)
+        .and_then(|v| v.to_str().ok())
+        .map(|v| v.split(';').next().unwrap_or(v).trim().to_string())
+        .unwrap_or_else(|| "image/x-icon".to_string());
+    if !mime.starts_with("image/") {
+        return None;
+    }
+    let bytes = res.bytes().await.ok()?;
+    if bytes.is_empty() || bytes.len() > MAX_LOGO_BYTES {
+        return None;
+    }
+    Some(format!("data:{mime};base64,{}", BASE64.encode(&bytes)))
 }
 
 /// Đọc feed của một nguồn và trả về danh sách bài.
@@ -265,6 +375,19 @@ fn strip_tags(input: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn rut_gon_ten_bao_tu_the_title() {
+        assert_eq!(brand_name("Tinhte.vn - MXH Hỏi đáp, Review, Thông tin công nghệ"), "Tinhte.vn");
+        assert_eq!(
+            brand_name("Ars Technica - Serving the Technologist since 1998. News, reviews, and analysis."),
+            "Ars Technica"
+        );
+        assert_eq!(brand_name("Trang thông tin dành cho tín đồ công nghệ | GenK.vn"), "GenK.vn");
+        assert_eq!(brand_name("Tổng hợp tin tức Khoa học công nghệ mới nhất | VnExpress"), "VnExpress");
+        // Tên vốn đã gọn thì giữ nguyên.
+        assert_eq!(brand_name("TechCrunch"), "TechCrunch");
+    }
 
     /// Kiểm thử chạm mạng thật, nên bị bỏ qua ở lần chạy thường.
     /// Chạy bằng: `cargo test -- --ignored --nocapture`

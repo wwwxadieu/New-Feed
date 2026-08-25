@@ -154,19 +154,27 @@ async fn refresh(app: AppHandle, state: State<'_, AppState>) -> Result<Snapshot,
     let done = Arc::new(AtomicUsize::new(0));
     let client = state.client.clone();
 
-    let results: Vec<(String, Result<Vec<Article>, String>)> = stream::iter(targets)
+    type FetchResult = (String, Result<Vec<Article>, String>, Option<String>);
+
+    let results: Vec<FetchResult> = stream::iter(targets)
         .map(|source| {
             let client = client.clone();
             let app = app.clone();
             let done = done.clone();
             async move {
                 let outcome = fetcher::fetch_source(&client, &source, limit).await;
+                // Nguồn nào chưa có logo thì lấy luôn trong cùng lượt, để nguồn
+                // mặc định và nguồn thêm lỗi lần trước đều có huy hiệu.
+                let logo = match source.logo {
+                    Some(_) => None,
+                    None => fetcher::fetch_logo(&client, &source.home_url).await,
+                };
                 let finished = done.fetch_add(1, Ordering::SeqCst) + 1;
                 let _ = app.emit(
                     "refresh:progress",
                     serde_json::json!({ "done": finished, "total": total, "source": source.title }),
                 );
-                (source.id, outcome)
+                (source.id, outcome, logo)
             }
         })
         .buffer_unordered(FETCH_CONCURRENCY)
@@ -177,10 +185,13 @@ async fn refresh(app: AppHandle, state: State<'_, AppState>) -> Result<Snapshot,
     let now = Utc::now().to_rfc3339_opts(SecondsFormat::Secs, true);
     let mut incoming = Vec::new();
 
-    for (source_id, outcome) in results {
+    for (source_id, outcome, logo) in results {
         let Some(source) = data.sources.iter_mut().find(|s| s.id == source_id) else {
             continue;
         };
+        if logo.is_some() {
+            source.logo = logo;
+        }
         match outcome {
             Ok(articles) => {
                 source.last_fetched = Some(now.clone());
@@ -225,6 +236,7 @@ pub fn run() {
                         last_fetched: None,
                         last_error: None,
                         article_count: 0,
+                        logo: None,
                     })
                     .collect();
                 let _ = store::save(&handle, &data);

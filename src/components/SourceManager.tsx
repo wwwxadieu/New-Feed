@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { Source } from "../lib/types";
 import { clockTime, formatNumber, hostOf } from "../lib/format";
 import { CloseIcon, PlusIcon, TrashIcon } from "./Icons";
+import { SourceLogo } from "./SourceLogo";
 
 interface Props {
   sources: Source[];
@@ -73,6 +74,8 @@ export function SourceManager({ sources, busy, onAdd, onRemove, onToggle, onClos
                 >
                   <i />
                 </button>
+
+                <SourceLogo sourceId={source.id} name={source.title} size={30} radius={9} />
 
                 <div className="info">
                   <b>{source.title}</b>

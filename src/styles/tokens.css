@@ -12,6 +12,10 @@
   --glass-strong: rgba(255, 255, 255, 0.8);
   --glass-thin: rgba(255, 255, 255, 0.42);
   --glass-border: rgba(255, 255, 255, 0.68);
+  /* Bề mặt đọc phải đục hoàn toàn — chữ dài không thể đọc trên nền trong suốt. */
+  --sheet-bg: #ffffff;
+  --sheet-border: rgba(60, 60, 67, 0.14);
+  --scrim: rgba(228, 232, 238, 0.44);
   --glass-highlight: rgba(255, 255, 255, 0.9);
   --hairline: rgba(60, 60, 67, 0.13);
   --fill: rgba(118, 118, 128, 0.12);
@@ -63,6 +67,9 @@
   --glass-strong: rgba(34, 34, 39, 0.78);
   --glass-thin: rgba(40, 40, 46, 0.4);
   --glass-border: rgba(255, 255, 255, 0.09);
+  --sheet-bg: #1c1c1e;
+  --sheet-border: rgba(255, 255, 255, 0.12);
+  --scrim: rgba(6, 6, 10, 0.5);
   --glass-highlight: rgba(255, 255, 255, 0.12);
   --hairline: rgba(235, 235, 245, 0.11);
   --fill: rgba(118, 118, 128, 0.24);

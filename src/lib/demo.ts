@@ -132,6 +132,7 @@ const SOURCES: Source[] = [
   lastFetched: at(0.2),
   lastError: null,
   articleCount: 40 + i * 7,
+  logo: null,
 }));
 
 export function demoSnapshot(): Snapshot {

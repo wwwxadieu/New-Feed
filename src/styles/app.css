@@ -5,6 +5,16 @@
   height: 100%;
   display: flex;
   flex-direction: column;
+  transition: filter var(--dur-sheet) var(--ease-sheet), transform var(--dur-sheet) var(--ease-sheet);
+}
+
+/* Khi mở tấm đọc, làm mờ thẳng cả khung thay vì chỉ dựa vào backdrop-filter
+   của lớp phủ: những vùng tự có backdrop-filter (thanh bên, thanh công cụ)
+   không được lớp phủ làm mờ nên vẫn còn nét. */
+.window.behind-sheet {
+  filter: blur(13px);
+  transform: scale(1.01);
+  pointer-events: none;
 }
 
 .titlebar {
@@ -302,11 +312,14 @@
 .avatar-stack { display: flex; flex: none; }
 .avatar {
   width: 20px; height: 20px; border-radius: 50%; margin-right: -6px;
+  flex: none; overflow: hidden;
   display: grid; place-items: center;
   font-size: 8.5px; font-weight: 700; letter-spacing: -0.02em;
   background: var(--fill-strong); color: var(--label-2);
   border: 1.5px solid var(--glass-strong);
 }
+.avatar.has-logo { background: #fff; }
+.avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .source-line {
   font-size: 12px; color: var(--label-3);
   min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
@@ -391,12 +404,11 @@
   position: fixed; inset: 0; z-index: 50;
   display: grid; place-items: center;
   padding: 26px;
-  background: rgba(20, 22, 28, 0.32);
-  backdrop-filter: blur(14px) saturate(140%);
-  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  background: var(--scrim);
+  backdrop-filter: blur(6px) saturate(125%);
+  -webkit-backdrop-filter: blur(6px) saturate(125%);
   animation: overlay-in var(--dur-base) ease both;
 }
-:root[data-theme="dark"] .overlay { background: rgba(0, 0, 0, 0.5); }
 @keyframes overlay-in { from { opacity: 0; } to { opacity: 1; } }
 
 .sheet {
@@ -405,10 +417,8 @@
   max-height: min(92vh, 900px);
   display: flex; flex-direction: column;
   border-radius: var(--r-xl);
-  background: var(--glass-strong);
-  backdrop-filter: blur(50px) saturate(190%);
-  -webkit-backdrop-filter: blur(50px) saturate(190%);
-  border: 1px solid var(--glass-border);
+  background: var(--sheet-bg);
+  border: 1px solid var(--sheet-border);
   box-shadow: var(--shadow-sheet);
   overflow: hidden;
   animation: sheet-in var(--dur-sheet) var(--ease-sheet) both;
@@ -430,16 +440,6 @@
 
 /* ================= Màn hình đọc ================= */
 .reader-grid { display: grid; grid-template-columns: minmax(0, 1fr) 232px; gap: 24px; padding: 20px 24px 48px; align-items: start; }
-
-.clean-strip {
-  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
-  padding: 8px 12px; margin-bottom: 16px;
-  border-radius: var(--r-md);
-  background: var(--blue-soft);
-  font-size: 12px; color: var(--blue); font-weight: 500;
-}
-.clean-strip b { font-weight: 700; font-variant-numeric: tabular-nums; }
-.clean-strip .tail { margin-left: auto; opacity: 0.75; font-weight: 400; }
 
 .reader-title { margin: 0 0 8px; font-size: 27px; font-weight: 700; line-height: 1.2; letter-spacing: -0.028em; text-wrap: balance; }
 .reader-byline { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 18px; font-size: 12.5px; color: var(--label-3); }
