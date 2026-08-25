@@ -3,6 +3,7 @@ import { TOPICS } from "../lib/types";
 import type { ThemeChoice } from "../lib/theme";
 import { clockTime } from "../lib/format";
 import { AutoIcon, MoonIcon, SourceIcon, SunIcon } from "./Icons";
+import { TopicIcon } from "./TopicIcons";
 
 interface Props {
   clusters: Cluster[];
@@ -43,7 +44,9 @@ export function Sidebar({
       <nav className="nav-section" aria-label="Chủ đề">
         <span className="section-title">Chủ đề</span>
         <button className="nav-item" aria-current={topic === "all"} onClick={() => onTopic("all")}>
-          <span className="swatch" />
+          <span className="nav-icon">
+            <TopicIcon topic="all" />
+          </span>
           Tất cả
           <span className="count">{clusters.length}</span>
         </button>
@@ -54,7 +57,9 @@ export function Sidebar({
             aria-current={topic === item.id}
             onClick={() => onTopic(item.id)}
           >
-            <span className="swatch" />
+            <span className="nav-icon">
+              <TopicIcon topic={item.id} />
+            </span>
             {item.label}
             <span className="count">{counts[item.id]}</span>
           </button>

@@ -103,6 +103,16 @@
   color: var(--blue);
   font-weight: 600;
 }
+.nav-item .nav-icon {
+  width: 16px; height: 16px; flex: none;
+  display: grid; place-items: center;
+  color: var(--label-3);
+  transition: color var(--dur-fast) ease, transform var(--dur-base) var(--ease-out);
+}
+.nav-item:hover .nav-icon { color: var(--label-2); }
+.nav-item[aria-current="true"] .nav-icon { color: currentColor; transform: scale(1.06); }
+
+/* Chấm tròn vẫn dùng cho các mục không thuộc chủ đề. */
 .nav-item .swatch {
   width: 8px; height: 8px; border-radius: 50%; flex: none;
   background: var(--label-3);
