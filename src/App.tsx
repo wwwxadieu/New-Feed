@@ -32,6 +32,7 @@ export default function App() {
 
   const [snapshot, setSnapshot] = useState<Snapshot | null>(null);
   const [topic, setTopic] = useState("all");
+  const [sourceId, setSourceId] = useState<string | null>(null);
   const [sort, setSort] = useState<SortKey>("hot");
   const [windowHours, setWindowHours] = useState("24");
   const [query, setQuery] = useState("");
@@ -43,6 +44,16 @@ export default function App() {
   const [addingSource, setAddingSource] = useState(false);
   const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
   const [toast, setToast] = useState<{ message: string; error?: boolean } | null>(null);
+
+  const pickTopic = useCallback((next: string) => {
+    setTopic(next);
+    setSourceId(null);
+  }, []);
+
+  const pickSource = useCallback((next: string | null) => {
+    setSourceId(next);
+    setTopic("all");
+  }, []);
 
   const notify = useCallback((message: string, error = false) => {
     setToast({ message, error });
@@ -70,6 +81,7 @@ export default function App() {
     try {
       const next = await api.refresh();
       setSnapshot(next);
+      if (next.translateNotice) notify(next.translateNotice, true);
       const failed = next.sources.filter((s) => s.enabled && s.lastError).length;
       notify(
         failed > 0
@@ -128,6 +140,18 @@ export default function App() {
     [notify],
   );
 
+  const toggleTranslate = useCallback(
+    (value: boolean) => {
+      if (!snapshot) return;
+      const next = { ...snapshot.settings, translate: value };
+      setSnapshot({ ...snapshot, settings: next });
+      api.saveSettings(next).then(setSnapshot).catch((err: unknown) => {
+        notify(err instanceof Error ? err.message : String(err), true);
+      });
+    },
+    [snapshot, notify],
+  );
+
   const clusters = useMemo(() => {
     if (!snapshot) return [];
     const limit = Number(windowHours);
@@ -136,6 +160,7 @@ export default function App() {
     const filtered = snapshot.clusters.filter((cluster) => {
       if (hoursSince(cluster.newest) > limit) return false;
       if (topic !== "all" && cluster.topic !== topic) return false;
+      if (sourceId && !cluster.articles.some((a) => a.sourceId === sourceId)) return false;
       if (!needle) return true;
       return (
         cluster.title.toLowerCase().includes(needle) ||
@@ -149,7 +174,7 @@ export default function App() {
     else if (sort === "new") sorted.sort((a, b) => Date.parse(b.newest) - Date.parse(a.newest));
     else sorted.sort((a, b) => b.score - a.score);
     return sorted;
-  }, [snapshot, topic, sort, windowHours, query]);
+  }, [snapshot, topic, sourceId, sort, windowHours, query]);
 
   const sourceMap = useMemo(
     () => new Map((snapshot?.sources ?? []).map((source) => [source.id, source])),
@@ -176,13 +201,17 @@ export default function App() {
           {snapshot && (
             <Sidebar
               clusters={snapshot.clusters}
+              sources={snapshot.sources}
               topic={topic}
-              onTopic={setTopic}
+              sourceId={sourceId}
+              onTopic={pickTopic}
+              onSource={pickSource}
               onOpenSources={() => setSourcesOpen(true)}
-              sourceCount={snapshot.sources.length}
               lastRefresh={snapshot.lastRefresh}
               theme={theme}
               onTheme={setTheme}
+              translate={snapshot.settings.translate}
+              onTranslate={toggleTranslate}
             />
           )}
 
@@ -236,7 +265,7 @@ export default function App() {
             <div className="feed">
               <div className="feed-head">
                 <div>
-                  <h1>Tổng quan</h1>
+                  <h1>{sourceId ? (sourceMap.get(sourceId)?.title ?? "Tổng quan") : "Tổng quan"}</h1>
                   <p>
                     Gộp <b>{formatNumber(articlesInView)}</b> bài thành <b>{formatNumber(clusters.length)}</b> cụm sự
                     kiện trong {windowLabel.toLowerCase()} qua
@@ -247,7 +276,7 @@ export default function App() {
                 </div>
               </div>
 
-              <div className="cluster-list view-swap" key={`${topic}-${sort}-${windowHours}`}>
+              <div className="cluster-list view-swap" key={`${topic}-${sourceId ?? ""}-${sort}-${windowHours}`}>
                 {clusters.length === 0 ? (
                   <div className="empty-state">
                     <h2>{snapshot ? "Chưa có cụm tin nào ở bộ lọc này" : "Đang tải…"}</h2>
@@ -288,6 +317,13 @@ export default function App() {
         <SourceManager
           sources={snapshot.sources}
           busy={addingSource}
+          translateEmail={snapshot.settings.translateEmail}
+          onTranslateEmail={(email) => {
+            const next = { ...snapshot.settings, translateEmail: email };
+            api.saveSettings(next).then(setSnapshot).catch((err: unknown) => {
+              notify(err instanceof Error ? err.message : String(err), true);
+            });
+          }}
           onAdd={addSource}
           onRemove={removeSource}
           onToggle={toggleSource}

@@ -30,6 +30,8 @@ export function ClusterCard({ cluster, index, lead, onOpen }: Props) {
   const names = uniqueSources.slice(0, 3).map(([, title]) => title);
   const extra = uniqueSources.length - names.length;
   const rising = cluster.sourceCount >= 4 && hoursSince(cluster.newest) < 6;
+  const translated = cluster.titleVi?.trim();
+  const summary = (translated && cluster.summaryVi?.trim()) || cluster.summary;
 
   return (
     <button
@@ -59,10 +61,15 @@ export function ClusterCard({ cluster, index, lead, onOpen }: Props) {
           <span className="pill">{TOPIC_LABEL[cluster.topic] ?? "Khác"}</span>
           <span className="stamp">{relativeTime(cluster.newest)}</span>
           {rising && <span className="pill hot">Đang tăng</span>}
+          {translated && (
+            <span className="pill quiet" title={`Nguyên văn: ${cluster.title}`}>
+              đã dịch
+            </span>
+          )}
         </span>
 
-        <h2 className="c-title">{cluster.title}</h2>
-        {cluster.summary && <p className="c-summary">{cluster.summary}</p>}
+        <h2 className="c-title">{translated || cluster.title}</h2>
+        {summary && <p className="c-summary">{summary}</p>}
 
         <span className="c-foot">
           <span className="avatar-stack">

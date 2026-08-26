@@ -83,7 +83,7 @@ export function InsightRail({ snapshot, clusters }: Props) {
             <div className="hot-row" key={cluster.id}>
               <span className="rank">{String(index + 1).padStart(2, "0")}</span>
               <div>
-                <p>{cluster.title}</p>
+                <p>{cluster.titleVi?.trim() || cluster.title}</p>
                 <div className="meter">
                   <i style={{ width: `${Math.round((cluster.score / peak) * 100)}%` }} />
                 </div>

@@ -17,6 +17,12 @@ export function ReaderSheet({ cluster, onClose }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Bản dịch của bài đang mở, giữ trong phiên để bấm qua lại không dịch lại.
+  const [translation, setTranslation] = useState<Record<number, string> | null>(null);
+  const [translating, setTranslating] = useState(false);
+  const [translateError, setTranslateError] = useState<string | null>(null);
+  const [showOriginal, setShowOriginal] = useState(false);
+
   const article = cluster.articles[selected] ?? cluster.articles[0];
 
   useEffect(() => {
@@ -32,6 +38,9 @@ export function ReaderSheet({ cluster, onClose }: Props) {
     setLoading(true);
     setError(null);
     setContent(null);
+    setTranslation(null);
+    setTranslateError(null);
+    setShowOriginal(false);
 
     api
       .readArticle(article.url)
@@ -56,6 +65,36 @@ export function ReaderSheet({ cluster, onClose }: Props) {
     };
   }, [article.url]);
 
+  const runTranslate = async () => {
+    if (!content || translating) return;
+    setTranslating(true);
+    setTranslateError(null);
+    try {
+      // Chỉ gửi phần chữ; ảnh giữ nguyên vị trí theo chỉ số của khối.
+      const indexes: number[] = [];
+      const texts: string[] = [];
+      content.blocks.forEach((block, index) => {
+        if (block.kind !== "image") {
+          indexes.push(index);
+          texts.push(block.text);
+        }
+      });
+      const done = await api.translateTexts([article.title, ...texts]);
+      const map: Record<number, string> = { [-1]: done[0] };
+      indexes.forEach((blockIndex, i) => {
+        map[blockIndex] = done[i + 1];
+      });
+      setTranslation(map);
+    } catch (err: unknown) {
+      setTranslateError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setTranslating(false);
+    }
+  };
+
+  const usingTranslation = translation !== null && !showOriginal;
+  const displayTitle = usingTranslation ? (translation[-1] ?? article.title) : article.title;
+
   return (
     <div className="overlay" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
       <div className="sheet" role="dialog" aria-modal="true" aria-label={cluster.title}>
@@ -65,13 +104,25 @@ export function ReaderSheet({ cluster, onClose }: Props) {
           </button>
           <span className="pill">{TOPIC_LABEL[cluster.topic] ?? "Khác"}</span>
           <span className="stamp">{relativeTime(article.published)}</span>
-          <span style={{ marginLeft: "auto", fontSize: 11, color: "var(--label-3)" }}>Esc để đóng</span>
+          <span style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 10 }}>
+            {content &&
+              (translation ? (
+                <button className="text-button" onClick={() => setShowOriginal((v) => !v)}>
+                  {showOriginal ? "Xem bản dịch" : "Xem nguyên văn"}
+                </button>
+              ) : (
+                <button className="text-button" onClick={runTranslate} disabled={translating}>
+                  {translating ? "Đang dịch…" : "Dịch sang tiếng Việt"}
+                </button>
+              ))}
+            <span style={{ fontSize: 11, color: "var(--label-3)" }}>Esc để đóng</span>
+          </span>
         </div>
 
         <div className="sheet-body">
           <div className="reader-grid">
             <article>
-              <h1 className="reader-title">{article.title}</h1>
+              <h1 className="reader-title">{displayTitle}</h1>
               <div className="reader-byline">
                 <SourceLogo sourceId={article.sourceId} name={article.sourceTitle} size={18} />
                 <span className="src">{article.sourceTitle}</span>
@@ -101,14 +152,19 @@ export function ReaderSheet({ cluster, onClose }: Props) {
                 </p>
               )}
 
+              {translateError && (
+                <p className="translate-error">{translateError}</p>
+              )}
+
               {content && (
                 <div className="reader-body">
                   {content.blocks.map((block, index) => {
+                    const text = block.kind === "image" ? "" : (usingTranslation ? translation[index] : undefined) ?? block.text;
                     switch (block.kind) {
                       case "heading":
-                        return <h3 key={index}>{block.text}</h3>;
+                        return <h3 key={index}>{text}</h3>;
                       case "quote":
-                        return <blockquote key={index}>{block.text}</blockquote>;
+                        return <blockquote key={index}>{text}</blockquote>;
                       case "image":
                         return (
                           <figure key={index}>
@@ -116,7 +172,7 @@ export function ReaderSheet({ cluster, onClose }: Props) {
                           </figure>
                         );
                       default:
-                        return <p key={index}>{block.text}</p>;
+                        return <p key={index}>{text}</p>;
                     }
                   })}
                 </div>

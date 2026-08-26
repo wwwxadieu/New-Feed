@@ -76,6 +76,13 @@ Kết quả nằm ở `src-tauri/target/release/bundle/`:
 `.github/workflows/build-windows.yml` sẽ tự dựng trên máy ảo Windows và đính
 kèm bộ cài vào phần Artifacts của lần chạy đó.
 
+## Thanh bên
+
+Chủ đề và nguồn tin là hai cách cắt lát cùng một dòng tin, nằm ở hai khối
+tách nhau bằng một đường kẻ mảnh. Chọn một chủ đề sẽ bỏ bộ lọc nguồn và
+ngược lại, nên không bao giờ rơi vào trạng thái lọc chồng lọc ra danh sách
+rỗng mà không rõ vì sao.
+
 ## Về bộ cài Windows
 
 Bộ cài có trang **Choose Install Location** nên chọn được thư mục cài. Mặc
@@ -136,6 +143,21 @@ không kèm ảnh trong feed (TechCrunch, The Verge) thì đọc `og:image` củ
 trang bài — chỉ tải phần đầu trang rồi dừng ngay khi hết `<head>`, nên bù
 ảnh cho hàng chục bài không làm chậm lượt làm mới. Đo trên sáu nguồn mặc
 định: 125/125 bài có ảnh.
+
+**Dịch nguồn nước ngoài.** Ngôn ngữ được nhận diện theo nguồn, dựa trên dấu
+riêng của chữ quốc ngữ trong tiêu đề. Nguồn nào không phải tiếng Việt thì
+tiêu đề và tóm tắt được dịch tự động qua
+[MyMemory](https://mymemory.translated.net) — dịch vụ dịch máy có tài liệu
+công khai, **không cần khoá API và không dùng mô hình ngôn ngữ lớn**. Toàn
+văn bài được dịch theo yêu cầu bằng nút ở màn hình đọc.
+
+Hạn mức miễn phí tính theo ký tự mỗi ngày (5.000 khi ẩn danh, 50.000 nếu
+khai một địa chỉ email trong phần Nguồn tin), nên mỗi lượt làm mới cấp phát
+theo **hạn ngạch ký tự** thay vì đếm số bài: tiêu đề và tóm tắt của cùng một
+bài luôn đi liền nhau để thẻ tin không nửa Việt nửa Anh, và việc dịch dừng
+đúng ngưỡng rồi tiếp tục ở lượt sau. Bản dịch được lưu lại nên không bao giờ
+phải dịch lại. Tiêu đề đã dịch có nhãn "đã dịch" và rê chuột lên sẽ thấy
+nguyên văn.
 
 **Logo nguồn.** Mỗi nguồn được lấy icon từ chính trang của nó (ưu tiên
 `apple-touch-icon` vì thường là PNG 180px, sau đó tới `<link rel="icon">`, cuối

@@ -34,6 +34,11 @@ export const api = {
   saveSettings: (settings: Settings): Promise<Snapshot> =>
     isDesktop ? call<Snapshot>("save_settings", { settings }) : demoDelay(demoSnapshot()),
 
+  translateTexts: (texts: string[]): Promise<string[]> =>
+    isDesktop
+      ? call<string[]>("translate_texts", { texts })
+      : Promise.reject(new Error("Dịch chỉ hoạt động trong ứng dụng desktop.")),
+
   readArticle: (url: string): Promise<CleanedArticle> =>
     isDesktop ? call<CleanedArticle>("read_article", { url }) : demoDelay(demoArticle(), 700),
 

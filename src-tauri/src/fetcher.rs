@@ -222,6 +222,7 @@ fn make_source(title: String, home_url: &str, feed_url: &str) -> Source {
         last_error: None,
         article_count: 0,
         logo: None,
+        language: None,
     }
 }
 
@@ -316,7 +317,7 @@ pub async fn fetch_source(client: &reqwest::Client, source: &Source, limit: usiz
         let Ok(article_base) = Url::parse(&link) else { continue };
         let title = entry
             .title
-            .map(|t| t.content.split_whitespace().collect::<Vec<_>>().join(" "))
+            .map(|t| decode_entities(&t.content).split_whitespace().collect::<Vec<_>>().join(" "))
             .unwrap_or_default();
         if title.is_empty() {
             continue;
@@ -326,7 +327,7 @@ pub async fn fetch_source(client: &reqwest::Client, source: &Source, limit: usiz
             .map(|s| s.content)
             .or_else(|| entry.content.and_then(|c| c.body))
             .unwrap_or_default();
-        let summary = strip_tags(&summary_html);
+        let summary = decode_entities(&strip_tags(&summary_html));
         let published = entry
             .published
             .or(entry.updated)
@@ -368,6 +369,8 @@ pub async fn fetch_source(client: &reqwest::Client, source: &Source, limit: usiz
             summary: summary.chars().take(400).collect(),
             published,
             image,
+            title_vi: None,
+            summary_vi: None,
         });
     }
     Ok(out)
@@ -465,6 +468,60 @@ pub async fn fetch_article(client: &reqwest::Client, article_url: &str) -> Resul
     Ok(crate::extract::extract(&body, &base))
 }
 
+/// Giải mã thực thể HTML trong tiêu đề và mô tả của feed.
+///
+/// Nhiều feed đưa dấu nháy và gạch ngang dưới dạng &#8216; hay &mdash;.
+/// Không giải mã thì tiêu đề hiện ra thô và bản dịch cũng lệch theo.
+fn decode_entities(input: &str) -> String {
+    if !input.contains('&') {
+        return input.to_string();
+    }
+
+    let named: &[(&str, &str)] = &[
+        ("amp", "&"), ("lt", "<"), ("gt", ">"), ("quot", "\""), ("apos", "'"),
+        ("nbsp", " "), ("hellip", "…"), ("mdash", "—"), ("ndash", "–"),
+        ("lsquo", "\u{2018}"), ("rsquo", "\u{2019}"), ("ldquo", "\u{201C}"), ("rdquo", "\u{201D}"),
+        ("laquo", "«"), ("raquo", "»"), ("times", "×"), ("middot", "·"), ("bull", "•"),
+    ];
+
+    let mut out = String::with_capacity(input.len());
+    let mut rest = input;
+
+    while let Some(start) = rest.find('&') {
+        out.push_str(&rest[..start]);
+        let tail = &rest[start..];
+
+        // Thực thể hợp lệ luôn kết thúc bằng ';' trong vòng vài ký tự.
+        let Some(end) = tail[..tail.len().min(12)].find(';') else {
+            out.push('&');
+            rest = &tail[1..];
+            continue;
+        };
+
+        let body = &tail[1..end];
+        let decoded = if let Some(digits) = body.strip_prefix("#x").or_else(|| body.strip_prefix("#X")) {
+            u32::from_str_radix(digits, 16).ok().and_then(char::from_u32).map(String::from)
+        } else if let Some(digits) = body.strip_prefix('#') {
+            digits.parse::<u32>().ok().and_then(char::from_u32).map(String::from)
+        } else {
+            named.iter().find(|(name, _)| *name == body).map(|(_, value)| (*value).to_string())
+        };
+
+        match decoded {
+            Some(text) => {
+                out.push_str(&text);
+                rest = &tail[end + 1..];
+            }
+            None => {
+                out.push('&');
+                rest = &tail[1..];
+            }
+        }
+    }
+    out.push_str(rest);
+    out
+}
+
 fn strip_tags(input: &str) -> String {
     let mut out = String::with_capacity(input.len());
     let mut inside = false;
@@ -482,6 +539,20 @@ fn strip_tags(input: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn giai_ma_thuc_the_html() {
+        assert_eq!(
+            decode_entities("Rockstar responds to &#8216;heartbreaking&#8217; GTA 6 leaks"),
+            "Rockstar responds to \u{2018}heartbreaking\u{2019} GTA 6 leaks"
+        );
+        assert_eq!(decode_entities("Q&amp;A v&#x1EDB;i CEO"), "Q&A với CEO");
+        assert_eq!(decode_entities("Giá 25 tri&#7879;u &mdash; r&#7867;"), "Giá 25 triệu — rẻ");
+        // Chuỗi không phải thực thể thì giữ nguyên, không được nuốt mất.
+        assert_eq!(decode_entities("Tom & Jerry"), "Tom & Jerry");
+        assert_eq!(decode_entities("a &notarealentity; b"), "a &notarealentity; b");
+        assert_eq!(decode_entities("không có gì"), "không có gì");
+    }
 
     #[test]
     fn rut_gon_ten_bao_tu_the_title() {

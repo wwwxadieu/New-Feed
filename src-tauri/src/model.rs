@@ -28,6 +28,9 @@ pub struct Source {
     /// Logo của nguồn, lưu thẳng dạng data URI để hiển thị được cả khi offline.
     #[serde(default)]
     pub logo: Option<String>,
+    /// "vi" nếu nguồn viết bằng tiếng Việt, "other" nếu là tiếng nước ngoài.
+    #[serde(default)]
+    pub language: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -43,6 +46,12 @@ pub struct Article {
     pub published: String,
     #[serde(default)]
     pub image: Option<String>,
+    /// Tiêu đề đã dịch sang tiếng Việt, chỉ có với nguồn nước ngoài.
+    #[serde(default)]
+    pub title_vi: Option<String>,
+    /// Tóm tắt đã dịch sang tiếng Việt.
+    #[serde(default)]
+    pub summary_vi: Option<String>,
 }
 
 /// Nội dung bài đã bóc tách, kèm số khối rác thực sự đã loại bỏ.
@@ -76,6 +85,9 @@ pub enum Block {
 pub struct Cluster {
     pub id: String,
     pub title: String,
+    /// Tiêu đề tiếng Việt của bài đại diện, nếu nguồn là tiếng nước ngoài.
+    pub title_vi: Option<String>,
+    pub summary_vi: Option<String>,
     pub summary: String,
     pub topic: String,
     pub newest: String,
@@ -93,11 +105,28 @@ pub struct Settings {
     pub window_hours: i64,
     /// Số bài lấy tối đa cho mỗi nguồn ở một lần làm mới.
     pub max_per_source: usize,
+    /// Dịch tiêu đề của nguồn nước ngoài sang tiếng Việt.
+    #[serde(default = "default_true")]
+    pub translate: bool,
+    /// Email khai báo với dịch vụ dịch để nâng hạn mức miễn phí hằng ngày
+    /// từ 5.000 lên 50.000 ký tự. Để trống vẫn dùng được.
+    #[serde(default)]
+    pub translate_email: String,
+}
+
+fn default_true() -> bool {
+    true
 }
 
 impl Default for Settings {
     fn default() -> Self {
-        Self { theme: "auto".into(), window_hours: 24, max_per_source: 25 }
+        Self {
+            theme: "auto".into(),
+            window_hours: 24,
+            max_per_source: 25,
+            translate: true,
+            translate_email: String::new(),
+        }
     }
 }
 
@@ -112,6 +141,9 @@ pub struct AppData {
     pub settings: Settings,
     #[serde(default)]
     pub last_refresh: Option<String>,
+    /// Thông báo tạm về việc dịch, ví dụ khi hết hạn mức. Không lưu ra đĩa.
+    #[serde(skip)]
+    pub translate_notice: Option<String>,
 }
 
 /// Gói dữ liệu trả về cho giao diện sau mỗi thao tác.
@@ -125,4 +157,5 @@ pub struct Snapshot {
     pub topic_counts: Vec<(String, usize)>,
     pub hourly: Vec<usize>,
     pub last_refresh: Option<String>,
+    pub translate_notice: Option<String>,
 }

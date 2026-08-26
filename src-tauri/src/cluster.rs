@@ -196,12 +196,14 @@ pub fn build(articles: &[Article]) -> Vec<Cluster> {
                 .max()
                 .unwrap_or(now);
 
-            let summary = articles
+            // Lấy tóm tắt dài nhất, và lấy luôn bản dịch của chính bài đó để
+            // tiêu đề và tóm tắt không lệch nhau về ngôn ngữ.
+            let summary_source = articles
                 .iter()
-                .map(|a| a.summary.as_str())
-                .max_by_key(|s| s.chars().count())
-                .unwrap_or_default()
-                .to_string();
+                .max_by_key(|a| a.summary.chars().count())
+                .expect("cụm không rỗng");
+            let summary = summary_source.summary.clone();
+            let summary_vi = summary_source.summary_vi.clone();
 
             let hours_old = (now - newest).num_minutes() as f32 / 60.0;
             let score = source_count as f32 * (1.0 / (1.0 + hours_old / 12.0)) * 100.0;
@@ -209,6 +211,8 @@ pub fn build(articles: &[Article]) -> Vec<Cluster> {
             Cluster {
                 id: stable_id(&lead_article.url),
                 title: lead_article.title.clone(),
+                title_vi: lead_article.title_vi.clone(),
+                summary_vi,
                 summary,
                 topic: classify(&lead_article.title, &lead_article.summary).to_string(),
                 newest: newest.to_rfc3339_opts(chrono::SecondsFormat::Secs, true),
@@ -238,6 +242,8 @@ mod tests {
             title: title.to_string(),
             url,
             summary: String::new(),
+            title_vi: None,
+            summary_vi: None,
             published: (Utc::now() - Duration::hours(hours_ago))
                 .to_rfc3339_opts(chrono::SecondsFormat::Secs, true),
             image: None,

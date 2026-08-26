@@ -9,6 +9,8 @@ export interface Source {
   lastError: string | null;
   articleCount: number;
   logo: string | null;
+  /** "vi" hoặc "other" — quyết định có cần dịch tiêu đề hay không. */
+  language: string | null;
 }
 
 export interface Article {
@@ -20,11 +22,15 @@ export interface Article {
   summary: string;
   published: string;
   image: string | null;
+  titleVi: string | null;
+  summaryVi: string | null;
 }
 
 export interface Cluster {
   id: string;
   title: string;
+  titleVi: string | null;
+  summaryVi: string | null;
   summary: string;
   topic: string;
   newest: string;
@@ -55,6 +61,8 @@ export interface Settings {
   theme: "auto" | "light" | "dark";
   windowHours: number;
   maxPerSource: number;
+  translate: boolean;
+  translateEmail: string;
 }
 
 export interface Snapshot {
@@ -65,6 +73,7 @@ export interface Snapshot {
   topicCounts: [string, number][];
   hourly: number[];
   lastRefresh: string | null;
+  translateNotice: string | null;
 }
 
 export interface Topic {

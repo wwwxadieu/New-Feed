@@ -3,6 +3,7 @@ mod extract;
 mod fetcher;
 mod model;
 mod store;
+mod translate;
 
 use chrono::{DateTime, SecondsFormat, Utc};
 use futures::stream::{self, StreamExt};
@@ -21,6 +22,12 @@ const FETCH_CONCURRENCY: usize = 6;
 /// không kéo dài; bài cũ hơn sẽ được bù ở các lượt sau.
 const IMAGE_BACKFILL_LIMIT: usize = 60;
 const IMAGE_BACKFILL_CONCURRENCY: usize = 8;
+/// Hạn ngạch ký tự cho mỗi lượt dịch. Dịch vụ cho 5.000 ký tự mỗi ngày khi
+/// dùng ẩn danh và 50.000 khi có khai báo email; chừa lại một khoảng đệm.
+const TRANSLATE_BUDGET_ANON: usize = 4_500;
+const TRANSLATE_BUDGET_WITH_EMAIL: usize = 45_000;
+/// Gọi dồn dập dễ bị dịch vụ chặn tạm, nên giữ mức song song thấp.
+const TRANSLATE_CONCURRENCY: usize = 3;
 
 pub struct AppState {
     data: Mutex<AppData>,
@@ -61,6 +68,7 @@ fn snapshot(data: &AppData) -> Snapshot {
         topic_counts,
         hourly,
         last_refresh: data.last_refresh.clone(),
+        translate_notice: data.translate_notice.clone(),
     }
 }
 
@@ -120,6 +128,124 @@ fn apply_images(data: &mut AppData, found: Vec<(String, String)>) {
     }
 }
 
+fn detect_language(articles: &[Article]) -> String {
+    let titles: Vec<String> = articles.iter().map(|a| a.title.clone()).collect();
+    if translate::is_vietnamese(&titles) { "vi" } else { "other" }.to_string()
+}
+
+/// Gom danh sách cần dịch kèm email đã cấu hình, hoặc rỗng nếu tắt tính năng.
+fn translation_targets(data: &AppData) -> (Vec<(String, Field, String)>, String) {
+    if !data.settings.translate {
+        return (Vec::new(), String::new());
+    }
+    (translation_jobs(data), data.settings.translate_email.clone())
+}
+
+/// Ô văn bản cần dịch của một bài.
+#[derive(Clone, Copy, PartialEq)]
+enum Field {
+    Title,
+    Summary,
+}
+
+/// Gom việc dịch theo hạn ngạch ký tự.
+///
+/// Dịch vụ tính hạn mức theo số ký tự mỗi ngày chứ không theo số lần gọi,
+/// nên cấp phát theo ký tự thay vì đếm số bài. Tiêu đề và tóm tắt của cùng
+/// một bài đi liền nhau để thẻ tin không bị nửa Việt nửa Anh.
+fn translation_jobs(data: &AppData) -> Vec<(String, Field, String)> {
+    let budget = if data.settings.translate_email.contains('@') {
+        TRANSLATE_BUDGET_WITH_EMAIL
+    } else {
+        TRANSLATE_BUDGET_ANON
+    };
+
+    let foreign: std::collections::HashSet<&str> = data
+        .sources
+        .iter()
+        .filter(|s| s.language.as_deref() == Some("other"))
+        .map(|s| s.id.as_str())
+        .collect();
+
+    let mut spent = 0usize;
+    let mut jobs = Vec::new();
+
+    for article in &data.articles {
+        if !foreign.contains(article.source_id.as_str()) {
+            continue;
+        }
+        let fields = [
+            (Field::Title, &article.title, &article.title_vi),
+            (Field::Summary, &article.summary, &article.summary_vi),
+        ];
+        for (field, text, existing) in fields {
+            if existing.is_some() || text.trim().is_empty() {
+                continue;
+            }
+            let cost = text.chars().count();
+            if spent + cost > budget {
+                return jobs;
+            }
+            spent += cost;
+            jobs.push((article.id.clone(), field, text.clone()));
+        }
+    }
+    jobs
+}
+
+/// Chạy các việc dịch. Trả về kết quả kèm thông báo nếu hết hạn mức.
+async fn run_translations(
+    client: &reqwest::Client,
+    email: String,
+    jobs: Vec<(String, Field, String)>,
+) -> (Vec<(String, Field, String)>, Option<String>) {
+    if jobs.is_empty() {
+        return (Vec::new(), None);
+    }
+    let address = if email.contains('@') { Some(email) } else { None };
+
+    let results: Vec<Result<(String, Field, String), translate::TranslateError>> = stream::iter(jobs)
+        .map(|(id, field, text)| {
+            let client = client.clone();
+            let address = address.clone();
+            async move {
+                translate::to_vietnamese(&client, &text, address.as_deref())
+                    .await
+                    .map(|vi| (id, field, vi))
+            }
+        })
+        .buffer_unordered(TRANSLATE_CONCURRENCY)
+        .collect()
+        .await;
+
+    let mut done = Vec::new();
+    let mut notice = None;
+    for result in results {
+        match result {
+            Ok(item) => done.push(item),
+            // Hết hạn mức là điều đáng báo; lỗi lẻ của một ô thì bỏ qua và
+            // để lượt làm mới sau dịch lại.
+            Err(translate::TranslateError::QuotaExhausted) => {
+                notice = Some(translate::TranslateError::QuotaExhausted.to_string());
+            }
+            Err(_) => {}
+        }
+    }
+    (done, notice)
+}
+
+fn apply_translations(data: &mut AppData, done: Vec<(String, Field, String)>) {
+    for (id, field, vi) in done {
+        let Some(article) = data.articles.iter_mut().find(|a| a.id == id) else {
+            continue;
+        };
+        match field {
+            Field::Title => article.title_vi = Some(vi),
+            Field::Summary => article.summary_vi = Some(vi),
+        }
+    }
+}
+
 #[tauri::command]
 async fn get_snapshot(state: State<'_, AppState>) -> Result<Snapshot, String> {
     Ok(snapshot(&*state.data.lock().await))
@@ -140,6 +266,7 @@ async fn add_source(app: AppHandle, state: State<'_, AppState>, input: String) -
     let articles = fetcher::fetch_source(&state.client, &source, data.settings.max_per_source).await?;
     let mut source = source;
     source.last_fetched = Some(Utc::now().to_rfc3339_opts(SecondsFormat::Secs, true));
+    source.language = Some(detect_language(&articles));
     data.sources.push(source);
     merge_articles(&mut data, articles);
 
@@ -149,6 +276,13 @@ async fn add_source(app: AppHandle, state: State<'_, AppState>, input: String) -
 
     let mut data = state.data.lock().await;
     apply_images(&mut data, found);
+    let pending = translation_targets(&data);
+    drop(data);
+    let (translated, notice) = run_translations(&state.client, pending.1, pending.0).await;
+
+    let mut data = state.data.lock().await;
+    apply_translations(&mut data, translated);
+    data.translate_notice = notice;
     store::save(&app, &data)?;
     Ok(snapshot(&data))
 }
@@ -243,6 +377,8 @@ async fn refresh(app: AppHandle, state: State<'_, AppState>) -> Result<Snapshot,
             Ok(articles) => {
                 source.last_fetched = Some(now.clone());
                 source.last_error = None;
+                // Nhận diện lại mỗi lượt để nguồn đổi ngôn ngữ vẫn theo kịp.
+                source.language = Some(detect_language(&articles));
                 incoming.extend(articles);
             }
             Err(message) => source.last_error = Some(message),
@@ -259,8 +395,32 @@ async fn refresh(app: AppHandle, state: State<'_, AppState>) -> Result<Snapshot,
 
     let mut data = state.data.lock().await;
     apply_images(&mut data, found);
+    let pending = translation_targets(&data);
+    drop(data);
+    let (translated, notice) = run_translations(&state.client, pending.1, pending.0).await;
+
+    let mut data = state.data.lock().await;
+    apply_translations(&mut data, translated);
+    data.translate_notice = notice;
     store::save(&app, &data)?;
     Ok(snapshot(&data))
+}
+
+/// Dịch một loạt đoạn văn theo yêu cầu, dùng cho nút dịch ở màn hình đọc.
+#[tauri::command]
+async fn translate_texts(state: State<'_, AppState>, texts: Vec<String>) -> Result<Vec<String>, String> {
+    let email = { state.data.lock().await.settings.translate_email.clone() };
+    let address = if email.contains('@') { Some(email) } else { None };
+
+    // Gọi tuần tự: dừng ngay khi hết hạn mức thay vì đốt thêm lượt gọi.
+    let mut out = Vec::with_capacity(texts.len());
+    for text in texts {
+        match translate::to_vietnamese(&state.client, &text, address.as_deref()).await {
+            Ok(vi) => out.push(vi),
+            Err(err) => return Err(err.to_string()),
+        }
+    }
+    Ok(out)
 }
 
 #[tauri::command]
@@ -292,6 +452,7 @@ pub fn run() {
                         last_error: None,
                         article_count: 0,
                         logo: None,
+                        language: None,
                     })
                     .collect();
                 let _ = store::save(&handle, &data);
@@ -308,7 +469,8 @@ pub fn run() {
             set_source_enabled,
             save_settings,
             refresh,
-            read_article
+            read_article,
+            translate_texts
         ])
         .run(tauri::generate_context!())
         .expect("không khởi động được ứng dụng");

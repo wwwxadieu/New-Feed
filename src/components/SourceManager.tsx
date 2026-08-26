@@ -7,14 +7,26 @@ import { SourceLogo } from "./SourceLogo";
 interface Props {
   sources: Source[];
   busy: boolean;
+  translateEmail: string;
+  onTranslateEmail: (email: string) => void;
   onAdd: (input: string) => Promise<void>;
   onRemove: (id: string) => void;
   onToggle: (id: string, enabled: boolean) => void;
   onClose: () => void;
 }
 
-export function SourceManager({ sources, busy, onAdd, onRemove, onToggle, onClose }: Props) {
+export function SourceManager({
+  sources,
+  busy,
+  translateEmail,
+  onTranslateEmail,
+  onAdd,
+  onRemove,
+  onToggle,
+  onClose,
+}: Props) {
   const [input, setInput] = useState("");
+  const [email, setEmail] = useState(translateEmail);
 
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -87,6 +99,7 @@ export function SourceManager({ sources, busy, onAdd, onRemove, onToggle, onClos
                     <small>
                       {hostOf(source.feedUrl)} · {formatNumber(source.articleCount)} bài ·{" "}
                       {clockTime(source.lastFetched)}
+                      {source.language === "other" ? " · tiếng nước ngoài" : ""}
                     </small>
                   )}
                 </div>
@@ -102,6 +115,30 @@ export function SourceManager({ sources, busy, onAdd, onRemove, onToggle, onClos
               </div>
             ))
           )}
+
+          <div className="sheet-section">
+            <span className="section-title">Hạn mức dịch</span>
+            <p className="form-hint" style={{ padding: "0 0 8px", border: "none" }}>
+              Dịch vụ dịch cho 5.000 ký tự mỗi ngày khi dùng ẩn danh, hoặc 50.000 nếu khai báo
+              một địa chỉ email. Để trống vẫn dùng được bình thường.
+            </p>
+            <div style={{ display: "flex", gap: 8 }}>
+              <input
+                className="text-field"
+                type="email"
+                placeholder="email@example.com (không bắt buộc)"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+              <button
+                className="link-button"
+                onClick={() => onTranslateEmail(email.trim())}
+                disabled={email.trim() === translateEmail}
+              >
+                Lưu
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>

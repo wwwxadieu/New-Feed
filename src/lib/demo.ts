@@ -19,10 +19,12 @@ function article(sourceTitle: string, title: string, hoursAgo: number, summary =
     summary,
     published: at(hoursAgo),
     image: null,
+    titleVi: null,
+    summaryVi: null,
   };
 }
 
-const RAW_CLUSTERS: Omit<Cluster, "sourceCount">[] = [
+const RAW_CLUSTERS: Omit<Cluster, "sourceCount" | "titleVi" | "summaryVi">[] = [
   {
     id: "demo-sec",
     topic: "security",
@@ -113,7 +115,12 @@ const RAW_CLUSTERS: Omit<Cluster, "sourceCount">[] = [
 ];
 
 // Mỗi bài trong dữ liệu mẫu đến từ một nguồn khác nhau.
-const CLUSTERS: Cluster[] = RAW_CLUSTERS.map((c) => ({ ...c, sourceCount: c.articles.length }));
+const CLUSTERS: Cluster[] = RAW_CLUSTERS.map((c) => ({
+  ...c,
+  sourceCount: c.articles.length,
+  titleVi: null,
+  summaryVi: null,
+}));
 
 const SOURCES: Source[] = [
   "VnExpress Số hóa",
@@ -133,6 +140,7 @@ const SOURCES: Source[] = [
   lastError: null,
   articleCount: 40 + i * 7,
   logo: null,
+  language: i >= 2 ? "other" : "vi",
 }));
 
 export function demoSnapshot(): Snapshot {
@@ -146,10 +154,11 @@ export function demoSnapshot(): Snapshot {
   return {
     sources: SOURCES,
     clusters: CLUSTERS,
-    settings: { theme: "auto", windowHours: 24, maxPerSource: 25 },
+    settings: { theme: "auto", windowHours: 24, maxPerSource: 25, translate: true, translateEmail: "" },
     articleCount: 284,
     topicCounts,
     hourly: [12, 9, 7, 5, 4, 6, 11, 19, 28, 34, 31, 27, 33, 41, 38, 30, 26, 24, 29, 36, 44, 52, 47, 38],
     lastRefresh: at(0.1),
+    translateNotice: null,
   };
 }
