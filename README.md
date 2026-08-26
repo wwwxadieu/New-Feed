@@ -83,6 +83,13 @@ tách nhau bằng một đường kẻ mảnh. Chọn một chủ đề sẽ b�
 ngược lại, nên không bao giờ rơi vào trạng thái lọc chồng lọc ra danh sách
 rỗng mà không rõ vì sao.
 
+## Cửa sổ rộng
+
+Cột giữa có giới hạn bề ngang. Không giới hạn thì trên màn hình rộng, dòng
+tiêu đề kéo dài quá tầm mắt và thẻ tin biến thành một dải gần như trống —
+đo ở khổ 2336px thì thẻ rộng 1724px và tiêu đề 1489px. Từ 1700px trở lên,
+dòng tin xếp thành hai cột, mỗi thẻ giữ khổ xấp xỉ như ở cửa sổ thường.
+
 ## Về bộ cài Windows
 
 Bộ cài có trang **Choose Install Location** nên chọn được thư mục cài. Mặc

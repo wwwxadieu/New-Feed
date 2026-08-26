@@ -260,6 +260,16 @@
 /* ================= Dòng cụm sự kiện ================= */
 .feed { flex: 1; min-height: 0; overflow-y: auto; padding: 20px 20px 56px; }
 
+/* Trên màn hình rộng, cột giữa không được kéo dài vô hạn: dòng chữ vượt quá
+   tầm mắt và thẻ tin biến thành một dải gần như trống. Giới hạn bề ngang
+   vùng đọc rồi căn giữa, giữ đúng khổ đã dùng ở cửa sổ cỡ thường. */
+.feed-head,
+.cluster-list,
+.empty-state {
+  max-width: 880px;
+  margin-inline: auto;
+}
+
 .feed-head { display: flex; align-items: flex-end; gap: 16px; margin-bottom: 16px; flex-wrap: wrap; }
 .feed-head h1 {
   margin: 0 0 2px;
@@ -378,6 +388,22 @@
 }
 .empty-state h2 { margin: 0 0 6px; font-size: 17px; font-weight: 650; letter-spacing: -0.015em; }
 .empty-state p { margin: 0 auto 18px; max-width: 44ch; font-size: 13.5px; color: var(--label-2); }
+
+/* Màn hình siêu rộng: xếp hai cột thẻ thay vì để trống hai bên. Bề ngang
+   mỗi thẻ vẫn xấp xỉ khổ ở cửa sổ thường nên chữ không bị dài quá tầm mắt. */
+@media (min-width: 1700px) {
+  .feed-head,
+  .cluster-list,
+  .empty-state {
+    max-width: 1520px;
+  }
+  .cluster-list {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    align-items: start;
+  }
+}
 
 /* ================= Cột phải ================= */
 .rail {
