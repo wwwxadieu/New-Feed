@@ -11,6 +11,7 @@ const TOPIC_TINT: Record<string, string> = {
   device: "var(--blue)",
   startup: "var(--green)",
   ev: "var(--orange)",
+  games: "var(--purple)",
   social: "var(--pink)",
   space: "var(--blue)",
   other: "var(--label-3)",

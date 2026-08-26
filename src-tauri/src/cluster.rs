@@ -84,6 +84,20 @@ pub fn classify(title: &str, summary: &str) -> &'static str {
         return "ev";
     }
     if has(&[
+        // Tránh dùng riêng chữ "game": tiếng Anh hay có "game-changer",
+        // "the game is changing" chẳng liên quan gì tới trò chơi.
+        "trò chơi điện tử", "tựa game", "game thủ", "làng game", "game mới", "ra mắt game",
+        "phát hành game", "cộng đồng game", "máy chơi game", "nhà phát triển game",
+        "esports", "thể thao điện tử", " gaming ", "video game", "game studio",
+        "playstation", " ps5", " ps6", "xbox", "nintendo", "steam deck", " steam ",
+        "epic games", "game pass", "rockstar", "ubisoft", "activision", "blizzard",
+        "riot games", " gta ", "minecraft", "fortnite", "call of duty", "elden ring",
+        "pokemon", "pokémon", "zelda", "genshin", "liên quân", "tốc chiến",
+        "game awards", "gamescom", "tokyo game show", "summer game fest",
+    ]) {
+        return "games";
+    }
+    if has(&[
         "iphone", "ipad", "macbook", "mac mini", "mac studio", "apple watch", "airpods",
         "samsung", "xiaomi", "oppo", "vivo", "realme", "pixel", "galaxy",
         "điện thoại", "smartphone", "laptop", "máy tính bảng", "tai nghe", "smartwatch",
@@ -297,6 +311,23 @@ mod tests {
         assert_eq!(classify("Mô hình ngôn ngữ mở vừa ra mắt", ""), "ai");
         assert_eq!(classify("Tiến trình chip 2nm đi vào sản xuất", ""), "hardware");
         assert_eq!(classify("Trời hôm nay đẹp", ""), "other");
+    }
+
+    #[test]
+    fn phan_loai_tin_game() {
+        assert_eq!(classify("Rockstar phản hồi về rò rỉ GTA 6", ""), "games");
+        assert_eq!(classify("Nintendo công bố ngày phát hành máy mới", ""), "games");
+        assert_eq!(classify("Tựa game nhập vai mới ra mắt trên Steam Deck", ""), "games");
+        assert_eq!(classify("Giải thể thao điện tử lớn nhất năm khởi tranh", ""), "games");
+        // Tin thiết bị có nhắc tai nghe vẫn phải vào nhóm game nếu là tai nghe chơi game.
+        assert_eq!(classify("Sony ra tai nghe mới cho PS5", ""), "games");
+
+        // Chữ "game" trong thành ngữ tiếng Anh không được kéo tin sang nhóm game.
+        assert_eq!(
+            classify("Anthropic's new model is a game-changer for coding", "The model tops benchmarks."),
+            "ai"
+        );
+        assert_eq!(classify("iPhone 18 ra mắt với camera nâng cấp", ""), "device");
     }
 
     #[test]

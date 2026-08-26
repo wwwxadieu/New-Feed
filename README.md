@@ -173,6 +173,13 @@ bài luôn đi liền nhau để thẻ tin không nửa Việt nửa Anh, và vi
 phải dịch lại. Tiêu đề đã dịch có nhãn "đã dịch" và rê chuột lên sẽ thấy
 nguyên văn.
 
+**Chủ đề.** Phân loại bằng bảng từ khoá trong `classify()`, xét chủ đề hẹp
+trước chủ đề rộng. Thứ tự có ý nghĩa: game đứng trước nhóm thiết bị để tin
+về PS5 hay tai nghe chơi game không bị nhóm thiết bị bắt trước, và cả hai
+đứng trước AI vì gần như mọi tin công nghệ bây giờ đều nhắc tới AI ở đâu đó.
+Bảng từ khoá game tránh dùng riêng chữ "game" vì tiếng Anh hay có
+"game-changer" chẳng liên quan tới trò chơi.
+
 **Logo nguồn.** Mỗi nguồn được lấy icon từ chính trang của nó (ưu tiên
 `apple-touch-icon` vì thường là PNG 180px, sau đó tới `<link rel="icon">`, cuối
 cùng là `/favicon.ico`) rồi nhúng thẳng vào dữ liệu dạng data URI. Nhờ vậy huy

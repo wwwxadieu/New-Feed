@@ -35,6 +35,7 @@
   --indigo: #5856d6;
   --teal: #30b0c7;
   --pink: #ff2d55;
+  --purple: #af52de;
 
   /* Đổ bóng: rất nhẹ, nhiều lớp */
   --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.04), 0 8px 24px -12px rgba(16, 24, 40, 0.16);
@@ -87,6 +88,7 @@
   --indigo: #5e5ce6;
   --teal: #40c8e0;
   --pink: #ff375f;
+  --purple: #bf5af2;
 
   --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.4), 0 10px 28px -14px rgba(0, 0, 0, 0.7);
   --shadow-raised: 0 2px 8px rgba(0, 0, 0, 0.5), 0 22px 54px -20px rgba(0, 0, 0, 0.8);

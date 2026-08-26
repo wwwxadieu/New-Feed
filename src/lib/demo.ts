@@ -100,6 +100,20 @@ const RAW_CLUSTERS: Omit<Cluster, "sourceCount" | "titleVi" | "summaryVi">[] = [
     ],
   },
   {
+    id: "demo-games",
+    topic: "games",
+    title: "Bản cập nhật lớn giữa mùa của tựa game nhập vai đứng đầu bảng xếp hạng",
+    summary:
+      "Bản cập nhật bổ sung một vùng bản đồ mới và chỉnh lại hệ thống chiến đấu sau phản hồi của cộng đồng. Giải đấu thể thao điện tử đầu tiên theo phiên bản này diễn ra cuối tháng.",
+    newest: at(5),
+    score: 170,
+    articles: [
+      article("Genk", "Bản cập nhật lớn giữa mùa của tựa game nhập vai đứng đầu bảng xếp hạng", 5,
+        "Bản cập nhật bổ sung một vùng bản đồ mới và chỉnh lại hệ thống chiến đấu sau phản hồi của cộng đồng."),
+      article("The Verge", "Game thủ chia rẽ vì thay đổi hệ thống chiến đấu trong bản mới", 7),
+    ],
+  },
+  {
     id: "demo-social",
     topic: "social",
     title: "Nền tảng thử nghiệm nhãn tự động cho nội dung do AI tạo trên dòng thời gian",

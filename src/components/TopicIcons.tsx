@@ -69,6 +69,20 @@ const EvTopic = () => (
   </svg>
 );
 
+/** Tay cầm chơi game.
+ *
+ * Thân phải cao và chi tiết bên trong phải to, nếu không ở cỡ 16px cả phím
+ * điều hướng lẫn hai nút đều biến mất, chỉ còn lại một khối mờ.
+ */
+const GamesTopic = () => (
+  <svg {...svg}>
+    <path d="M8.6 7h6.8c3.4 0 6 3 5.4 6.3l-.6 3.2a2.6 2.6 0 0 1-4.8.7L14.3 15H9.7l-1.1 2.2a2.6 2.6 0 0 1-4.8-.7l-.6-3.2C2.6 10 5.2 7 8.6 7Z" />
+    <path d="M7.4 10.4v2.9M5.95 11.85h2.9" strokeWidth={1.9} />
+    <circle cx="15.7" cy="10.9" r="1.15" fill="currentColor" stroke="none" />
+    <circle cx="17.9" cy="12.9" r="1.15" fill="currentColor" stroke="none" />
+  </svg>
+);
+
 const SocialTopic = () => (
   <svg {...svg}>
     <path d="M20 11.9c0 3.8-3.6 6.9-8 6.9-1 0-1.9-.2-2.8-.5L4 20.6l1.4-3.8A6.5 6.5 0 0 1 4 11.9C4 8.1 7.6 5 12 5s8 3.1 8 6.9Z" />
@@ -98,6 +112,7 @@ const TOPIC_ICONS: Record<string, () => React.ReactElement> = {
   security: SecurityTopic,
   hardware: HardwareTopic,
   device: DeviceTopic,
+  games: GamesTopic,
   startup: StartupTopic,
   ev: EvTopic,
   social: SocialTopic,
