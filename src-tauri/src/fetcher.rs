@@ -310,9 +310,10 @@ pub async fn fetch_source(client: &reqwest::Client, source: &Source, limit: usiz
 
     let mut out = Vec::new();
     for entry in feed.entries.into_iter().take(limit) {
-        let Some(link) = entry.links.into_iter().map(|l| l.href).find(|h| h.starts_with("http")) else {
+        let Some(link) = entry.links.iter().map(|l| l.href.clone()).find(|h| h.starts_with("http")) else {
             continue;
         };
+        let Ok(article_base) = Url::parse(&link) else { continue };
         let title = entry
             .title
             .map(|t| t.content.split_whitespace().collect::<Vec<_>>().join(" "))
@@ -331,11 +332,32 @@ pub async fn fetch_source(client: &reqwest::Client, source: &Source, limit: usiz
             .or(entry.updated)
             .unwrap_or_else(Utc::now)
             .to_rfc3339_opts(SecondsFormat::Secs, true);
-        let image = entry
+
+        // Mỗi báo mang ảnh một kiểu: thẻ media chuẩn, enclosure, hoặc chỉ
+        // nhét <img> vào phần mô tả. Thử lần lượt cả ba.
+        let from_media = entry
             .media
-            .into_iter()
-            .flat_map(|m| m.content)
-            .find_map(|c| c.url.map(|u| u.to_string()));
+            .iter()
+            .flat_map(|m| m.content.iter())
+            .find_map(|c| c.url.as_ref().map(|u| u.to_string()))
+            .or_else(|| {
+                entry
+                    .media
+                    .iter()
+                    .flat_map(|m| m.thumbnails.iter())
+                    .map(|t| t.image.uri.clone())
+                    .next()
+            });
+        let from_enclosure = entry.links.iter().find_map(|l| {
+            let is_image = l
+                .media_type
+                .as_deref()
+                .is_some_and(|mime| mime.starts_with("image/"));
+            (is_image && !looks_like_tracking_pixel(&l.href)).then(|| l.href.clone())
+        });
+        let image = from_media
+            .or(from_enclosure)
+            .or_else(|| image_from_html(&summary_html, &article_base));
 
         out.push(Article {
             id: stable_id(&link),
@@ -349,6 +371,91 @@ pub async fn fetch_source(client: &reqwest::Client, source: &Source, limit: usiz
         });
     }
     Ok(out)
+}
+
+/// Ảnh nhỏ hơn mức này gần như chắc chắn là điểm ảnh theo dõi, không phải ảnh bài.
+const MIN_IMAGE_DIMENSION: u32 = 60;
+/// Chỉ đọc phần đầu trang khi đi tìm og:image — thẻ meta luôn nằm trong <head>.
+const OG_IMAGE_SCAN_BYTES: usize = 96_000;
+
+fn looks_like_tracking_pixel(src: &str) -> bool {
+    let lower = src.to_lowercase();
+    ["1x1", "spacer", "blank.gif", "pixel", "beacon", "transparent"]
+        .iter()
+        .any(|marker| lower.contains(marker))
+}
+
+/// Ảnh đầu tiên trong một đoạn HTML, ví dụ phần mô tả của feed.
+fn image_from_html(html: &str, base: &Url) -> Option<String> {
+    let fragment = Html::parse_fragment(html);
+    let sel = Selector::parse("img").ok()?;
+
+    for el in fragment.select(&sel) {
+        let value = el.value();
+
+        // Bỏ qua ảnh khai báo kích thước quá nhỏ.
+        let too_small = ["width", "height"].iter().any(|attr| {
+            value
+                .attr(attr)
+                .and_then(|v| v.trim().parse::<u32>().ok())
+                .is_some_and(|px| px < MIN_IMAGE_DIMENSION)
+        });
+        if too_small {
+            continue;
+        }
+
+        for attr in ["src", "data-src", "data-original", "data-lazy-src"] {
+            let Some(raw) = value.attr(attr) else { continue };
+            if raw.trim().is_empty() || raw.starts_with("data:") || looks_like_tracking_pixel(raw) {
+                continue;
+            }
+            if let Ok(url) = base.join(raw.trim()) {
+                return Some(url.to_string());
+            }
+        }
+    }
+    None
+}
+
+/// Lấy og:image của một bài mà không tải cả trang.
+///
+/// Đọc theo từng khối và dừng ngay khi hết <head> hoặc vượt hạn mức, nên
+/// việc bù ảnh cho hàng chục bài không kéo dài lượt làm mới.
+pub async fn fetch_og_image(client: &reqwest::Client, article_url: &str) -> Option<String> {
+    let base = Url::parse(article_url).ok()?;
+    let mut res = client.get(article_url).send().await.ok()?;
+    if !res.status().is_success() {
+        return None;
+    }
+
+    let mut buffer: Vec<u8> = Vec::with_capacity(OG_IMAGE_SCAN_BYTES);
+    while let Ok(Some(chunk)) = res.chunk().await {
+        buffer.extend_from_slice(&chunk);
+        let seen = String::from_utf8_lossy(&buffer);
+        if seen.contains("</head>") || buffer.len() >= OG_IMAGE_SCAN_BYTES {
+            break;
+        }
+    }
+
+    let head = String::from_utf8_lossy(&buffer);
+    let doc = Html::parse_document(&head);
+    for selector in [
+        r#"meta[property="og:image"]"#,
+        r#"meta[name="og:image"]"#,
+        r#"meta[name="twitter:image"]"#,
+        r#"meta[property="twitter:image"]"#,
+    ] {
+        let Ok(sel) = Selector::parse(selector) else { continue };
+        if let Some(raw) = doc.select(&sel).find_map(|el| el.value().attr("content")) {
+            if raw.trim().is_empty() || raw.starts_with("data:") {
+                continue;
+            }
+            if let Ok(url) = base.join(raw.trim()) {
+                return Some(url.to_string());
+            }
+        }
+    }
+    None
 }
 
 /// Tải trang bài viết và trả về nội dung đã làm sạch.
@@ -401,8 +508,29 @@ mod tests {
             let source = discover(&client, site).await.expect("dò được feed");
             println!("\n{site} → {} ({})", source.title, source.feed_url);
 
-            let articles = fetch_source(&client, &source, 5).await.expect("đọc được feed");
+            let articles = fetch_source(&client, &source, 10).await.expect("đọc được feed");
             assert!(!articles.is_empty(), "feed của {site} phải có bài");
+
+            let from_feed = articles.iter().filter(|a| a.image.is_some()).count();
+            // Bài nào feed không kèm ảnh thì bù bằng og:image của trang bài.
+            let mut with_image = from_feed;
+            for article in articles.iter().filter(|a| a.image.is_none()) {
+                if fetch_og_image(&client, &article.url).await.is_some() {
+                    with_image += 1;
+                }
+            }
+            println!(
+                "  ảnh: {}/{} lấy thẳng từ feed, {}/{} sau khi bù og:image",
+                from_feed,
+                articles.len(),
+                with_image,
+                articles.len()
+            );
+            assert!(
+                with_image * 2 >= articles.len(),
+                "{site}: quá nửa số bài phải có ảnh, hiện chỉ {with_image}/{}",
+                articles.len()
+            );
 
             let cleaned = fetch_article(&client, &articles[0].url).await.expect("bóc tách được bài");
             println!(

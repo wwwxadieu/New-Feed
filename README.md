@@ -129,6 +129,14 @@ khối có mật độ chữ cao nhất làm thân bài. Ảnh được lấy c�
 `srcset`. Số khối bị loại bỏ vẫn được đếm và trả về trong `CleanedArticle`,
 nhưng không hiển thị trên màn hình đọc — trang đọc chỉ có nội dung bài.
 
+**Ảnh bài.** Mỗi báo mang ảnh một kiểu khác nhau, nên phải thử lần lượt:
+thẻ `<media:content>`/`<media:thumbnail>` chuẩn, rồi `<enclosure>`
+(VnExpress), rồi thẻ `<img>` đầu tiên trong phần mô tả (GenK). Nguồn nào
+không kèm ảnh trong feed (TechCrunch, The Verge) thì đọc `og:image` của
+trang bài — chỉ tải phần đầu trang rồi dừng ngay khi hết `<head>`, nên bù
+ảnh cho hàng chục bài không làm chậm lượt làm mới. Đo trên sáu nguồn mặc
+định: 125/125 bài có ảnh.
+
 **Logo nguồn.** Mỗi nguồn được lấy icon từ chính trang của nó (ưu tiên
 `apple-touch-icon` vì thường là PNG 180px, sau đó tới `<link rel="icon">`, cuối
 cùng là `/favicon.ico`) rồi nhúng thẳng vào dữ liệu dạng data URI. Nhờ vậy huy

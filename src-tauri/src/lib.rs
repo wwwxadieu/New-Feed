@@ -17,6 +17,10 @@ use tokio::sync::Mutex;
 const MAX_ARTICLES: usize = 1200;
 /// Số nguồn tải song song. Đủ nhanh nhưng không làm nghẽn đường truyền.
 const FETCH_CONCURRENCY: usize = 6;
+/// Số bài được bù ảnh mỗi lượt. Chỉ bù cho tin mới nhất để lượt làm mới
+/// không kéo dài; bài cũ hơn sẽ được bù ở các lượt sau.
+const IMAGE_BACKFILL_LIMIT: usize = 60;
+const IMAGE_BACKFILL_CONCURRENCY: usize = 8;
 
 pub struct AppState {
     data: Mutex<AppData>,
@@ -79,6 +83,43 @@ fn merge_articles(data: &mut AppData, incoming: Vec<Article>) {
     data.articles = merged;
 }
 
+/// Bù ảnh cho những bài mà feed không kèm ảnh, bằng cách đọc og:image của
+/// trang bài. Nhận và trả về theo id để không phải giữ khoá trong lúc tải.
+async fn backfill_images(
+    client: &reqwest::Client,
+    targets: Vec<(String, String)>,
+) -> Vec<(String, String)> {
+    stream::iter(targets)
+        .map(|(id, url)| {
+            let client = client.clone();
+            async move { fetcher::fetch_og_image(&client, &url).await.map(|image| (id, image)) }
+        })
+        .buffer_unordered(IMAGE_BACKFILL_CONCURRENCY)
+        .collect::<Vec<_>>()
+        .await
+        .into_iter()
+        .flatten()
+        .collect()
+}
+
+/// Danh sách bài mới nhất còn thiếu ảnh.
+fn articles_missing_images(data: &AppData) -> Vec<(String, String)> {
+    data.articles
+        .iter()
+        .filter(|a| a.image.is_none())
+        .take(IMAGE_BACKFILL_LIMIT)
+        .map(|a| (a.id.clone(), a.url.clone()))
+        .collect()
+}
+
+fn apply_images(data: &mut AppData, found: Vec<(String, String)>) {
+    for (id, image) in found {
+        if let Some(article) = data.articles.iter_mut().find(|a| a.id == id) {
+            article.image = Some(image);
+        }
+    }
+}
+
 #[tauri::command]
 async fn get_snapshot(state: State<'_, AppState>) -> Result<Snapshot, String> {
     Ok(snapshot(&*state.data.lock().await))
@@ -102,6 +143,12 @@ async fn add_source(app: AppHandle, state: State<'_, AppState>, input: String) -
     data.sources.push(source);
     merge_articles(&mut data, articles);
 
+    let targets = articles_missing_images(&data);
+    drop(data);
+    let found = backfill_images(&state.client, targets).await;
+
+    let mut data = state.data.lock().await;
+    apply_images(&mut data, found);
     store::save(&app, &data)?;
     Ok(snapshot(&data))
 }
@@ -204,6 +251,14 @@ async fn refresh(app: AppHandle, state: State<'_, AppState>) -> Result<Snapshot,
 
     merge_articles(&mut data, incoming);
     data.last_refresh = Some(now);
+
+    // Thả khoá trước khi đi tải ảnh, để thao tác của người dùng không phải chờ.
+    let targets = articles_missing_images(&data);
+    drop(data);
+    let found = backfill_images(&state.client, targets).await;
+
+    let mut data = state.data.lock().await;
+    apply_images(&mut data, found);
     store::save(&app, &data)?;
     Ok(snapshot(&data))
 }

@@ -2,6 +2,7 @@ import type { Cluster } from "../lib/types";
 import { TOPIC_LABEL } from "../lib/types";
 import { hoursSince, relativeTime } from "../lib/format";
 import { SourceLogo } from "./SourceLogo";
+import { TopicIcon } from "./TopicIcons";
 
 const TOPIC_TINT: Record<string, string> = {
   ai: "var(--indigo)",
@@ -39,8 +40,7 @@ export function ClusterCard({ cluster, index, lead, onOpen }: Props) {
       <span className="thumb" style={{ "--tint": TOPIC_TINT[cluster.topic] ?? "var(--blue)" } as React.CSSProperties}>
         <span className="fallback" />
         <span className="glyph">
-          <b>{cluster.sourceCount}</b>
-          <small>nguồn</small>
+          <TopicIcon topic={cluster.topic} />
         </span>
         {image && (
           <img

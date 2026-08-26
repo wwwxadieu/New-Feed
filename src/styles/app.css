@@ -286,14 +286,15 @@
   background: linear-gradient(150deg, var(--tint, var(--blue)), transparent 78%), var(--fill);
   opacity: 0.5;
 }
+/* Chỉ hiện khi bài không có ảnh: icon chủ đề mờ, không tranh chỗ với ảnh thật. */
 .thumb .glyph {
   position: absolute; inset: 0;
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
-  gap: 1px;
-  color: var(--label-2);
+  display: grid; place-items: center;
+  color: var(--label-3);
+  opacity: 0.75;
 }
-.thumb .glyph b { font-size: 22px; font-weight: 700; letter-spacing: -0.04em; line-height: 1; }
-.thumb .glyph small { font-size: 10px; letter-spacing: 0.02em; color: var(--label-3); }
+.thumb .glyph svg { width: 26px; height: 26px; }
+.cluster-card.lead .thumb .glyph svg { width: 34px; height: 34px; }
 
 .c-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 5px; }
 .pill {
