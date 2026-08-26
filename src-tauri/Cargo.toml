@@ -1,6 +1,6 @@
 [package]
 name = "news-feed"
-version = "0.2.1"
+version = "0.2.2"
 description = "Ứng dụng đọc tin công nghệ dạng dashboard"
 authors = ["News Feed"]
 edition = "2021"

@@ -61,7 +61,23 @@
   flex: 1;
   min-height: 0;
   display: grid;
-  grid-template-columns: 244px minmax(0, 1fr) 328px;
+  grid-template-columns: 244px minmax(0, 1fr);
+}
+
+/* Thanh công cụ chạy hết bề ngang vùng nội dung. Nếu để nó dừng ở ranh giới
+   cột giữa thì nền của nó tạo một cạnh dọc cứng, và panel bên phải dựng
+   ngay sát cạnh đó — hai khối chạm nhau, không có khoảng thở. */
+.content {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.columns {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 328px;
 }
 
 /* ================= Thanh bên ================= */
@@ -177,8 +193,6 @@
 @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
 
 /* ================= Cột giữa ================= */
-.main { min-height: 0; display: flex; flex-direction: column; }
-
 .toolbar {
   flex: none;
   display: flex;
@@ -678,6 +692,7 @@
 /* ================= Cửa sổ hẹp ================= */
 @media (max-width: 1180px) {
   .shell { grid-template-columns: 232px minmax(0, 1fr); }
+  .columns { grid-template-columns: minmax(0, 1fr); }
   .rail { display: none; }
 }
 @media (max-width: 900px) {

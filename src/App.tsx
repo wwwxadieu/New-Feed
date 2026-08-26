@@ -215,7 +215,7 @@ export default function App() {
             />
           )}
 
-          <main className="main">
+          <div className="content">
             <div className="toolbar">
               <label className="searchfield">
                 <SearchIcon />
@@ -262,52 +262,55 @@ export default function App() {
               )}
             </div>
 
-            <div className="feed">
-              <div className="feed-head">
-                <div>
-                  <h1>{sourceId ? (sourceMap.get(sourceId)?.title ?? "Tổng quan") : "Tổng quan"}</h1>
-                  <p>
-                    Gộp <b>{formatNumber(articlesInView)}</b> bài thành <b>{formatNumber(clusters.length)}</b> cụm sự
-                    kiện trong {windowLabel.toLowerCase()} qua
-                  </p>
-                </div>
-                <div style={{ marginLeft: "auto" }}>
-                  <Segmented label="Sắp xếp" options={SORTS} value={sort} onChange={setSort} />
-                </div>
-              </div>
-
-              <div className="cluster-list view-swap" key={`${topic}-${sourceId ?? ""}-${sort}-${windowHours}`}>
-                {clusters.length === 0 ? (
-                  <div className="empty-state">
-                    <h2>{snapshot ? "Chưa có cụm tin nào ở bộ lọc này" : "Đang tải…"}</h2>
+            <div className="columns">
+              <main className="feed">
+                <div className="feed-head">
+                  <div>
+                    <h1>{sourceId ? (sourceMap.get(sourceId)?.title ?? "Tổng quan") : "Tổng quan"}</h1>
                     <p>
-                      {snapshot?.sources.length
-                        ? "Thử nới khoảng thời gian, xoá từ khoá tìm kiếm, hoặc bấm Làm mới để tải tin mới."
-                        : "Thêm vài nguồn tin công nghệ để bắt đầu."}
+                      Gộp <b>{formatNumber(articlesInView)}</b> bài thành <b>{formatNumber(clusters.length)}</b> cụm sự
+                      kiện trong {windowLabel.toLowerCase()} qua
                     </p>
-                    {snapshot && (
-                      <button className="link-button" onClick={() => setSourcesOpen(true)}>
-                        <PlusIcon />
-                        Thêm nguồn tin
-                      </button>
-                    )}
                   </div>
-                ) : (
-                  clusters.map((cluster, index) => (
-                    <ClusterCard
-                      key={cluster.id}
-                      cluster={cluster}
-                      index={index}
-                      lead={index === 0}
-                      onOpen={setReader}
-                    />
-                  ))
-                )}
-              </div>
-            </div>
-          </main>
+                  <div style={{ marginLeft: "auto" }}>
+                    <Segmented label="Sắp xếp" options={SORTS} value={sort} onChange={setSort} />
+                  </div>
+                </div>
 
-          {snapshot && <InsightRail snapshot={snapshot} clusters={clusters} />}
+                <div className="cluster-list view-swap" key={`${topic}-${sourceId ?? ""}-${sort}-${windowHours}`}>
+                  {clusters.length === 0 ? (
+                    <div className="empty-state">
+                      <h2>{snapshot ? "Chưa có cụm tin nào ở bộ lọc này" : "Đang tải…"}</h2>
+                      <p>
+                        {snapshot?.sources.length
+                          ? "Thử nới khoảng thời gian, xoá từ khoá tìm kiếm, hoặc bấm Làm mới để tải tin mới."
+                          : "Thêm vài nguồn tin công nghệ để bắt đầu."}
+                      </p>
+                      {snapshot && (
+                        <button className="link-button" onClick={() => setSourcesOpen(true)}>
+                          <PlusIcon />
+                          Thêm nguồn tin
+                        </button>
+                      )}
+                    </div>
+                  ) : (
+                    clusters.map((cluster, index) => (
+                      <ClusterCard
+                        key={cluster.id}
+                        cluster={cluster}
+                        index={index}
+                        lead={index === 0}
+                        onOpen={setReader}
+                      />
+                    ))
+                  )}
+                </div>
+              </main>
+
+              {snapshot && <InsightRail snapshot={snapshot} clusters={clusters} />}
+            </div>
+          </div>
+
         </div>
       </div>
 

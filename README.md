@@ -83,6 +83,13 @@ tách nhau bằng một đường kẻ mảnh. Chọn một chủ đề sẽ b�
 ngược lại, nên không bao giờ rơi vào trạng thái lọc chồng lọc ra danh sách
 rỗng mà không rõ vì sao.
 
+## Bố cục cửa sổ
+
+Thanh công cụ chạy hết bề ngang vùng nội dung thay vì dừng ở ranh giới cột
+giữa. Dừng giữa chừng thì nền của nó tạo một cạnh dọc cứng, và panel bên
+phải dựng ngay sát cạnh đó — hai khối chạm nhau không có khoảng thở. Cho
+thanh công cụ chạy hết bề ngang thì cột phải nằm hẳn bên dưới nó.
+
 ## Cửa sổ rộng
 
 Cột giữa có giới hạn bề ngang. Không giới hạn thì trên màn hình rộng, dòng
