@@ -1,6 +1,6 @@
 # News Feed
 
-**[⬇ Tải bản cài Windows v0.1.0](https://github.com/wwwxadieu/New-Feed/releases/tag/v0.1.0)** — bộ cài 2,6 MB.
+**[⬇ Tải bản cài Windows](https://github.com/wwwxadieu/New-Feed/releases/latest)** — bộ cài khoảng 2,6 MB.
 
 Ứng dụng đọc tin công nghệ dạng dashboard cho Windows. Thay vì xếp bài theo dòng
 thời gian, ứng dụng **gộp các bài viết nói về cùng một sự kiện thành một cụm**,
@@ -75,6 +75,17 @@ Kết quả nằm ở `src-tauri/target/release/bundle/`:
 **Cách 2 — không cần cài gì.** Đẩy nhánh lên GitHub, workflow
 `.github/workflows/build-windows.yml` sẽ tự dựng trên máy ảo Windows và đính
 kèm bộ cài vào phần Artifacts của lần chạy đó.
+
+## Về bộ cài Windows
+
+Bộ cài có trang **Choose Install Location** nên chọn được thư mục cài. Mặc
+định là `%LOCALAPPDATA%\News Feed` — cài cho riêng người dùng hiện tại nên
+không cần quyền quản trị và không hiện hộp thoại UAC.
+
+Muốn cài vào `Program Files` cho mọi người dùng thì đổi `installMode` trong
+`src-tauri/tauri.conf.json` thành `"both"`; khi đó bộ cài có thêm một trang
+cho người dùng chọn cài cho riêng mình hay cho cả máy, đổi lại là sẽ có hộp
+thoại UAC khi chọn cài cho cả máy.
 
 ## Phát hành phiên bản mới
 
