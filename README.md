@@ -1,5 +1,7 @@
 # News Feed
 
+**[⬇ Tải bản cài Windows v0.1.0](https://github.com/wwwxadieu/New-Feed/releases/tag/v0.1.0)** — bộ cài 2,6 MB.
+
 Ứng dụng đọc tin công nghệ dạng dashboard cho Windows. Thay vì xếp bài theo dòng
 thời gian, ứng dụng **gộp các bài viết nói về cùng một sự kiện thành một cụm**,
 rồi cho đọc bài đã bóc tách sạch quảng cáo.
@@ -15,7 +17,7 @@ nó cho thấy thứ mà một danh sách một cột không diễn đạt đư�
 
 | Thành phần | Lựa chọn | Lý do |
 | --- | --- | --- |
-| Khung ứng dụng | **Tauri v2** | Bản chạy đã đo được **8,2 MB** (xem mục dưới), dùng WebView2 có sẵn trong Windows. Electron cho cùng chức năng nặng ~120–150 MB. |
+| Khung ứng dụng | **Tauri v2** | Bộ cài Windows đã đo được **2,6 MB**, dùng WebView2 có sẵn trong Windows. Electron cho cùng chức năng nặng ~120–150 MB. |
 | Backend | **Rust** | Tải nguồn, bóc tách HTML và gộp cụm chạy native, không chặn giao diện. |
 | Giao diện | **React 19 + TypeScript + Vite** | Bundle nhỏ, dựng lại nhanh, kiểu chặt. |
 | Phông chữ | **Inter Variable** (đóng gói kèm) | Hỗ trợ đầy đủ dấu tiếng Việt, tải từ trong ứng dụng nên chạy được offline. |
@@ -53,10 +55,16 @@ npm run app:build
 
 ### Kích thước đã đo
 
-Bản release dựng trên Linux (`opt-level = "s"`, LTO, `panic = "abort"`, đã
-strip symbol) cho ra bản chạy **8,2 MB** đã bao gồm toàn bộ giao diện nhúng
-sẵn bên trong. Bản Windows thường nhỏ hơn con số này vì không phải liên kết
-GTK/WebKit — WebView2 đã có sẵn trong hệ điều hành.
+Số liệu từ bản phát hành v0.1.0 dựng trên máy ảo Windows:
+
+| Tệp | Kích thước |
+| --- | --- |
+| `News.Feed_0.1.0_x64-setup.exe` (bộ cài NSIS) | **2,6 MB** |
+| `News.Feed_0.1.0_x64_en-US.msi` (gói MSI) | **3,4 MB** |
+
+Bản chạy dựng trên Linux là 8,2 MB vì phải liên kết GTK/WebKit; trên Windows
+không cần vì WebView2 đã có sẵn trong hệ điều hành. Cấu hình release dùng
+`opt-level = "s"`, LTO, `panic = "abort"` và strip symbol.
 
 Kết quả nằm ở `src-tauri/target/release/bundle/`:
 
@@ -67,6 +75,22 @@ Kết quả nằm ở `src-tauri/target/release/bundle/`:
 **Cách 2 — không cần cài gì.** Đẩy nhánh lên GitHub, workflow
 `.github/workflows/build-windows.yml` sẽ tự dựng trên máy ảo Windows và đính
 kèm bộ cài vào phần Artifacts của lần chạy đó.
+
+## Phát hành phiên bản mới
+
+Nâng số phiên bản ở `package.json` và `src-tauri/tauri.conf.json` cho khớp
+nhau, rồi làm một trong hai cách:
+
+```bash
+# Cách thường: gắn thẻ và đẩy lên
+git tag -a v0.2.0 -m "News Feed v0.2.0"
+git push origin v0.2.0
+```
+
+Hoặc vào tab **Actions → Phát hành → Run workflow**, nhập số phiên bản (không
+kèm chữ `v`). Cách chạy tay có ích khi token chỉ có quyền ghi nhánh mà không
+đẩy được thẻ. Cả hai đều dựng bản Windows, chạy kiểm thử, rồi tạo bản phát
+hành kèm bộ cài `.exe` và gói `.msi`.
 
 ## Cách hoạt động
 
