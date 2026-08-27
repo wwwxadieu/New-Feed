@@ -520,7 +520,7 @@
 .sheet {
   position: relative;
   width: min(960px, 100%);
-  max-height: min(92vh, 900px);
+  max-height: min(calc(100vh - 56px), 1600px);
   display: flex; flex-direction: column;
   border-radius: var(--r-xl);
   background: var(--sheet-bg);
@@ -726,4 +726,91 @@
   .shell { grid-template-columns: minmax(0, 1fr); }
   .sidebar { display: none; }
   .reader-grid { grid-template-columns: minmax(0, 1fr); }
+}
+
+
+/* ================= Màn hình lớn (2K trở lên) =================
+   Tăng kích thước thật của chữ và khung, không dùng zoom hay transform:
+   scale — hai cách đó phóng ảnh đã dựng nên chữ sẽ mờ. Mốc tính theo pixel
+   CSS nên máy đặt tỷ lệ hiển thị 125–150% vẫn nhận đúng khổ chữ của nó. */
+@media (min-width: 1800px) {
+  .shell { grid-template-columns: 268px minmax(0, 1fr); }
+  .columns { grid-template-columns: minmax(0, 1fr) 360px; }
+
+  .nav-item { font-size: 14.5px; }
+  .nav-item .count { font-size: 12.5px; }
+  .section-title { font-size: 11.5px; }
+
+  .feed-head h1 { font-size: 29px; }
+  .feed-head p { font-size: 14px; }
+  .c-title { font-size: 16.5px; }
+  .cluster-card.lead .c-title { font-size: 21.5px; }
+  .c-summary { font-size: 14px; }
+  .searchfield input { font-size: 14px; }
+
+  .hot-row p { font-size: 13.8px; }
+  .bar-row .name { font-size: 13.2px; }
+  .panel-head h3 { font-size: 11.5px; }
+
+  .sheet { width: min(1180px, 100%); }
+  .reader-grid { grid-template-columns: minmax(0, 1fr) 264px; gap: 28px; padding: 24px 30px 56px; }
+  .reader-title { font-size: 31px; }
+  .reader-body p { font-size: 17px; margin-bottom: 17px; }
+  .reader-body h3 { font-size: 19px; }
+  .reader-body blockquote { font-size: 17.5px; }
+  .reader-byline { font-size: 13.5px; }
+  .src-option { font-size: 13.5px; }
+}
+
+@media (min-width: 2400px) {
+  .shell { grid-template-columns: 300px minmax(0, 1fr); }
+  .columns { grid-template-columns: minmax(0, 1fr) 400px; }
+
+  .feed-head,
+  .cluster-list,
+  .empty-state {
+    max-width: 1760px;
+  }
+
+  .nav-item { font-size: 15.5px; }
+  .nav-item .count { font-size: 13.5px; }
+
+  .feed-head h1 { font-size: 32px; }
+  .c-title { font-size: 18px; }
+  .cluster-card.lead .c-title { font-size: 23.5px; }
+  .c-summary { font-size: 15px; }
+  .cluster-card { grid-template-columns: 136px minmax(0, 1fr); }
+  .cluster-card.lead { grid-template-columns: 220px minmax(0, 1fr); }
+
+  .hot-row p { font-size: 14.8px; }
+  .bar-row .name { font-size: 14px; }
+
+  .sheet { width: min(1400px, 100%); }
+  .reader-grid { grid-template-columns: minmax(0, 1fr) 296px; gap: 34px; padding: 28px 36px 64px; }
+  .reader-title { font-size: 35px; }
+  .reader-body p { font-size: 18.5px; line-height: 1.7; margin-bottom: 19px; }
+  .reader-body h3 { font-size: 21px; }
+  .reader-body blockquote { font-size: 19px; }
+  .reader-byline { font-size: 14.5px; }
+  .src-option { font-size: 14.5px; }
+}
+
+/* Màn 4K chạy ở tỷ lệ hiển thị 100%: mọi thứ nhỏ về mặt vật lý nên còn chỗ
+   để nới thêm một nấc. Máy đặt 150% chỉ báo 2560px CSS nên không rơi vào đây. */
+@media (min-width: 3000px) {
+  .shell { grid-template-columns: 330px minmax(0, 1fr); }
+  .columns { grid-template-columns: minmax(0, 1fr) 440px; }
+  .feed-head,
+  .cluster-list,
+  .empty-state {
+    max-width: 2000px;
+  }
+  .sheet { width: min(1660px, 100%); }
+  .reader-grid { grid-template-columns: minmax(0, 1fr) 340px; }
+  .reader-title { font-size: 38px; }
+  .reader-body p { font-size: 19.5px; margin-bottom: 21px; }
+  .reader-body h3 { font-size: 22px; }
+  .c-title { font-size: 19px; }
+  .c-summary { font-size: 15.5px; }
+  .nav-item { font-size: 16.5px; }
 }

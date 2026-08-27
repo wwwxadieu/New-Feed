@@ -76,6 +76,17 @@ Game & esports, Startup & vốn, Xe điện, Mạng xã hội, Không gian**. Th
 lọc theo chủ đề hoặc theo từng nguồn, kèm khoảng thời gian 6 giờ / 24 giờ /
 7 ngày và ô tìm kiếm.
 
+### Chạy tốt trên màn hình 2K trở lên
+
+Khung, cỡ chữ và bề rộng cột đều nới theo bề ngang cửa sổ, qua bốn mốc:
+1800px, 2400px và 3000px. Trên màn 2K, tấm đọc bài cao gấp rưỡi và chữ thân
+bài tăng từ 15,5px lên 18,5px, nhìn thấy khoảng 42 dòng cùng lúc thay vì 32.
+
+Việc phóng to làm bằng kích thước thật chứ không dùng `zoom` hay
+`transform: scale` — hai cách đó phóng ảnh đã dựng nên chữ sẽ mờ. Mốc tính
+theo pixel CSS, nên máy đặt tỷ lệ hiển thị 125–150% vẫn nhận đúng khổ chữ
+tương ứng với không gian thật mà nó có.
+
 ### Cuộn mượt có độ nảy
 
 Cuộn dòng tin và cuộn bài đọc đều có chuyển động trôi dần thay vì nhảy từng
