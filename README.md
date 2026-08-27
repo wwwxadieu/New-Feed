@@ -176,6 +176,13 @@ trong phần mô tả (GenK). Nguồn nào không kèm ảnh trong feed thì đ�
 của trang bài — chỉ tải phần đầu trang rồi dừng ngay khi hết `<head>`. Đo trên
 sáu nguồn mặc định: 125/125 bài có ảnh.
 
+**Giới hạn khi giải mã ảnh.** Ảnh tải từ Internet là dữ liệu không kiểm soát
+được. Một tệp PNG 60 KB có thể khai báo 8000x8000 và bung ra 183 MB dạng RGB,
+đủ để làm cạn bộ nhớ. Ứng dụng đọc kích thước từ phần đầu tệp trước khi cấp
+phát, từ chối ảnh vượt 24 triệu điểm ảnh, và bọc phần giải mã trong
+`catch_unwind` để một tấm ảnh dị dạng không thoát ra ngoài phạm vi của nó.
+Bản release cố ý không đặt `panic = "abort"` vì lý do đó.
+
 **Ảnh đại diện tải sẵn.** Ảnh được tải và thu về bề ngang 480px ngay trong
 lượt làm mới, lưu vào thư mục đệm rồi hiển thị qua giao thức asset của Tauri.
 Để giao diện tự tải từ máy chủ của báo thì mỗi thẻ tin là một lượt gọi mạng

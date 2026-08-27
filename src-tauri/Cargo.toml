@@ -1,6 +1,6 @@
 [package]
 name = "news-feed"
-version = "0.6.0"
+version = "0.6.1"
 description = "Ứng dụng đọc tin công nghệ dạng dashboard"
 authors = ["News Feed"]
 edition = "2021"
@@ -33,10 +33,17 @@ version = "0.12"
 default-features = false
 features = ["gzip", "brotli", "rustls-tls", "charset"]
 
+[dev-dependencies]
+flate2 = "1"
+
 [profile.release]
-# Bản build nhẹ và ổn định: tối ưu kích thước, bỏ symbol, panic gọn.
+# Bản build nhẹ và ổn định: tối ưu kích thước, bỏ symbol.
+#
+# Cố ý KHÔNG đặt panic = "abort". Ứng dụng phân tích HTML và ảnh lấy từ
+# Internet, tức dữ liệu không kiểm soát được; với abort thì một panic trong
+# bộ giải mã sẽ giết cả tiến trình, người dùng chỉ thấy app tự thoát. Để
+# panic cuộn ngăn xếp thì catch_unwind chặn được ngay tại chỗ hỏng.
 opt-level = "s"
 lto = true
 codegen-units = 1
-panic = "abort"
 strip = true
