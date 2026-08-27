@@ -3,6 +3,7 @@ mod extract;
 mod fetcher;
 mod model;
 mod store;
+mod thumbs;
 mod translate;
 
 use chrono::{DateTime, SecondsFormat, Utc};
@@ -28,6 +29,9 @@ const TRANSLATE_BUDGET_ANON: usize = 4_500;
 const TRANSLATE_BUDGET_WITH_EMAIL: usize = 45_000;
 /// Gọi dồn dập dễ bị dịch vụ chặn tạm, nên giữ mức song song thấp.
 const TRANSLATE_CONCURRENCY: usize = 3;
+/// Bóc tách ra ít hơn ngần này từ thì coi như hụt, chuyển sang dùng nội dung
+/// của feed. Có nguồn dựng bài bằng JavaScript nên trang gốc không chứa chữ.
+const MIN_ARTICLE_WORDS: usize = 120;
 
 pub struct AppState {
     data: Mutex<AppData>,
@@ -108,6 +112,23 @@ async fn backfill_images(
         .into_iter()
         .flatten()
         .collect()
+}
+
+/// Bài đã có địa chỉ ảnh nhưng chưa tải về máy.
+fn thumbs_to_cache(data: &AppData) -> Vec<(String, String)> {
+    data.articles
+        .iter()
+        .filter(|a| a.thumb.is_none())
+        .filter_map(|a| a.image.clone().map(|url| (a.id.clone(), url)))
+        .collect()
+}
+
+fn apply_thumbs(data: &mut AppData, done: Vec<(String, String)>) {
+    for (id, path) in done {
+        if let Some(article) = data.articles.iter_mut().find(|a| a.id == id) {
+            article.thumb = Some(path);
+        }
+    }
 }
 
 /// Danh sách bài mới nhất còn thiếu ảnh.
@@ -276,11 +297,16 @@ async fn add_source(app: AppHandle, state: State<'_, AppState>, input: String) -
 
     let mut data = state.data.lock().await;
     apply_images(&mut data, found);
+    let cache = thumbs::cache_dir(&app)?;
+    let pending_thumbs = thumbs_to_cache(&data);
     let pending = translation_targets(&data);
     drop(data);
+
+    let cached = thumbs::ensure(&state.client, &cache, pending_thumbs).await;
     let (translated, notice) = run_translations(&state.client, pending.1, pending.0).await;
 
     let mut data = state.data.lock().await;
+    apply_thumbs(&mut data, cached);
     apply_translations(&mut data, translated);
     data.translate_notice = notice;
     store::save(&app, &data)?;
@@ -395,13 +421,23 @@ async fn refresh(app: AppHandle, state: State<'_, AppState>) -> Result<Snapshot,
 
     let mut data = state.data.lock().await;
     apply_images(&mut data, found);
+
+    // Tải ảnh về máy ngay trong lượt làm mới, để lúc vẽ thẻ tin không phải
+    // đợi từng lượt gọi mạng riêng.
+    let cache = thumbs::cache_dir(&app)?;
+    let pending_thumbs = thumbs_to_cache(&data);
     let pending = translation_targets(&data);
     drop(data);
+
+    let cached = thumbs::ensure(&state.client, &cache, pending_thumbs).await;
     let (translated, notice) = run_translations(&state.client, pending.1, pending.0).await;
 
     let mut data = state.data.lock().await;
+    apply_thumbs(&mut data, cached);
     apply_translations(&mut data, translated);
     data.translate_notice = notice;
+    let keep: std::collections::HashSet<String> = data.articles.iter().map(|a| a.id.clone()).collect();
+    thumbs::prune(&cache, &keep);
     store::save(&app, &data)?;
     Ok(snapshot(&data))
 }
@@ -425,7 +461,27 @@ async fn translate_texts(state: State<'_, AppState>, texts: Vec<String>) -> Resu
 
 #[tauri::command]
 async fn read_article(state: State<'_, AppState>, url: String) -> Result<CleanedArticle, String> {
-    fetcher::fetch_article(&state.client, &url).await
+    let cleaned = fetcher::fetch_article(&state.client, &url).await?;
+    if cleaned.word_count >= MIN_ARTICLE_WORDS {
+        return Ok(cleaned);
+    }
+
+    let stored = {
+        let data = state.data.lock().await;
+        data.articles
+            .iter()
+            .find(|a| a.url == url)
+            .and_then(|a| a.content_html.clone())
+    };
+    let Some(html) = stored.filter(|h| !h.trim().is_empty()) else {
+        return Ok(cleaned);
+    };
+    let Ok(base) = url::Url::parse(&url) else {
+        return Ok(cleaned);
+    };
+
+    let from_feed = extract::from_fragment(&html, &base);
+    Ok(if from_feed.word_count > cleaned.word_count { from_feed } else { cleaned })
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]

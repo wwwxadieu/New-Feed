@@ -586,6 +586,16 @@
 .text-button:hover { opacity: 0.72; }
 .text-button:disabled { color: var(--label-3); cursor: default; }
 
+.partial-note {
+  margin: 0 0 16px;
+  padding: 9px 12px;
+  border-radius: var(--r-md);
+  background: var(--fill);
+  color: var(--label-2);
+  font-size: 12.5px;
+  line-height: 1.45;
+}
+
 .translate-error {
   margin: 0 0 16px;
   padding: 9px 12px;

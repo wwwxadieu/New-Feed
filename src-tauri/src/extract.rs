@@ -63,6 +63,73 @@ fn image_src(el: &scraper::ElementRef, base: &Url) -> Option<String> {
     None
 }
 
+/// Dựng khối nội dung từ một đoạn HTML đã biết chắc là thân bài.
+///
+/// Dùng cho nội dung lấy thẳng từ feed: không cần chấm điểm chọn khối vì cả
+/// đoạn vốn đã là bài, chỉ cần đọc ra chữ và ảnh.
+pub fn from_fragment(html_src: &str, base: &Url) -> CleanedArticle {
+    let fragment = Html::parse_fragment(html_src);
+    let mut blocks = Vec::new();
+    let mut images = Vec::new();
+
+    if let Ok(sel) = Selector::parse("p, h2, h3, h4, blockquote, li, img") {
+        for el in fragment.select(&sel) {
+            if el.value().name() == "img" {
+                if let Some(src) = image_src(&el, base) {
+                    if !images.contains(&src) {
+                        images.push(src.clone());
+                        blocks.push(Block::Image { src });
+                    }
+                }
+                continue;
+            }
+            let text = el.text().collect::<String>().split_whitespace().collect::<Vec<_>>().join(" ");
+            if text.chars().count() < 25 {
+                continue;
+            }
+            blocks.push(match el.value().name() {
+                "h2" | "h3" | "h4" => Block::Heading { text },
+                "blockquote" => Block::Quote { text },
+                _ => Block::Paragraph { text },
+            });
+        }
+    }
+
+    // Có feed chỉ dùng <br> để xuống dòng, không có thẻ khối nào.
+    if !blocks.iter().any(|b| !matches!(b, Block::Image { .. })) {
+        let text = fragment.root_element().text().collect::<String>();
+        for piece in text.split('\n') {
+            let line = piece.split_whitespace().collect::<Vec<_>>().join(" ");
+            if line.chars().count() >= 25 {
+                blocks.push(Block::Paragraph { text: line });
+            }
+        }
+    }
+
+    let word_count: usize = blocks
+        .iter()
+        .map(|b| match b {
+            Block::Paragraph { text } | Block::Heading { text } | Block::Quote { text } => {
+                text.split_whitespace().count()
+            }
+            Block::Image { .. } => 0,
+        })
+        .sum();
+
+    CleanedArticle {
+        blocks,
+        images,
+        lead_image: None,
+        byline: None,
+        word_count,
+        read_minutes: (word_count / 200).max(1),
+        removed_ads: 0,
+        removed_popups: 0,
+        removed_trackers: 0,
+        partial: true,
+    }
+}
+
 pub fn extract(html_src: &str, base: &Url) -> CleanedArticle {
     let mut doc = Html::parse_document(html_src);
 
@@ -213,6 +280,7 @@ pub fn extract(html_src: &str, base: &Url) -> CleanedArticle {
         removed_ads,
         removed_popups,
         removed_trackers,
+        partial: false,
     }
 }
 

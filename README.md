@@ -176,6 +176,20 @@ trong phần mô tả (GenK). Nguồn nào không kèm ảnh trong feed thì đ�
 của trang bài — chỉ tải phần đầu trang rồi dừng ngay khi hết `<head>`. Đo trên
 sáu nguồn mặc định: 125/125 bài có ảnh.
 
+**Ảnh đại diện tải sẵn.** Ảnh được tải và thu về bề ngang 480px ngay trong
+lượt làm mới, lưu vào thư mục đệm rồi hiển thị qua giao thức asset của Tauri.
+Để giao diện tự tải từ máy chủ của báo thì mỗi thẻ tin là một lượt gọi mạng
+riêng và ảnh gốc thường lớn gấp nhiều lần khung hiển thị. Đo trên tám ảnh
+thật: 1.484 KB còn 168 KB, tức 11%. Ảnh của bài đã bị đẩy khỏi kho được xoá
+theo trong mỗi lượt làm mới.
+
+**Nguồn dựng bằng JavaScript.** Có trang, ví dụ tinhte.vn, đưa thân bài vào
+một khối JSON và chỉ hiện ra sau khi trình duyệt chạy mã, nên bóc tách từ
+HTML tĩnh không thấy gì. Khi bóc được dưới 120 từ, ứng dụng chuyển sang dùng
+nội dung của feed và ghi rõ trên màn hình đọc rằng đây chỉ là phần đầu bài.
+Lấy được toàn văn những trang này đòi hỏi nhúng trình duyệt không giao diện,
+cái giá quá lớn so với một ứng dụng 2,6 MB.
+
 **Logo nguồn.** Lấy icon từ chính trang của nguồn, ưu tiên `apple-touch-icon`
 vì thường là PNG 180px, rồi tới `<link rel="icon">`, cuối cùng `/favicon.ico`.
 Ảnh nhúng thẳng vào dữ liệu dạng data URI nên hiện được cả khi offline.

@@ -161,6 +161,13 @@ export function ReaderSheet({ cluster, onClose }: Props) {
                 <p className="translate-error">{translateError}</p>
               )}
 
+              {content?.partial && (
+                <p className="partial-note">
+                  Nguồn này dựng nội dung bằng JavaScript nên chỉ lấy được phần đầu bài. Mở bài gốc để
+                  đọc đầy đủ.
+                </p>
+              )}
+
               {content && (
                 <div className="reader-body">
                   {content.blocks.map((block, index) => {

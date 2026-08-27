@@ -24,6 +24,8 @@ export interface Article {
   image: string | null;
   titleVi: string | null;
   summaryVi: string | null;
+  /** Đường dẫn ảnh đã tải sẵn trên máy. */
+  thumb: string | null;
 }
 
 export interface Cluster {
@@ -55,6 +57,8 @@ export interface CleanedArticle {
   removedAds: number;
   removedPopups: number;
   removedTrackers: number;
+  /** Đúng khi chỉ lấy được phần tóm tắt chứ không phải toàn văn. */
+  partial: boolean;
 }
 
 export interface Settings {

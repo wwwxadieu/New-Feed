@@ -1,6 +1,7 @@
 import type { Cluster } from "../lib/types";
 import { TOPIC_LABEL } from "../lib/types";
 import { hoursSince, relativeTime } from "../lib/format";
+import { assetUrl } from "../lib/api";
 import { SourceLogo } from "./SourceLogo";
 import { TopicIcon } from "./TopicIcons";
 
@@ -25,7 +26,10 @@ interface Props {
 }
 
 export function ClusterCard({ cluster, index, lead, onOpen }: Props) {
-  const image = cluster.articles.find((a) => a.image)?.image ?? null;
+  // Ưu tiên ảnh đã tải sẵn trên máy; chưa có thì mới lấy từ máy chủ của báo.
+  const cached = cluster.articles.find((a) => a.thumb)?.thumb ?? null;
+  const remote = cluster.articles.find((a) => a.image)?.image ?? null;
+  const image = cached ? assetUrl(cached) : remote;
   // Một báo có thể có nhiều bài trong cùng cụm, nhưng chỉ nên hiện một lần.
   const uniqueSources = [...new Map(cluster.articles.map((a) => [a.sourceId, a.sourceTitle])).entries()];
   const names = uniqueSources.slice(0, 3).map(([, title]) => title);
@@ -50,6 +54,7 @@ export function ClusterCard({ cluster, index, lead, onOpen }: Props) {
             src={image}
             alt=""
             loading="lazy"
+            decoding="async"
             onError={(event) => {
               event.currentTarget.hidden = true;
             }}

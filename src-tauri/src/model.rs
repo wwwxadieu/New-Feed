@@ -52,6 +52,13 @@ pub struct Article {
     /// Tóm tắt đã dịch sang tiếng Việt.
     #[serde(default)]
     pub summary_vi: Option<String>,
+    /// Đường dẫn ảnh đại diện đã tải về và thu nhỏ trên máy.
+    #[serde(default)]
+    pub thumb: Option<String>,
+    /// Nội dung HTML lấy từ feed, dùng làm phương án dự phòng khi không bóc
+    /// tách được thân bài từ trang gốc.
+    #[serde(default)]
+    pub content_html: Option<String>,
 }
 
 /// Nội dung bài đã bóc tách, kèm số khối rác thực sự đã loại bỏ.
@@ -69,6 +76,9 @@ pub struct CleanedArticle {
     pub removed_ads: usize,
     pub removed_popups: usize,
     pub removed_trackers: usize,
+    /// Đúng khi chỉ lấy được phần tóm tắt chứ không phải toàn văn.
+    #[serde(default)]
+    pub partial: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

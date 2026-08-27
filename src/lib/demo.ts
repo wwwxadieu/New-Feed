@@ -21,6 +21,7 @@ function article(sourceTitle: string, title: string, hoursAgo: number, summary =
     image: null,
     titleVi: null,
     summaryVi: null,
+    thumb: null,
   };
 }
 

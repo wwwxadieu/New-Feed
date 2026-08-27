@@ -4,6 +4,18 @@ import { demoSnapshot } from "./demo";
 /** Khi mở bằng `npm run dev` trong trình duyệt sẽ không có backend Rust. */
 export const isDesktop = typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
 
+/**
+ * Địa chỉ hiển thị được của một tệp trên máy. Ảnh đại diện được tải sẵn vào
+ * thư mục đệm nên vẽ ra tức thì, không phải chờ gọi mạng cho từng thẻ tin.
+ */
+export function assetUrl(path: string): string {
+  if (!isDesktop) return path;
+  const internals = (window as unknown as {
+    __TAURI_INTERNALS__?: { convertFileSrc?: (p: string, protocol?: string) => string };
+  }).__TAURI_INTERNALS__;
+  return internals?.convertFileSrc?.(path, "asset") ?? path;
+}
+
 async function call<T>(command: string, args?: Record<string, unknown>): Promise<T> {
   const { invoke } = await import("@tauri-apps/api/core");
   return invoke<T>(command, args);
@@ -94,5 +106,6 @@ function demoArticle(): CleanedArticle {
     removedAds: 14,
     removedPopups: 3,
     removedTrackers: 9,
+    partial: false,
   };
 }
