@@ -76,6 +76,14 @@ Game & esports, Startup & vốn, Xe điện, Mạng xã hội, Không gian**. Th
 lọc theo chủ đề hoặc theo từng nguồn, kèm khoảng thời gian 6 giờ / 24 giờ /
 7 ngày và ô tìm kiếm.
 
+### Cuộn mượt có độ nảy
+
+Cuộn dòng tin và cuộn bài đọc đều có chuyển động trôi dần thay vì nhảy từng
+nấc, và nảy lại khi chạm mép trên hoặc mép dưới. WebView trên Windows không
+có sẵn hiệu ứng này như macOS nên ứng dụng tự dựng. Thanh cuộn kéo tay và
+phím điều hướng vẫn chạy theo cơ chế gốc, và hiệu ứng tự tắt nếu hệ điều hành
+bật chế độ giảm chuyển động.
+
 ### Giao diện sáng và tối
 
 <img src="docs/screenshots/dashboard-dark.png" alt="Giao diện tối" width="880">

@@ -465,7 +465,16 @@
 .hot-row:active { background: var(--fill-strong); }
 .hot-row:hover p { color: var(--blue); }
 .hot-row .rank { font-size: 11px; color: var(--label-3); padding-top: 2px; font-variant-numeric: tabular-nums; }
-.hot-row p { margin: 0 0 6px; font-size: 12.8px; line-height: 1.36; transition: color var(--dur-fast) ease; }
+/* Chữ nghiêng để panel này khác hẳn phần còn lại. Chỉ nghiêng tiêu đề, còn
+   dòng đếm nguồn giữ chữ đứng cho dễ đọc. */
+.hot-row p {
+  margin: 0 0 6px;
+  font-size: 12.8px;
+  line-height: 1.38;
+  font-style: italic;
+  letter-spacing: 0.002em;
+  transition: color var(--dur-fast) ease;
+}
 .hot-row .sub { font-size: 11px; color: var(--label-3); margin-top: 5px; display: block; }
 .meter { display: block; height: 3px; border-radius: 2px; background: var(--fill); overflow: hidden; }
 .meter i { display: block; height: 100%; border-radius: 2px; background: var(--blue); transition: width var(--dur-base) var(--ease-out); }

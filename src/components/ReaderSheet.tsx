@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { CleanedArticle, Cluster } from "../lib/types";
 import { TOPIC_LABEL } from "../lib/types";
 import { api } from "../lib/api";
+import { useElasticScroll } from "../lib/elasticScroll";
 import { hostOf, relativeTime } from "../lib/format";
 import { SourceLogo } from "./SourceLogo";
 import { CloseIcon, ExternalIcon } from "./Icons";
@@ -22,6 +23,10 @@ export function ReaderSheet({ cluster, onClose }: Props) {
   const [translating, setTranslating] = useState(false);
   const [translateError, setTranslateError] = useState<string | null>(null);
   const [showOriginal, setShowOriginal] = useState(false);
+
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const gridRef = useRef<HTMLDivElement>(null);
+  useElasticScroll(scrollRef, gridRef);
 
   const article = cluster.articles[selected] ?? cluster.articles[0];
 
@@ -119,8 +124,8 @@ export function ReaderSheet({ cluster, onClose }: Props) {
           </span>
         </div>
 
-        <div className="sheet-body">
-          <div className="reader-grid">
+        <div className="sheet-body" ref={scrollRef}>
+          <div className="reader-grid" ref={gridRef}>
             <article>
               <h1 className="reader-title">{displayTitle}</h1>
               <div className="reader-byline">

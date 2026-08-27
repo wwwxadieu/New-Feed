@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Cluster, Snapshot } from "./lib/types";
 import { api, isDesktop } from "./lib/api";
 import { useTheme } from "./lib/theme";
+import { useElasticScroll } from "./lib/elasticScroll";
 import { formatNumber, hoursSince } from "./lib/format";
 import { Segmented } from "./components/Segmented";
 import { Sidebar } from "./components/Sidebar";
@@ -29,6 +30,10 @@ const SORTS = [
 
 export default function App() {
   const { choice: theme, setChoice: setTheme } = useTheme();
+
+  const feedRef = useRef<HTMLElement>(null);
+  const feedInnerRef = useRef<HTMLDivElement>(null);
+  useElasticScroll(feedRef, feedInnerRef);
 
   const [snapshot, setSnapshot] = useState<Snapshot | null>(null);
   const [topic, setTopic] = useState("all");
@@ -263,7 +268,8 @@ export default function App() {
             </div>
 
             <div className="columns">
-              <main className="feed">
+              <main className="feed" ref={feedRef}>
+                <div className="feed-inner" ref={feedInnerRef}>
                 <div className="feed-head">
                   <div>
                     <h1>{sourceId ? (sourceMap.get(sourceId)?.title ?? "Tổng quan") : "Tổng quan"}</h1>
@@ -304,6 +310,7 @@ export default function App() {
                       />
                     ))
                   )}
+                </div>
                 </div>
               </main>
 
