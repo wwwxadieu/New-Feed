@@ -6,6 +6,7 @@ import { clockTime, formatNumber, relativeTime } from "../lib/format";
 interface Props {
   snapshot: Snapshot;
   clusters: Cluster[];
+  onOpen: (cluster: Cluster) => void;
 }
 
 function Sparkline({ data }: { data: number[] }) {
@@ -60,7 +61,7 @@ function Sparkline({ data }: { data: number[] }) {
   );
 }
 
-export function InsightRail({ snapshot, clusters }: Props) {
+export function InsightRail({ snapshot, clusters, onOpen }: Props) {
   const hot = clusters.slice(0, 5);
   const peak = hot[0]?.score ?? 1;
   const topics = snapshot.topicCounts.slice(0, 7);
@@ -80,18 +81,23 @@ export function InsightRail({ snapshot, clusters }: Props) {
           <p style={{ margin: 0, fontSize: 12.5, color: "var(--label-3)" }}>Chưa có dữ liệu.</p>
         ) : (
           hot.map((cluster, index) => (
-            <div className="hot-row" key={cluster.id}>
+            <button
+              className="hot-row"
+              key={cluster.id}
+              onClick={() => onOpen(cluster)}
+              title="Mở tin này"
+            >
               <span className="rank">{String(index + 1).padStart(2, "0")}</span>
-              <div>
+              <span>
                 <p>{cluster.titleVi?.trim() || cluster.title}</p>
-                <div className="meter">
+                <span className="meter">
                   <i style={{ width: `${Math.round((cluster.score / peak) * 100)}%` }} />
-                </div>
+                </span>
                 <span className="sub">
                   {cluster.sourceCount} nguồn · {relativeTime(cluster.newest)}
                 </span>
-              </div>
-            </div>
+              </span>
+            </button>
           ))
         )}
       </section>

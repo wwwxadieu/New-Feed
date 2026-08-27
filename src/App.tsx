@@ -307,7 +307,7 @@ export default function App() {
                 </div>
               </main>
 
-              {snapshot && <InsightRail snapshot={snapshot} clusters={clusters} />}
+              {snapshot && <InsightRail snapshot={snapshot} clusters={clusters} onOpen={setReader} />}
             </div>
           </div>
 

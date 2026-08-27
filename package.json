@@ -1,7 +1,7 @@
 {
   "name": "news-feed",
   "private": true,
-  "version": "0.3.0",
+  "version": "0.3.1",
   "type": "module",
   "description": "Ứng dụng đọc tin công nghệ dạng dashboard, tổng hợp theo cụm sự kiện.",
   "scripts": {

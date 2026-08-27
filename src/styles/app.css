@@ -96,10 +96,10 @@
 .nav-section { display: flex; flex-direction: column; gap: 2px; }
 .section-title {
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 650;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: var(--label-3);
+  color: var(--label-2);
   padding: 0 10px 6px;
 }
 .nav-item {
@@ -109,7 +109,10 @@
   padding: 7px 10px;
   border-radius: var(--r-sm);
   font-size: 13.5px;
-  color: var(--label-2);
+  /* Danh sách điều hướng là nội dung chính của thanh bên, không phải chữ
+     phụ: dùng mực đầy và nét dày hơn mặc định cho rõ ở cỡ 13,5px. */
+  font-weight: 450;
+  color: var(--label);
   text-align: left;
   transition: background var(--dur-fast) ease, color var(--dur-fast) ease;
 }
@@ -122,10 +125,10 @@
 .nav-item .nav-icon {
   width: 16px; height: 16px; flex: none;
   display: grid; place-items: center;
-  color: var(--label-3);
+  color: var(--label-2);
   transition: color var(--dur-fast) ease, transform var(--dur-base) var(--ease-out);
 }
-.nav-item:hover .nav-icon { color: var(--label-2); }
+.nav-item:hover .nav-icon { color: var(--label); }
 .nav-item[aria-current="true"] .nav-icon { color: currentColor; transform: scale(1.06); }
 
 /* Chấm tròn vẫn dùng cho các mục không thuộc chủ đề. */
@@ -138,7 +141,8 @@
 .nav-item .count {
   margin-left: auto;
   font-size: 11.5px;
-  color: var(--label-3);
+  font-weight: 500;
+  color: var(--label-2);
   font-variant-numeric: tabular-nums;
 }
 .nav-item[aria-current="true"] .count { color: var(--blue); }
@@ -444,12 +448,26 @@
 }
 .panel-head .note { margin-left: auto; font-size: 11px; color: var(--label-3); font-variant-numeric: tabular-nums; }
 
-.hot-row { display: grid; grid-template-columns: 15px minmax(0, 1fr); gap: 9px; padding: 6px 0; }
+/* Mỗi dòng là một nút mở thẳng tin đó, vùng bấm nới rộng hết bề ngang panel. */
+.hot-row {
+  display: grid;
+  grid-template-columns: 15px minmax(0, 1fr);
+  gap: 9px;
+  width: calc(100% + 16px);
+  margin: 0 -8px;
+  padding: 7px 8px;
+  text-align: left;
+  border-radius: var(--r-sm);
+  transition: background var(--dur-fast) ease;
+}
 .hot-row + .hot-row { border-top: 1px solid var(--hairline); }
+.hot-row:hover { background: var(--fill); }
+.hot-row:active { background: var(--fill-strong); }
+.hot-row:hover p { color: var(--blue); }
 .hot-row .rank { font-size: 11px; color: var(--label-3); padding-top: 2px; font-variant-numeric: tabular-nums; }
-.hot-row p { margin: 0 0 6px; font-size: 12.8px; line-height: 1.36; }
+.hot-row p { margin: 0 0 6px; font-size: 12.8px; line-height: 1.36; transition: color var(--dur-fast) ease; }
 .hot-row .sub { font-size: 11px; color: var(--label-3); margin-top: 5px; display: block; }
-.meter { height: 3px; border-radius: 2px; background: var(--fill); overflow: hidden; }
+.meter { display: block; height: 3px; border-radius: 2px; background: var(--fill); overflow: hidden; }
 .meter i { display: block; height: 100%; border-radius: 2px; background: var(--blue); transition: width var(--dur-base) var(--ease-out); }
 .hot-row:first-child .meter i { background: var(--orange); }
 
