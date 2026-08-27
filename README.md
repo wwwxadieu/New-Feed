@@ -1,194 +1,205 @@
+<div align="center">
+
 # News Feed
 
-**[⬇ Tải bản cài Windows](https://github.com/wwwxadieu/New-Feed/releases/latest)** — bộ cài khoảng 2,6 MB.
+**Đọc tin công nghệ dạng dashboard.**
+Gộp tin từ nhiều báo thành cụm sự kiện, đọc bài đã bóc sạch quảng cáo, tự dịch nguồn nước ngoài.
 
-Ứng dụng đọc tin công nghệ dạng dashboard cho Windows. Thay vì xếp bài theo dòng
-thời gian, ứng dụng **gộp các bài viết nói về cùng một sự kiện thành một cụm**,
-rồi cho đọc bài đã bóc tách sạch quảng cáo.
+[![Tải bản cài Windows](https://img.shields.io/github/v/release/wwwxadieu/New-Feed?label=T%E1%BA%A3i%20b%E1%BA%A3n%20c%C3%A0i%20Windows&style=for-the-badge&color=0A84FF)](https://github.com/wwwxadieu/New-Feed/releases/latest)
+![Windows](https://img.shields.io/badge/Windows%2010%2F11-2,6%20MB-555?style=for-the-badge)
 
-## Ý tưởng cốt lõi
+<img src="docs/screenshots/dashboard-light.png" alt="Màn hình tổng quan của News Feed" width="900">
 
-Đơn vị hiển thị là **cụm sự kiện**, không phải bài báo lẻ. Khi 12 tờ báo cùng
-đưa một tin, dashboard hiện một thẻ với dòng "12 nguồn", không phải 12 dòng
-trùng nhau. Đó là lý do dashboard là dạng giao diện đúng cho ứng dụng này —
-nó cho thấy thứ mà một danh sách một cột không diễn đạt được.
+</div>
 
-## Công cụ và lý do chọn
+---
 
-| Thành phần | Lựa chọn | Lý do |
-| --- | --- | --- |
-| Khung ứng dụng | **Tauri v2** | Bộ cài Windows đã đo được **2,6 MB**, dùng WebView2 có sẵn trong Windows. Electron cho cùng chức năng nặng ~120–150 MB. |
-| Backend | **Rust** | Tải nguồn, bóc tách HTML và gộp cụm chạy native, không chặn giao diện. |
-| Giao diện | **React 19 + TypeScript + Vite** | Bundle nhỏ, dựng lại nhanh, kiểu chặt. |
-| Phông chữ | **Inter Variable** (đóng gói kèm) | Hỗ trợ đầy đủ dấu tiếng Việt, tải từ trong ứng dụng nên chạy được offline. |
-| Hiệu ứng | CSS thuần | Không thêm thư viện animation nào — bundle giữ ở mức ~72 KB gzip. |
+## Vì sao có ứng dụng này
 
-Bề mặt đọc là nền đục hoàn toàn, không phải kính mờ: chữ dài không thể đọc
-trên nền trong suốt. Chất liệu kính chỉ dùng cho phần khung (thanh bên, thanh
-công cụ, thẻ tin). Khi mở một bài, cả khung phía sau được làm mờ mềm 13px.
+Theo dõi năm bảy trang tin công nghệ mỗi ngày nghĩa là đọc đi đọc lại cùng một
+sự kiện dưới năm cái tiêu đề khác nhau. Bấm vào bài nào cũng gặp quảng cáo chèn
+giữa đoạn, popup đòi đăng ký nhận bản tin, và banner mời tải ứng dụng. Tin nước
+ngoài thì phải copy sang chỗ khác để dịch.
 
-## Chạy thử
+News Feed gom cả ba việc đó về một chỗ, chạy ngay trên máy bạn.
+
+## Tính năng
+
+### Gộp tin theo cụm sự kiện
+
+Đơn vị hiển thị là **sự kiện**, không phải bài báo lẻ. Khi nhiều báo cùng đưa
+một tin, dashboard hiện một thẻ duy nhất kèm dòng "5 nguồn · VnExpress, GenK,
+TechCrunch +2" thay vì năm dòng trùng nhau. Mở thẻ ra thì chuyển qua lại được
+giữa các nguồn và so tiêu đề của từng báo về cùng một sự kiện.
+
+Đó cũng là lý do giao diện là dashboard chứ không phải danh sách một cột: chỉ
+dashboard mới cho thấy được thứ mà một danh sách tuyến tính không diễn đạt nổi
+— tin nào đang được nhiều nơi nhắc tới, mảng nào đang nóng, mảng nào im ắng.
+
+### Đọc bài đã bóc sạch quảng cáo
+
+<img src="docs/screenshots/reader.png" alt="Màn hình đọc bài" width="880">
+
+Bấm vào một cụm là bài mở ngay trong ứng dụng: chỉ còn chữ và ảnh của bài gốc.
+Quảng cáo, popup, tường thu phí và script theo dõi đều bị loại trước khi hiển
+thị. Ảnh trong bài được giữ nguyên, kể cả ảnh lazy-load mà trình duyệt thường
+phải cuộn tới mới tải.
+
+### Tự dịch nguồn nước ngoài
+
+Tiêu đề và tóm tắt của báo tiếng nước ngoài được dịch sang tiếng Việt ngay
+trong dòng tin, có nhãn *đã dịch* để phân biệt với nguyên văn. Mở bài ra thì
+dịch được cả thân bài bằng một nút bấm, và xem lại nguyên văn bất cứ lúc nào.
+
+Ứng dụng tự nhận ra nguồn nào là tiếng nước ngoài dựa trên dấu chữ quốc ngữ
+trong tiêu đề, không cần khai báo tay.
+
+### Thêm nguồn nào cũng được
+
+<img src="docs/screenshots/sources.png" alt="Quản lý nguồn tin" width="880">
+
+Dán địa chỉ trang chủ là đủ — `vnexpress.net/so-hoa` hay `arstechnica.com` —
+ứng dụng tự dò ra feed. Không tìm thấy thẻ khai báo thì nó suy ra đường dẫn
+theo chuyên mục, kiểu `/rss/{chuyên-mục}.rss` mà báo Việt Nam hay dùng. Dán
+thẳng địa chỉ RSS cũng được.
+
+Mỗi nguồn hiện logo lấy từ chính trang của nó, bật tắt và xoá riêng từng
+nguồn, và báo rõ nguồn nào đang lỗi.
+
+Sáu nguồn có sẵn ngay lần chạy đầu: VnExpress Số hóa, GenK, VietnamNet Công
+nghệ, TechCrunch, The Verge, Ars Technica.
+
+### Tự phân loại chủ đề
+
+Tin được xếp vào **AI & mô hình, Bảo mật, Phần cứng, Điện thoại & thiết bị,
+Game & esports, Startup & vốn, Xe điện, Mạng xã hội, Không gian**. Thanh bên
+lọc theo chủ đề hoặc theo từng nguồn, kèm khoảng thời gian 6 giờ / 24 giờ /
+7 ngày và ô tìm kiếm.
+
+### Giao diện sáng và tối
+
+<img src="docs/screenshots/dashboard-dark.png" alt="Giao diện tối" width="880">
+
+Ba chế độ: theo hệ thống, sáng, tối. Chế độ tự động đổi ngay khi bạn đổi cài
+đặt Windows, không cần khởi động lại. Thiết kế theo hệ màu và chất liệu của
+Apple, phần khung dùng kính mờ còn vùng đọc để nền đục cho dễ đọc chữ dài.
+
+### Chạy hoàn toàn trên máy bạn
+
+Không có máy chủ, không có tài khoản, không thu thập gì. Toàn bộ dữ liệu nằm
+trong `%APPDATA%/app.newsfeed.desktop` trên máy bạn. Ứng dụng chỉ nối mạng để
+tải tin từ chính những nguồn bạn thêm vào.
+
+Bản cài **2,6 MB**, chạy tốn khoảng 80 MB RAM.
+
+## Cài đặt
+
+Tải bộ cài ở [trang phát hành](https://github.com/wwwxadieu/New-Feed/releases/latest):
+
+- **`.exe`** — bộ cài thường dùng, chạy là xong
+- **`.msi`** — gói MSI, dùng khi triển khai qua chính sách nhóm
+
+Bộ cài có trang chọn thư mục nên đổi được nơi cài. Mặc định là
+`%LOCALAPPDATA%\News Feed`, cài cho riêng người dùng hiện tại nên không cần
+quyền quản trị và không hiện hộp thoại UAC.
+
+Yêu cầu: Windows 10 hoặc 11. Không cần cài .NET hay runtime nào khác —
+WebView2 đã có sẵn trong hệ điều hành.
+
+## Dựng từ mã nguồn
 
 ```bash
 npm install
 
-# Xem giao diện trong trình duyệt với dữ liệu mẫu (không cần Rust)
+# Xem giao diện trong trình duyệt với dữ liệu mẫu, không cần Rust
 npm run dev
 
-# Chạy ứng dụng desktop thật, có tải tin và bóc tách bài
+# Chạy ứng dụng desktop thật
 npm run app:dev
-```
 
-`npm run dev` mở ở <http://localhost:1420> với dữ liệu minh hoạ. Chức năng thêm
-nguồn và đọc bài thật chỉ hoạt động ở chế độ desktop.
-
-## Dựng bản cài Windows
-
-**Cách 1 — trên máy Windows.** Cần [Rust](https://rustup.rs) và
-[Visual Studio Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/)
-(chọn "Desktop development with C++"):
-
-```bash
-npm install
+# Dựng bộ cài (cần Rust và Visual Studio Build Tools)
 npm run app:build
 ```
 
-### Kích thước đã đo
+Không muốn cài Rust thì đẩy nhánh lên GitHub, workflow
+`.github/workflows/build-windows.yml` tự dựng trên máy ảo Windows và đính bộ
+cài vào phần Artifacts.
 
-Số liệu từ bản phát hành v0.1.0 dựng trên máy ảo Windows:
+## Công cụ
 
-| Tệp | Kích thước |
-| --- | --- |
-| `News.Feed_0.1.0_x64-setup.exe` (bộ cài NSIS) | **2,6 MB** |
-| `News.Feed_0.1.0_x64_en-US.msi` (gói MSI) | **3,4 MB** |
+| Thành phần | Lựa chọn | Lý do |
+| --- | --- | --- |
+| Khung ứng dụng | **Tauri v2** | Bộ cài 2,6 MB, dùng WebView2 có sẵn trong Windows. Electron cho cùng chức năng nặng 120–150 MB. |
+| Backend | **Rust** | Tải nguồn, bóc tách HTML và gộp cụm chạy native, không chặn giao diện. |
+| Giao diện | **React 19 + TypeScript + Vite** | Bundle 72 KB gzip, dựng lại nhanh, kiểu chặt. |
+| Phông chữ | **Inter Variable** đóng gói kèm | Đủ bộ dấu tiếng Việt, chạy được offline. |
+| Hiệu ứng | CSS thuần | Không thêm thư viện animation nào. |
 
-Bản chạy dựng trên Linux là 8,2 MB vì phải liên kết GTK/WebKit; trên Windows
-không cần vì WebView2 đã có sẵn trong hệ điều hành. Cấu hình release dùng
-`opt-level = "s"`, LTO, `panic = "abort"` và strip symbol.
-
-Kết quả nằm ở `src-tauri/target/release/bundle/`:
-
-- `nsis/News Feed_0.1.0_x64-setup.exe` — bộ cài
-- `msi/News Feed_0.1.0_x64_en-US.msi` — gói MSI
-- `News Feed.exe` — bản chạy trực tiếp
-
-**Cách 2 — không cần cài gì.** Đẩy nhánh lên GitHub, workflow
-`.github/workflows/build-windows.yml` sẽ tự dựng trên máy ảo Windows và đính
-kèm bộ cài vào phần Artifacts của lần chạy đó.
-
-## Thanh bên
-
-Chủ đề và nguồn tin là hai cách cắt lát cùng một dòng tin, nằm ở hai khối
-tách nhau bằng một đường kẻ mảnh. Chọn một chủ đề sẽ bỏ bộ lọc nguồn và
-ngược lại, nên không bao giờ rơi vào trạng thái lọc chồng lọc ra danh sách
-rỗng mà không rõ vì sao.
-
-## Bố cục cửa sổ
-
-Thanh công cụ chạy hết bề ngang vùng nội dung thay vì dừng ở ranh giới cột
-giữa. Dừng giữa chừng thì nền của nó tạo một cạnh dọc cứng, và panel bên
-phải dựng ngay sát cạnh đó — hai khối chạm nhau không có khoảng thở. Cho
-thanh công cụ chạy hết bề ngang thì cột phải nằm hẳn bên dưới nó.
-
-## Cửa sổ rộng
-
-Cột giữa có giới hạn bề ngang. Không giới hạn thì trên màn hình rộng, dòng
-tiêu đề kéo dài quá tầm mắt và thẻ tin biến thành một dải gần như trống —
-đo ở khổ 2336px thì thẻ rộng 1724px và tiêu đề 1489px. Từ 1700px trở lên,
-dòng tin xếp thành hai cột, mỗi thẻ giữ khổ xấp xỉ như ở cửa sổ thường.
-
-## Về bộ cài Windows
-
-Bộ cài có trang **Choose Install Location** nên chọn được thư mục cài. Mặc
-định là `%LOCALAPPDATA%\News Feed` — cài cho riêng người dùng hiện tại nên
-không cần quyền quản trị và không hiện hộp thoại UAC.
-
-Muốn cài vào `Program Files` cho mọi người dùng thì đổi `installMode` trong
-`src-tauri/tauri.conf.json` thành `"both"`; khi đó bộ cài có thêm một trang
-cho người dùng chọn cài cho riêng mình hay cho cả máy, đổi lại là sẽ có hộp
-thoại UAC khi chọn cài cho cả máy.
-
-## Phát hành phiên bản mới
-
-Nâng số phiên bản ở `package.json` và `src-tauri/tauri.conf.json` cho khớp
-nhau, rồi làm một trong hai cách:
-
-```bash
-# Cách thường: gắn thẻ và đẩy lên
-git tag -a v0.2.0 -m "News Feed v0.2.0"
-git push origin v0.2.0
-```
-
-Hoặc vào tab **Actions → Phát hành → Run workflow**, nhập số phiên bản (không
-kèm chữ `v`). Cách chạy tay có ích khi token chỉ có quyền ghi nhánh mà không
-đẩy được thẻ. Cả hai đều dựng bản Windows, chạy kiểm thử, rồi tạo bản phát
-hành kèm bộ cài `.exe` và gói `.msi`.
-
-## Cách hoạt động
+## Cách hoạt động bên trong
 
 ```
 Thêm nguồn ──► dò feed ──► đọc feed ──► gộp cụm ──► dashboard
-   (URL bất kỳ)   (tự tìm RSS)  (feed-rs)   (Jaccard có trọng số)
-                                                       │
-                                            mở một cụm ─┴──► tải trang bài
-                                                              ──► bóc tách
-                                                              ──► đọc sạch
+  (URL bất kỳ)  (tự tìm RSS)  (feed-rs)  (chồng lấn có trọng số)
+                                                      │
+                                           mở một cụm ─┴──► tải trang bài
+                                                            ──► bóc tách
+                                                            ──► đọc sạch
 ```
 
-**Dò feed.** Dán địa chỉ trang chủ là đủ; ứng dụng tìm thẻ
-`<link rel="alternate">`, nếu không có thì thử các đường dẫn quen thuộc
-(`/feed`, `/rss.xml`, …). Dán thẳng địa chỉ RSS cũng được.
+**Dò feed** (`src-tauri/src/fetcher.rs`). Tìm thẻ
+`<link rel="alternate">`, không có thì suy ra đường dẫn theo chuyên mục rồi
+thử các đường dẫn quen thuộc. Luôn bám theo địa chỉ sau chuyển hướng, nên
+trang đổi tên chuyên mục vẫn dò được.
+
+**Ảnh bài.** Mỗi báo mang ảnh một kiểu nên phải thử lần lượt: thẻ
+`<media:content>`, rồi `<enclosure>` (VnExpress), rồi thẻ `<img>` đầu tiên
+trong phần mô tả (GenK). Nguồn nào không kèm ảnh trong feed thì đọc `og:image`
+của trang bài — chỉ tải phần đầu trang rồi dừng ngay khi hết `<head>`. Đo trên
+sáu nguồn mặc định: 125/125 bài có ảnh.
+
+**Logo nguồn.** Lấy icon từ chính trang của nguồn, ưu tiên `apple-touch-icon`
+vì thường là PNG 180px, rồi tới `<link rel="icon">`, cuối cùng `/favicon.ico`.
+Ảnh nhúng thẳng vào dữ liệu dạng data URI nên hiện được cả khi offline.
 
 **Gộp cụm** (`src-tauri/src/cluster.rs`). Tách tiêu đề thành từ, bỏ từ dừng
-tiếng Việt và tiếng Anh, tính Jaccard có trọng số — từ càng hiếm trong toàn bộ
-kho tin thì càng nặng, nên tên riêng quyết định việc gộp. Hai bài cách nhau quá
-72 giờ không gộp dù tiêu đề giống nhau.
+tiếng Việt và tiếng Anh, tính hệ số chồng lấn có trọng số IDF làm trơn — từ
+càng hiếm trong kho tin thì càng nặng, nên tên riêng quyết định việc gộp. Dùng
+`min(a, b)` làm mẫu số thay vì hợp của hai tập, vì hai bản tin về cùng sự kiện
+thường khác nhau đáng kể về độ dài tiêu đề và Jaccard phạt chênh lệch đó quá
+nặng. Hai bài cách nhau quá 72 giờ thì không gộp dù tiêu đề giống nhau.
 
-**Bóc tách** (`src-tauri/src/extract.rs`). Xoá thẻ script/iframe/nav/footer, xoá
-phần tử có lớp hoặc id khớp mẫu quảng cáo, popup và tường thu phí, rồi chọn
-khối có mật độ chữ cao nhất làm thân bài. Ảnh được lấy cả từ `data-src` và
-`srcset`. Số khối bị loại bỏ vẫn được đếm và trả về trong `CleanedArticle`,
-nhưng không hiển thị trên màn hình đọc — trang đọc chỉ có nội dung bài.
+**Phân loại chủ đề.** Bảng từ khoá, xét chủ đề hẹp trước chủ đề rộng. Thứ tự
+có ý nghĩa: game đứng trước nhóm thiết bị để tin về PS5 hay tai nghe chơi game
+không bị nhóm thiết bị bắt trước, và cả hai đứng trước AI vì gần như mọi tin
+công nghệ bây giờ đều nhắc tới AI ở đâu đó.
 
-**Ảnh bài.** Mỗi báo mang ảnh một kiểu khác nhau, nên phải thử lần lượt:
-thẻ `<media:content>`/`<media:thumbnail>` chuẩn, rồi `<enclosure>`
-(VnExpress), rồi thẻ `<img>` đầu tiên trong phần mô tả (GenK). Nguồn nào
-không kèm ảnh trong feed (TechCrunch, The Verge) thì đọc `og:image` của
-trang bài — chỉ tải phần đầu trang rồi dừng ngay khi hết `<head>`, nên bù
-ảnh cho hàng chục bài không làm chậm lượt làm mới. Đo trên sáu nguồn mặc
-định: 125/125 bài có ảnh.
+**Bóc tách** (`src-tauri/src/extract.rs`). Xoá thẻ script/iframe/nav/footer,
+xoá phần tử có lớp hoặc id khớp mẫu quảng cáo, popup và tường thu phí, rồi
+chọn khối có mật độ chữ cao nhất làm thân bài.
 
-**Dịch nguồn nước ngoài.** Ngôn ngữ được nhận diện theo nguồn, dựa trên dấu
-riêng của chữ quốc ngữ trong tiêu đề. Nguồn nào không phải tiếng Việt thì
-tiêu đề và tóm tắt được dịch tự động qua
-[MyMemory](https://mymemory.translated.net) — dịch vụ dịch máy có tài liệu
-công khai, **không cần khoá API và không dùng mô hình ngôn ngữ lớn**. Toàn
-văn bài được dịch theo yêu cầu bằng nút ở màn hình đọc.
+**Dịch** (`src-tauri/src/translate.rs`). Dùng MyMemory — dịch vụ có tài liệu
+công khai, không cần khoá API và không dùng mô hình ngôn ngữ lớn. Hạn mức miễn
+phí tính theo ký tự mỗi ngày nên việc dịch được cấp phát theo hạn ngạch ký tự
+thay vì đếm số bài, và tiêu đề với tóm tắt của cùng một bài đi liền nhau để
+thẻ tin không bị nửa Việt nửa Anh. Khai một địa chỉ email trong phần Nguồn tin
+sẽ nâng hạn mức từ 5.000 lên 50.000 ký tự mỗi ngày.
 
-Hạn mức miễn phí tính theo ký tự mỗi ngày (5.000 khi ẩn danh, 50.000 nếu
-khai một địa chỉ email trong phần Nguồn tin), nên mỗi lượt làm mới cấp phát
-theo **hạn ngạch ký tự** thay vì đếm số bài: tiêu đề và tóm tắt của cùng một
-bài luôn đi liền nhau để thẻ tin không nửa Việt nửa Anh, và việc dịch dừng
-đúng ngưỡng rồi tiếp tục ở lượt sau. Bản dịch được lưu lại nên không bao giờ
-phải dịch lại. Tiêu đề đã dịch có nhãn "đã dịch" và rê chuột lên sẽ thấy
-nguyên văn.
+**Lưu trữ.** JSON trong thư mục cấu hình của người dùng, ghi ra file tạm rồi
+đổi tên nên mất điện giữa chừng không làm hỏng dữ liệu.
 
-**Chủ đề.** Phân loại bằng bảng từ khoá trong `classify()`, xét chủ đề hẹp
-trước chủ đề rộng. Thứ tự có ý nghĩa: game đứng trước nhóm thiết bị để tin
-về PS5 hay tai nghe chơi game không bị nhóm thiết bị bắt trước, và cả hai
-đứng trước AI vì gần như mọi tin công nghệ bây giờ đều nhắc tới AI ở đâu đó.
-Bảng từ khoá game tránh dùng riêng chữ "game" vì tiếng Anh hay có
-"game-changer" chẳng liên quan tới trò chơi.
+## Kiểm thử
 
-**Logo nguồn.** Mỗi nguồn được lấy icon từ chính trang của nó (ưu tiên
-`apple-touch-icon` vì thường là PNG 180px, sau đó tới `<link rel="icon">`, cuối
-cùng là `/favicon.ico`) rồi nhúng thẳng vào dữ liệu dạng data URI. Nhờ vậy huy
-hiệu nguồn vẫn hiện khi không có mạng và không phải gọi ra ngoài mỗi lần vẽ
-lại. Nguồn nào chưa lấy được thì lùi về chữ viết tắt của tên báo.
+```bash
+# Kiểm thử logic bóc tách, gộp cụm, phân loại và dịch (không cần mạng)
+cargo test --manifest-path src-tauri/Cargo.toml
 
-**Lưu trữ.** Toàn bộ dữ liệu nằm trong `%APPDATA%/app.newsfeed.desktop/state.json`
-trên máy người dùng. Không có máy chủ, không có tài khoản, không gửi dữ liệu đi
-đâu cả.
+# Kiểm thử đường ống thật với trang tin thật (có chạm mạng)
+cargo test --manifest-path src-tauri/Cargo.toml -- --ignored --nocapture
+```
+
+Kiểm thử chạm mạng chạy trọn vòng với ba trang thật: dò feed từ địa chỉ trang
+chủ, đọc feed, tải một bài rồi bóc tách, và in ra số từ, số ảnh, tỷ lệ bài có
+ảnh cùng số khối quảng cáo đã loại bỏ.
 
 ## Cấu trúc
 
@@ -199,9 +210,10 @@ src/                    Giao diện React
   styles/               Token thiết kế và CSS
 src-tauri/src/
   lib.rs                Các lệnh Tauri, trạng thái ứng dụng
-  fetcher.rs            Dò feed, tải nguồn, tải bài
+  fetcher.rs            Dò feed, tải nguồn, tải bài, lấy logo và ảnh
   extract.rs            Bóc tách nội dung, loại quảng cáo
   cluster.rs            Gộp cụm sự kiện, phân loại chủ đề
+  translate.rs          Dịch sang tiếng Việt, nhận diện ngôn ngữ
   store.rs              Lưu/đọc trạng thái ra đĩa
 ```
 
@@ -210,20 +222,6 @@ src-tauri/src/
 Ứng dụng tải và hiển thị toàn văn bài viết sau khi loại quảng cáo. Với sử dụng
 cá nhân thì đây là chuyện bình thường, tương đương chế độ Reader của trình
 duyệt. Nếu định phát hành rộng rãi, cần cân nhắc: hiển thị toàn văn bài có bản
-quyền đồng thời loại bỏ phần tạo doanh thu của toà soạn là rủi ro pháp lý thực.
-Hướng an toàn hơn là bóc tách toàn văn ở phía sau để phục vụ gộp cụm và tóm
-tắt, còn phía trước chỉ hiện tóm tắt tổng hợp kèm link về bài gốc.
-
-## Kiểm thử
-
-```bash
-# Kiểm thử logic bóc tách và gộp cụm (không cần mạng)
-cargo test --manifest-path src-tauri/Cargo.toml
-
-# Kiểm thử đường ống thật với trang tin thật (có chạm mạng)
-cargo test --manifest-path src-tauri/Cargo.toml -- --ignored --nocapture
-```
-
-Kiểm thử chạm mạng chạy trọn vòng với ba trang thật (VnExpress, GenK, Ars
-Technica): dò feed từ địa chỉ trang chủ, đọc feed, tải một bài rồi bóc tách,
-và in ra số từ, số ảnh cùng số khối quảng cáo đã loại bỏ.
+quyền đồng thời loại bỏ phần tạo doanh thu của toà soạn là rủi ro pháp lý
+thực. Hướng an toàn hơn là bóc tách toàn văn ở phía sau để phục vụ gộp cụm và
+tóm tắt, còn phía trước chỉ hiện tóm tắt tổng hợp kèm link về bài gốc.
