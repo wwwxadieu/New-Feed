@@ -1,4 +1,5 @@
 mod cluster;
+mod embedded;
 mod extract;
 mod fetcher;
 mod model;

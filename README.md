@@ -191,11 +191,29 @@ thật: 1.484 KB còn 168 KB, tức 11%. Ảnh của bài đã bị đẩy khỏ
 theo trong mỗi lượt làm mới.
 
 **Nguồn dựng bằng JavaScript.** Có trang, ví dụ tinhte.vn, đưa thân bài vào
-một khối JSON và chỉ hiện ra sau khi trình duyệt chạy mã, nên bóc tách từ
-HTML tĩnh không thấy gì. Khi bóc được dưới 120 từ, ứng dụng chuyển sang dùng
-nội dung của feed và ghi rõ trên màn hình đọc rằng đây chỉ là phần đầu bài.
-Lấy được toàn văn những trang này đòi hỏi nhúng trình duyệt không giao diện,
-cái giá quá lớn so với một ứng dụng 2,6 MB.
+một khối JSON và chỉ dựng ra HTML sau khi trình duyệt chạy mã, nên bóc tách
+theo mật độ chữ không thấy gì. Nhưng khối JSON đó nằm ngay trong HTML trả về,
+trong thẻ `<script id="__NEXT_DATA__">`, lấy được bằng một lượt tải bình
+thường. Khi bóc được dưới 120 từ, ứng dụng đọc tiếp khối này; không có thì
+mới lùi về nội dung của feed và ghi rõ đây chỉ là phần đầu bài.
+
+Chọn đúng bài trong khối JSON là phần khó. Khối này còn chứa bài liên quan,
+tin nổi bật và sự kiện, và chúng thường dài hơn bài đang đọc — đo trên
+tinhte.vn thì chuỗi HTML dài nhất là một bài sự kiện 58 KB chẳng liên quan
+gì. Nên không chọn theo độ dài mà neo theo tiêu đề: tìm nút mang tiêu đề
+khớp với tiêu đề trang rồi mới lấy thân bài bên trong nút đó, không khớp
+được thì trả về rỗng chứ không đoán bừa.
+
+Thân bài của các trang này thường không có thẻ `<p>` nào — một bài review
+2.577 từ chỉ gồm `<br>`, `<h2>`, `<li>` và `<img>` — nên phải duyệt cây theo
+đúng thứ tự tài liệu và hiểu hai thẻ `<br>` liên tiếp là hết đoạn. Lọc theo
+bộ chọn thẻ khối như trước sẽ lấy được tiêu đề phụ với danh sách rồi bỏ mất
+toàn bộ phần chữ chính, mà vẫn trông như đã thành công.
+
+Ảnh cũng phải lấy từ `data-permalink` chứ không phải `src`: `src` của
+tinhte.vn là địa chỉ kèm token hết hạn, tải về trả mã 307 với 0 byte. Đo
+trên sáu bài mới nhất: cả 6 ra toàn văn thay vì tóm tắt, và 7/7 ảnh của bài
+review tải được thật.
 
 **Logo nguồn.** Lấy icon từ chính trang của nguồn, ưu tiên `apple-touch-icon`
 vì thường là PNG 180px, rồi tới `<link rel="icon">`, cuối cùng `/favicon.ico`.

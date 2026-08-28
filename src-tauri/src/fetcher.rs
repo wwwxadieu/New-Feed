@@ -466,17 +466,42 @@ pub async fn fetch_og_image(client: &reqwest::Client, article_url: &str) -> Opti
 }
 
 /// Tải trang bài viết và trả về nội dung đã làm sạch.
+/// Dưới ngưỡng này thì coi như chưa lấy được bài và đi tìm đường khác.
+const THIN_ARTICLE_WORDS: usize = 120;
+
 pub async fn fetch_article(client: &reqwest::Client, article_url: &str) -> Result<CleanedArticle, String> {
     let base = Url::parse(article_url).map_err(|_| format!("Địa chỉ bài không hợp lệ: {article_url}"))?;
     let body = get_text(client, article_url).await?;
-    Ok(crate::extract::extract(&body, &base))
+    let cleaned = crate::extract::extract(&body, &base);
+    if cleaned.word_count >= THIN_ARTICLE_WORDS {
+        return Ok(cleaned);
+    }
+
+    // Bóc tách theo mật độ chữ không ra gì thì thử khối JSON trang nhúng sẵn.
+    // Đây là các trang dựng nội dung bằng JavaScript: HTML gần như rỗng chữ
+    // nhưng dữ liệu để dựng trang vẫn nằm ngay trong đó.
+    let Some(embedded_html) = crate::embedded::article_body(&body) else {
+        return Ok(cleaned);
+    };
+    let mut rich = crate::extract::from_body_html(&embedded_html, &base);
+    if rich.word_count <= cleaned.word_count {
+        return Ok(cleaned);
+    }
+
+    // Ảnh đại diện và tác giả vẫn lấy từ thẻ meta của trang, khối JSON không có.
+    rich.lead_image = cleaned.lead_image;
+    rich.byline = cleaned.byline;
+    rich.removed_ads = cleaned.removed_ads;
+    rich.removed_popups = cleaned.removed_popups;
+    rich.removed_trackers = cleaned.removed_trackers;
+    Ok(rich)
 }
 
 /// Giải mã thực thể HTML trong tiêu đề và mô tả của feed.
 ///
 /// Nhiều feed đưa dấu nháy và gạch ngang dưới dạng &#8216; hay &mdash;.
 /// Không giải mã thì tiêu đề hiện ra thô và bản dịch cũng lệch theo.
-fn decode_entities(input: &str) -> String {
+pub(crate) fn decode_entities(input: &str) -> String {
     if !input.contains('&') {
         return input.to_string();
     }
@@ -569,6 +594,97 @@ mod tests {
         assert_eq!(brand_name("Tổng hợp tin tức Khoa học công nghệ mới nhất | VnExpress"), "VnExpress");
         // Tên vốn đã gọn thì giữ nguyên.
         assert_eq!(brand_name("TechCrunch"), "TechCrunch");
+    }
+
+    /// Ảnh trong bài phải tải được thật.
+    ///
+    /// tinhte.vn đặt src là địa chỉ kèm token hết hạn, dùng nó thì ảnh hỏng
+    /// hết mà không có lỗi nào báo ra. Chạm mạng thật nên bị bỏ qua thường lệ.
+    #[tokio::test]
+    #[ignore]
+    async fn anh_trong_bai_tai_duoc_that() {
+        let client = client().expect("tạo client");
+        let cleaned = fetch_article(
+            &client,
+            "https://tinhte.vn/thread/review-macbook-pro-m3-max-16-inch-con-quai-vat-minh-dung-de-cay-viec-nang-suot-mot-nam-qua.4152062/",
+        )
+        .await
+        .expect("đọc được bài");
+
+        assert!(!cleaned.images.is_empty(), "bài này phải có ảnh");
+        let mut ok = 0usize;
+        for src in &cleaned.images {
+            let good = match client.get(src).send().await {
+                Ok(res) => {
+                    let status = res.status().as_u16();
+                    let bytes = res.bytes().await.map(|b| b.len()).unwrap_or(0);
+                    println!("  {status} {bytes:>8} byte  {}", &src[..src.len().min(78)]);
+                    status == 200 && bytes > 1000
+                }
+                Err(e) => {
+                    println!("  lỗi {e}");
+                    false
+                }
+            };
+            if good {
+                ok += 1;
+            }
+        }
+        println!("  ảnh tải được: {ok}/{}", cleaned.images.len());
+        assert_eq!(ok, cleaned.images.len(), "mọi ảnh trong bài đều phải tải được");
+    }
+
+    /// Trang dựng nội dung bằng JavaScript phải ra toàn văn, không phải tóm tắt.
+    ///
+    /// Chạm mạng thật nên bị bỏ qua ở lần chạy thường.
+    /// Chạy bằng: `cargo test -- --ignored --nocapture`
+    #[tokio::test]
+    #[ignore]
+    async fn lay_duoc_toan_van_tu_trang_dung_bang_javascript() {
+        let client = client().expect("tạo client");
+        let source = crate::model::Source {
+            id: "tinhte".into(),
+            title: "Tinhte.vn".into(),
+            home_url: "https://tinhte.vn".into(),
+            feed_url: "https://tinhte.vn/rss".into(),
+            enabled: true,
+            added_at: String::new(),
+            last_fetched: None,
+            last_error: None,
+            article_count: 0,
+            logo: None,
+            language: None,
+        };
+
+        let articles = fetch_source(&client, &source, 6).await.expect("đọc được feed");
+        assert!(!articles.is_empty(), "feed tinhte.vn phải có bài");
+
+        let mut full = 0usize;
+        for article in &articles {
+            let words_in_feed = article
+                .content_html
+                .as_deref()
+                .map(|h| crate::extract::from_fragment(h, &Url::parse(&article.url).unwrap()).word_count)
+                .unwrap_or(0);
+            let cleaned = fetch_article(&client, &article.url).await.expect("đọc được bài");
+            println!(
+                "  {:5} từ (feed cho {:4}) {:2} ảnh  {}",
+                cleaned.word_count,
+                words_in_feed,
+                cleaned.images.len(),
+                article.title.chars().take(52).collect::<String>()
+            );
+            if !cleaned.partial && cleaned.word_count > words_in_feed {
+                full += 1;
+            }
+        }
+
+        println!("  lấy được toàn văn: {full}/{}", articles.len());
+        assert!(
+            full * 2 > articles.len(),
+            "quá nửa số bài phải ra toàn văn, hiện chỉ {full}/{}",
+            articles.len()
+        );
     }
 
     /// Kiểm thử chạm mạng thật, nên bị bỏ qua ở lần chạy thường.

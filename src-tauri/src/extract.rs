@@ -1,6 +1,8 @@
 //! Bóc tách nội dung bài viết: loại quảng cáo/popup/script theo dõi, giữ lại chữ và ảnh.
 
 use crate::model::{Block, CleanedArticle};
+use ego_tree::NodeRef;
+use scraper::node::Node;
 use scraper::{ElementRef, Html, Selector};
 use url::Url;
 
@@ -42,9 +44,26 @@ fn meta_content(doc: &Html, selector: &str) -> Option<String> {
         .filter(|s| !s.is_empty())
 }
 
+/// Đúng khi địa chỉ trỏ thẳng tới một tệp ảnh.
+fn looks_like_image(raw: &str) -> bool {
+    let path = raw.split(['?', '#']).next().unwrap_or_default().to_ascii_lowercase();
+    [".jpg", ".jpeg", ".png", ".gif", ".webp", ".avif"].iter().any(|ext| path.ends_with(ext))
+}
+
 /// Lấy nguồn ảnh thật, có tính tới lazy-load và srcset.
 fn image_src(el: &scraper::ElementRef, base: &Url) -> Option<String> {
     let v = el.value();
+
+    // Có diễn đàn đặt src là địa chỉ kèm token hết hạn: đo trên tinhte.vn thì
+    // src trả về 307 với 0 byte, còn ảnh thật nằm ở data-permalink. Chỉ nhận
+    // khi đuôi đúng là ảnh, để thuộc tính này không cướp mất src ở những trang
+    // dùng nó trỏ tới bài viết chứ không phải tệp ảnh.
+    if let Some(raw) = v.attr("data-permalink").filter(|raw| looks_like_image(raw)) {
+        if let Some(abs) = absolutize(base, raw) {
+            return Some(abs);
+        }
+    }
+
     for attr in ["src", "data-src", "data-original", "data-lazy-src", "data-echo"] {
         if let Some(raw) = v.attr(attr) {
             if let Some(abs) = absolutize(base, raw) {
@@ -61,6 +80,169 @@ fn image_src(el: &scraper::ElementRef, base: &Url) -> Option<String> {
         }
     }
     None
+}
+
+
+/// Thẻ chỉ mang định dạng, đi xuyên qua để lấy chữ bên trong.
+const SKIP_TAGS: &[&str] = &["script", "style", "noscript", "iframe", "embed", "object", "svg", "button", "form"];
+
+/// Thẻ mở ra một khối mới: phải chốt đoạn đang gom trước khi đi vào.
+const WRAPPER_TAGS: &[&str] = &["p", "div", "section", "article", "ul", "ol", "table", "tr", "figure", "header"];
+
+/// Số ký tự tối thiểu để một đoạn được giữ lại.
+const MIN_BLOCK_CHARS: usize = 25;
+
+/// Gom chữ và ảnh theo đúng thứ tự xuất hiện trong tài liệu.
+struct Walker<'a> {
+    base: &'a Url,
+    blocks: Vec<Block>,
+    images: Vec<String>,
+    buf: String,
+    /// Số thẻ <br> liên tiếp vừa gặp mà chưa có chữ nào theo sau.
+    breaks: usize,
+}
+
+impl<'a> Walker<'a> {
+    fn new(base: &'a Url) -> Self {
+        Walker { base, blocks: Vec::new(), images: Vec::new(), buf: String::new(), breaks: 0 }
+    }
+
+    /// Chốt đoạn đang gom thành một khối.
+    fn flush(&mut self) {
+        let text = self.buf.split_whitespace().collect::<Vec<_>>().join(" ");
+        self.buf.clear();
+        self.breaks = 0;
+        if text.chars().count() >= MIN_BLOCK_CHARS {
+            self.blocks.push(Block::Paragraph { text });
+        }
+    }
+
+    fn push_text(&mut self, raw: &str) {
+        if raw.trim().is_empty() {
+            return;
+        }
+        // Hai thẻ <br> trở lên là hết đoạn; một thẻ chỉ là xuống dòng.
+        if self.breaks >= 2 {
+            self.flush();
+        } else if self.breaks == 1 && !self.buf.is_empty() {
+            self.buf.push(' ');
+        }
+        self.breaks = 0;
+        if !self.buf.is_empty() && !self.buf.ends_with(' ') {
+            self.buf.push(' ');
+        }
+        self.buf.push_str(raw);
+    }
+
+    fn push_titled(&mut self, el: ElementRef<'_>, heading: bool) {
+        self.flush();
+        let text = el.text().collect::<String>().split_whitespace().collect::<Vec<_>>().join(" ");
+        if text.chars().count() < MIN_BLOCK_CHARS {
+            return;
+        }
+        self.blocks.push(if heading { Block::Heading { text } } else { Block::Quote { text } });
+    }
+
+    fn walk(&mut self, node: NodeRef<'_, Node>) {
+        match node.value() {
+            Node::Text(text) => self.push_text(text),
+            Node::Element(element) => {
+                let tag = element.name();
+                if SKIP_TAGS.contains(&tag) {
+                    return;
+                }
+                let Some(el) = ElementRef::wrap(node) else { return };
+                match tag {
+                    "br" => {
+                        self.breaks += 1;
+                        return;
+                    }
+                    "img" => {
+                        self.flush();
+                        if let Some(src) = image_src(&el, self.base) {
+                            if !self.images.contains(&src) {
+                                self.images.push(src.clone());
+                                self.blocks.push(Block::Image { src });
+                            }
+                        }
+                        return;
+                    }
+                    "h1" | "h2" | "h3" | "h4" | "h5" | "h6" => {
+                        self.push_titled(el, true);
+                        return;
+                    }
+                    "blockquote" => {
+                        self.push_titled(el, false);
+                        return;
+                    }
+                    "li" => {
+                        self.flush();
+                        for child in node.children() {
+                            self.walk(child);
+                        }
+                        self.flush();
+                        return;
+                    }
+                    _ => {}
+                }
+                let boundary = WRAPPER_TAGS.contains(&tag);
+                if boundary {
+                    self.flush();
+                }
+                for child in node.children() {
+                    self.walk(child);
+                }
+                if boundary {
+                    self.flush();
+                }
+            }
+            _ => {
+                for child in node.children() {
+                    self.walk(child);
+                }
+            }
+        }
+    }
+}
+
+/// Dựng khối từ một đoạn HTML đã biết chắc là toàn văn thân bài.
+///
+/// Khác from_fragment ở chỗ đi theo thứ tự tài liệu thay vì lọc theo bộ chọn
+/// thẻ khối. Cần thế vì thân bài của diễn đàn thường không có thẻ <p> nào:
+/// đo trên tinhte.vn thì một bài review 2.577 từ chỉ có <br>, <h2>, <li> và
+/// <img>. Lọc theo bộ chọn ở đó sẽ lấy được tiêu đề phụ với danh sách rồi bỏ
+/// mất toàn bộ phần chữ chính, mà vẫn trông như đã bóc tách thành công.
+pub fn from_body_html(html_src: &str, base: &Url) -> CleanedArticle {
+    let fragment = Html::parse_fragment(html_src);
+    let mut walker = Walker::new(base);
+    walker.walk(*fragment.root_element());
+    walker.flush();
+
+    let word_count = count_words(&walker.blocks);
+    CleanedArticle {
+        blocks: walker.blocks,
+        images: walker.images,
+        lead_image: None,
+        byline: None,
+        word_count,
+        read_minutes: (word_count / 200).max(1),
+        removed_ads: 0,
+        removed_popups: 0,
+        removed_trackers: 0,
+        partial: false,
+    }
+}
+
+fn count_words(blocks: &[Block]) -> usize {
+    blocks
+        .iter()
+        .map(|b| match b {
+            Block::Paragraph { text } | Block::Heading { text } | Block::Quote { text } => {
+                text.split_whitespace().count()
+            }
+            Block::Image { .. } => 0,
+        })
+        .sum()
 }
 
 /// Dựng khối nội dung từ một đoạn HTML đã biết chắc là thân bài.

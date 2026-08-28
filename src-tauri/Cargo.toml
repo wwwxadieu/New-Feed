@@ -1,6 +1,6 @@
 [package]
 name = "news-feed"
-version = "0.6.1"
+version = "0.7.0"
 description = "Ứng dụng đọc tin công nghệ dạng dashboard"
 authors = ["News Feed"]
 edition = "2021"
@@ -26,6 +26,10 @@ url = "2"
 base64 = "0.22"
 image = { version = "0.25", default-features = false, features = ["jpeg", "png", "webp", "gif"] }
 scraper = "0.23"
+# Cùng phiên bản scraper 0.23 đang dùng, để kiểu cây dùng chung được. scraper
+# không tái xuất ego_tree nên phải khai báo thẳng thì mới duyệt cây theo đúng
+# thứ tự tài liệu được.
+ego-tree = "0.10"
 feed-rs = "2"
 
 [dependencies.reqwest]
