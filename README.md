@@ -78,7 +78,7 @@ lại từng nguồn đã đề nghị một lần, nên nguồn bạn cố ý x
 ### Tự phân loại chủ đề
 
 Tin được xếp vào **AI & mô hình, Bảo mật, Phần cứng, Điện thoại & thiết bị,
-Game & esports, Startup & vốn, Xe điện, Mạng xã hội, Không gian**. Thanh bên
+Game & esports, Xe điện, Mạng xã hội, Không gian**. Thanh bên
 lọc theo chủ đề hoặc theo từng nguồn, kèm khoảng thời gian 6 giờ / 24 giờ /
 7 ngày và ô tìm kiếm.
 

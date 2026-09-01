@@ -54,14 +54,6 @@ const DeviceTopic = () => (
   </svg>
 );
 
-/** Đường đi lên — vốn và tăng trưởng. */
-const StartupTopic = () => (
-  <svg {...svg}>
-    <path d="M4 17.6 9.6 12l3.5 3.5L20 8.6" />
-    <path d="M14.8 8.6H20v5.2" />
-  </svg>
-);
-
 /** Tia điện — xe điện. */
 const EvTopic = () => (
   <svg {...svg}>
@@ -113,7 +105,6 @@ const TOPIC_ICONS: Record<string, () => React.ReactElement> = {
   hardware: HardwareTopic,
   device: DeviceTopic,
   games: GamesTopic,
-  startup: StartupTopic,
   ev: EvTopic,
   social: SocialTopic,
   space: SpaceTopic,

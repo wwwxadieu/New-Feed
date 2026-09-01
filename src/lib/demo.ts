@@ -89,7 +89,7 @@ const RAW_CLUSTERS: Omit<Cluster, "sourceCount" | "titleVi" | "summaryVi">[] = [
   },
   {
     id: "demo-startup",
-    topic: "startup",
+    topic: "other",
     title: "Nền tảng hạ tầng dữ liệu gọi vốn 120 triệu USD vòng Series B",
     summary: "Vòng gọi vốn nâng định giá lên khoảng 1,1 tỷ USD, phần lớn dành cho mở rộng đội ngũ kỹ thuật.",
     newest: at(6),

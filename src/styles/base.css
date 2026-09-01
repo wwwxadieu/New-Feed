@@ -23,9 +23,10 @@ body {
   transition: background var(--dur-base) ease, color var(--dur-base) ease;
 }
 
-/* Nền môi trường: nền chuyển màu nhiều lớp, cộng vài mảng màu mờ để lớp
-   kính có thứ gì đó để khúc xạ. Nền đã mang màu sẵn nên các mảng này nhạt
-   hơn trước — chồng cả hai ở độ đậm cũ thì cửa sổ loang lổ. */
+/* Nền: một lớp duy nhất, cố ý phẳng và yên.
+   Chỗ nào cũng có màu thì không chỗ nào nổi lên. Nội dung đã là bề mặt đặc,
+   nền chỉ còn việc làm phông cho nó — nên đây là một dải dọc và một vùng
+   sáng cân giữa, không có khối màu rời nào nữa. */
 .ambient {
   position: fixed;
   inset: 0;
@@ -35,29 +36,6 @@ body {
   background: var(--bg-gradient);
   background-color: var(--bg-deep);
 }
-.ambient span {
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(90px);
-  opacity: 0.3;
-}
-.ambient span:nth-child(1) {
-  width: 620px; height: 620px; top: -220px; left: -120px;
-  background: radial-gradient(circle, var(--blue), transparent 70%);
-}
-.ambient span:nth-child(2) {
-  width: 520px; height: 520px; top: 30%; right: -180px;
-  background: radial-gradient(circle, var(--indigo), transparent 70%);
-  opacity: 0.2;
-}
-.ambient span:nth-child(3) {
-  width: 480px; height: 480px; bottom: -200px; left: 32%;
-  background: radial-gradient(circle, var(--teal), transparent 70%);
-  opacity: 0.18;
-}
-:root[data-theme="dark"] .ambient span { opacity: 0.2; }
-:root[data-theme="dark"] .ambient span:nth-child(2) { opacity: 0.15; }
-:root[data-theme="dark"] .ambient span:nth-child(3) { opacity: 0.13; }
 
 button,
 input,

@@ -355,11 +355,11 @@
   animation: pulse 1.4s ease-in-out infinite;
 }
 
-/* Cố ý không có backdrop-filter ở đây, khác với các panel.
-   Nền môi trường phía sau vốn đã là mấy mảng màu blur(90px), làm mờ thêm một
-   lần nữa gần như không đổi hình ảnh — nhưng mỗi thẻ tin lại thành một lớp
-   hợp ảnh riêng, và một dòng tin vài chục thẻ thì WebView phải dựng lại toàn
-   bộ chỗ đó ở mỗi khung hình cuộn. Đây là nguyên nhân chính làm cuộn giật. */
+/* Thẻ tin là bề mặt đặc, không phải kính.
+   Đây là chỗ có chữ để đọc, nên nó phải đứng hẳn trước nền chứ không hoà vào
+   nền. Đồng thời tránh được cái giá của backdrop-filter: mỗi thẻ kính là một
+   lớp hợp ảnh riêng, một dòng tin vài chục thẻ thì WebView phải dựng lại toàn
+   bộ chỗ đó ở mỗi khung hình cuộn. */
 .cluster-card {
   display: grid;
   grid-template-columns: 116px minmax(0, 1fr);
@@ -368,8 +368,8 @@
   text-align: left;
   padding: 13px;
   border-radius: var(--r-lg);
-  background: var(--sheen), var(--glass);
-  border: 1px solid var(--glass-border);
+  background: var(--surface);
+  border: 1px solid var(--surface-border);
   box-shadow: var(--shadow-card);
   animation: card-in 460ms var(--ease-out) both;
   animation-delay: calc(var(--i, 0) * 26ms);
@@ -379,13 +379,15 @@
 .cluster-card:hover {
   transform: translateY(-2px);
   box-shadow: var(--shadow-raised);
-  background: var(--sheen-strong), var(--glass-strong);
+  background: var(--surface-hover);
 }
 .cluster-card:active { transform: translateY(0) scale(0.995); }
+/* Tin dẫn đầu là một trong hai chỗ được dùng bề mặt nhấn. */
 .cluster-card.lead {
   grid-template-columns: 188px minmax(0, 1fr);
   padding: 15px;
-  background: var(--sheen-strong), var(--glass-strong);
+  background: var(--surface-accent);
+  border-color: var(--surface-accent-border);
 }
 
 @keyframes card-in {
@@ -451,7 +453,7 @@
   display: grid; place-items: center;
   font-size: 8.5px; font-weight: 700; letter-spacing: -0.02em;
   background: var(--fill-strong); color: var(--label-2);
-  border: 1.5px solid var(--glass-strong);
+  border: 1.5px solid var(--surface);
 }
 .avatar.has-logo { background: #fff; }
 .avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
@@ -468,10 +470,8 @@
   margin-top: 40px;
   padding: 36px 28px;
   border-radius: var(--r-xl);
-  background: var(--sheen), var(--glass);
-  backdrop-filter: blur(30px) saturate(180%);
-  -webkit-backdrop-filter: blur(30px) saturate(180%);
-  border: 1px solid var(--glass-border);
+  background: var(--surface);
+  border: 1px solid var(--surface-border);
   text-align: center;
   animation: card-in 460ms var(--ease-out) both;
 }
@@ -488,14 +488,30 @@
 .panel {
   padding: 14px;
   border-radius: var(--r-lg);
-  background: var(--sheen), var(--glass);
-  backdrop-filter: blur(30px) saturate(180%);
-  -webkit-backdrop-filter: blur(30px) saturate(180%);
-  border: 1px solid var(--glass-border);
+  background: var(--surface);
+  border: 1px solid var(--surface-border);
   box-shadow: var(--shadow-card);
   animation: card-in 320ms var(--ease-out) both;
 }
-.panel-head { display: flex; align-items: baseline; gap: 8px; margin-bottom: 11px; }
+
+/* Chỗ nhấn thứ hai và cũng là cuối cùng: panel Tin hot. */
+.panel.accent {
+  background: var(--surface-accent);
+  border-color: var(--surface-accent-border);
+}
+
+.panel-head { display: flex; align-items: center; gap: 8px; margin-bottom: 11px; }
+/* Huy hiệu lửa của panel Tin hot. Khối màu đặc duy nhất trong cả cột phải,
+   nên mắt bắt được ngay panel nào là panel chính. */
+.panel-head .panel-icon {
+  display: grid; place-items: center;
+  width: 19px; height: 19px;
+  flex: none;
+  border-radius: 6px;
+  color: #fff;
+  background: var(--hot-gradient);
+  box-shadow: 0 1px 4px rgba(255, 79, 40, 0.34);
+}
 .panel-head h3 {
   margin: 0;
   font-size: 11px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase;
@@ -553,10 +569,11 @@
 .spark-axis { display: flex; justify-content: space-between; margin-top: 5px; font-size: 10.5px; color: var(--label-3); }
 
 .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+/* Ô lõm bên trong một panel đặc: phân biệt bằng độ sâu, không bằng chất liệu. */
 .stat {
   padding: 10px 11px;
   border-radius: var(--r-md);
-  background: var(--sheen), var(--fill);
+  background: var(--surface-sunken);
 }
 .stat:first-child { grid-column: 1 / -1; }
 .stat .n { display: block; font-size: 19px; font-weight: 700; letter-spacing: -0.025em; font-variant-numeric: tabular-nums; }
@@ -693,7 +710,7 @@
   padding: 9px 12px;
   border-radius: var(--r-md);
   border: 1px solid var(--hairline);
-  background: var(--glass-thin);
+  background: var(--surface-sunken);
   font-size: 13px;
   outline: none;
   transition: box-shadow var(--dur-fast) ease, border-color var(--dur-fast) ease;

@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import type { Cluster, Snapshot } from "../lib/types";
 import { TOPIC_LABEL } from "../lib/types";
 import { clockTime, formatNumber, relativeTime } from "../lib/format";
+import { FlameIcon } from "./Icons";
 
 interface Props {
   snapshot: Snapshot;
@@ -72,9 +73,12 @@ export function InsightRail({ snapshot, clusters, onOpen }: Props) {
 
   return (
     <aside className="rail">
-      <section className="panel" style={{ animationDelay: "0ms" }}>
+      <section className="panel accent" style={{ animationDelay: "0ms" }}>
         <div className="panel-head">
-          <h3>Đang nóng</h3>
+          <span className="panel-icon">
+            <FlameIcon />
+          </span>
+          <h3>Tin hot</h3>
           <span className="note">{clockTime(snapshot.lastRefresh)}</span>
         </div>
         {hot.length === 0 ? (
@@ -124,7 +128,7 @@ export function InsightRail({ snapshot, clusters, onOpen }: Props) {
 
       <section className="panel" style={{ animationDelay: "70ms" }}>
         <div className="panel-head">
-          <h3>Nhịp đưa tin</h3>
+          <h3>Tin tức cập nhật theo giờ</h3>
           <span className="note">24 giờ</span>
         </div>
         <Sparkline data={snapshot.hourly} />
@@ -136,7 +140,7 @@ export function InsightRail({ snapshot, clusters, onOpen }: Props) {
 
       <section className="panel" style={{ animationDelay: "105ms" }}>
         <div className="panel-head">
-          <h3>Kho tin cục bộ</h3>
+          <h3>Tin tức được lưu</h3>
         </div>
         <div className="stat-grid">
           <div className="stat">

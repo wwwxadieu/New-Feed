@@ -9,21 +9,35 @@
   --bg-base: #eef0f5;
   --bg-deep: #e4e7ef;
 
-  /* Nền chính: bốn lớp chồng nhau thay cho một màu phẳng. Ba mảng màu rất
-     nhạt đặt ở ba góc để bề mặt kính có thứ gì đó để khúc xạ, cộng một dải
-     dọc sáng dần từ dưới lên cho cửa sổ có chiều sâu. Giữ độ đục dưới 0,15
-     để nền vẫn là nền, không tranh chỗ với thẻ tin. */
+  /* Nền chính: một dải dọc, cộng đúng một vùng sáng đặt cân giữa mép trên.
+     Trước đây có ba mảng màu lệch tâm ở ba góc để lớp kính có thứ khúc xạ;
+     từ khi nội dung chuyển sang bề mặt đặc thì chúng hết việc, mà ba tâm
+     sáng lệch nhau chồng lên nhau chỉ làm nền trông loang. Một nguồn sáng
+     cân giữa thì nền vẫn có chiều sâu mà mắt không bị kéo đi đâu cả. */
   --bg-gradient:
-    radial-gradient(1200px 820px at 10% -12%, rgba(0, 122, 255, 0.13), transparent 62%),
-    radial-gradient(1040px 720px at 94% 6%, rgba(88, 86, 214, 0.11), transparent 60%),
-    radial-gradient(920px 900px at 46% 112%, rgba(48, 176, 199, 0.11), transparent 58%),
-    linear-gradient(180deg, #f4f6fb 0%, #e9edf6 54%, #e2e7f2 100%);
+    radial-gradient(1500px 760px at 50% -24%, rgba(0, 122, 255, 0.06), transparent 68%),
+    linear-gradient(180deg, #edf0f8 0%, #e3e8f4 56%, #dae1ee 100%);
 
   /* Ánh sáng chiếu chếch trên bề mặt kính: sáng ở mép trên rồi tắt dần.
      Đây là thứ tạo cảm giác tấm kính có độ dày, không phải một hình chữ nhật
      màu. Đặt chồng lên màu nền của chính bề mặt đó. */
   --sheen: linear-gradient(175deg, rgba(255, 255, 255, 0.62), rgba(255, 255, 255, 0) 58%);
   --sheen-strong: linear-gradient(175deg, rgba(255, 255, 255, 0.78), rgba(255, 255, 255, 0.04) 70%);
+
+  /* Bề mặt đặc — chỗ đặt chữ để đọc.
+     Kính là chất liệu của lớp khung nổi bên trên: thanh tiêu đề, thanh bên,
+     thanh công cụ. Nếu nội dung cũng bằng kính thì cả cửa sổ trong mờ như
+     nhau, không còn gì nổi lên trước cái gì — mắt không biết nhìn vào đâu.
+     Nền chuyển màu lúc đó lộ ra ở khe giữa các thẻ, đúng vai trò của nó. */
+  --surface: #ffffff;
+  --surface-hover: #ffffff;
+  --surface-sunken: #eff2f8;
+  --surface-border: rgba(60, 60, 67, 0.11);
+
+  /* Bề mặt nhấn, để dành cho đúng hai chỗ: tin dẫn đầu và panel Tin hot.
+     Dùng rộng hơn là hết nhấn. */
+  --surface-accent: linear-gradient(158deg, #e7f0ff, #ffffff 64%);
+  --surface-accent-border: rgba(0, 122, 255, 0.24);
 
   /* Gradient nhấn, chỉ dùng cho chi tiết nhỏ: cột biểu đồ, nhãn, thanh tiến độ. */
   --accent-gradient: linear-gradient(135deg, #007aff, #5856d6);
@@ -93,13 +107,19 @@
   --bg-deep: #05050a;
 
   --bg-gradient:
-    radial-gradient(1200px 820px at 10% -12%, rgba(10, 132, 255, 0.2), transparent 62%),
-    radial-gradient(1040px 720px at 94% 6%, rgba(94, 92, 230, 0.16), transparent 60%),
-    radial-gradient(920px 900px at 46% 112%, rgba(64, 200, 224, 0.11), transparent 58%),
-    linear-gradient(180deg, #12141d 0%, #0a0b12 56%, #05060b 100%);
+    radial-gradient(1500px 760px at 50% -24%, rgba(10, 132, 255, 0.1), transparent 68%),
+    linear-gradient(180deg, #0f1119 0%, #08090f 56%, #040509 100%);
 
   --sheen: linear-gradient(175deg, rgba(255, 255, 255, 0.075), rgba(255, 255, 255, 0) 58%);
   --sheen-strong: linear-gradient(175deg, rgba(255, 255, 255, 0.11), rgba(255, 255, 255, 0.01) 70%);
+
+  --surface: #1c1e27;
+  --surface-hover: #22242e;
+  --surface-sunken: #14151d;
+  --surface-border: rgba(255, 255, 255, 0.075);
+
+  --surface-accent: linear-gradient(158deg, #1e2c48, #1c1e27 64%);
+  --surface-accent-border: rgba(10, 132, 255, 0.34);
 
   --accent-gradient: linear-gradient(135deg, #0a84ff, #5e5ce6);
   --accent-gradient-soft: linear-gradient(135deg, rgba(10, 132, 255, 0.24), rgba(94, 92, 230, 0.16));

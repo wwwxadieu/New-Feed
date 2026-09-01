@@ -158,16 +158,6 @@ pub fn classify(title: &str, summary: &str) -> &'static str {
     ]) {
         return "social";
     }
-    if has(&[
-        "gọi vốn", "series a", "series b", "series c", "funding", "startup", "khởi nghiệp",
-        "định giá", "ipo", "vòng vốn", "rót vốn", "thương vụ", "mua lại", "sáp nhập",
-        "cổ phiếu", "tỷ usd",
-        "venture capital", "seed round", "series d", "valuation", "acquisition",
-        "acquires", "raises $", "unicorn", "y combinator", "a16z", "sequoia",
-        "layoffs", "sa thải", "quỹ đầu tư",
-    ]) {
-        return "startup";
-    }
     "other"
 }
 
@@ -426,7 +416,8 @@ mod tests {
         assert_eq!(classify("DeepSeek releases a smaller model with open weights", ""), "ai");
         assert_eq!(classify("Micron starts shipping HBM4 for data center accelerators", ""), "hardware");
         assert_eq!(classify("Bluesky tightens content moderation after a spam wave", ""), "social");
-        assert_eq!(classify("Y Combinator startup raises $40 million in a seed round", ""), "startup");
+        // Không còn nhóm riêng cho tin gọi vốn, chúng rơi về nhóm Khác.
+        assert_eq!(classify("Y Combinator startup raises $40 million in a seed round", ""), "other");
     }
 
     /// Nhóm không gian được xét trước nhóm thiết bị, nên những chữ dùng chung

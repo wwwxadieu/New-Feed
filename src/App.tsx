@@ -321,11 +321,7 @@ export default function App() {
 
   return (
     <SourcesContext.Provider value={sourceMap}>
-      <div className="ambient" aria-hidden="true">
-        <span />
-        <span />
-        <span />
-      </div>
+      <div className="ambient" aria-hidden="true" />
 
       <div className={`window${sheetOpen ? " behind-sheet" : ""}`} aria-hidden={sheetOpen}>
         <TitleBar />
