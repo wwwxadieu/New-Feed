@@ -151,6 +151,12 @@ pub struct AppData {
     pub settings: Settings,
     #[serde(default)]
     pub last_refresh: Option<String>,
+    /// Mã của những nguồn mặc định đã từng được nạp vào máy này.
+    ///
+    /// Nhờ đó bản cập nhật có thêm nguồn mới vẫn tới được máy đang dùng dở,
+    /// mà nguồn người dùng đã cố ý xoá thì không mọc lại ở lần mở sau.
+    #[serde(default)]
+    pub seeded_defaults: Vec<String>,
     /// Thông báo tạm về việc dịch, ví dụ khi hết hạn mức. Không lưu ra đĩa.
     #[serde(skip)]
     pub translate_notice: Option<String>,

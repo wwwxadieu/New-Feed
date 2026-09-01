@@ -68,18 +68,32 @@ pub fn classify(title: &str, summary: &str) -> &'static str {
         "lỗ hổng", "bảo mật", "vulnerability", "mã độc", "malware", "ransomware", "cve-",
         "tấn công mạng", "rò rỉ dữ liệu", "data breach", "phishing", "lừa đảo", "hacker",
         "bản vá", "bị hack", "chiếm đoạt tài khoản", "an ninh mạng", "mã hoá đầu cuối",
+        "zero-day", "exploit", "cyberattack", "cybersecurity", "botnet", "spyware",
+        "infostealer", "backdoor", "ddos", "patch tuesday", "threat actor", "stolen credentials",
+        "supply chain attack", "phần mềm gián điệp", "tống tiền dữ liệu",
     ]) {
         return "security";
     }
+    // Xét trước nhóm thiết bị nên tránh những chữ dùng chung với tên sản phẩm:
+    // "galaxy" là điện thoại Samsung, "eclipse" là bộ công cụ lập trình, và
+    // "rocket" không kèm gì thì kéo cả Rocket League sang đây.
     if has(&[
         "vệ tinh", "không gian", "tên lửa", "nasa", "spacex", "quỹ đạo", "satellite",
         "vũ trụ", "sao hoả", "mặt trăng", "thiên hà", "kính viễn vọng",
+        "asteroid", "astronaut", "spacecraft", "telescope", "orbital", "in orbit",
+        "rocket launch", "rocket lab", "blue origin", "starship", "starlink", "artemis",
+        "james webb", "solar eclipse", "lunar", "comet", "meteor", " esa ", " iss ",
+        "phi hành gia", "tiểu hành tinh", "thiên thạch", "nhật thực", "trạm vũ trụ",
+        "sao mộc", "sao thổ", "sao kim",
     ]) {
         return "space";
     }
     if has(&[
         "xe điện", "trạm sạc", "sạc nhanh", "pin xe", "tesla", "vinfast", "ô tô điện",
         "xe tự lái", "xe máy điện", "hybrid",
+        "electric vehicle", " ev ", " evs ", "charging station", "battery pack",
+        "solid-state battery", "plug-in", "robotaxi", "waymo", "autonomous driving",
+        "rivian", "lucid motors", "xpeng", " byd ", " nio ", "pin thể rắn", "xe tự hành",
     ]) {
         return "ev";
     }
@@ -94,6 +108,11 @@ pub fn classify(title: &str, summary: &str) -> &'static str {
         "riot games", " gta ", "minecraft", "fortnite", "call of duty", "elden ring",
         "pokemon", "pokémon", "zelda", "genshin", "liên quân", "tốc chiến",
         "game awards", "gamescom", "tokyo game show", "summer game fest",
+        "switch 2", "game console", "indie game", "roblox", "valorant", "dota",
+        "league of legends", "counter-strike", "final fantasy", "resident evil",
+        "assassin's creed", "battlefield", "starfield", "cyberpunk 2077", "baldur's gate",
+        "capcom", "square enix", "bandai namco", "ea sports", "bethesda", "valve",
+        "rocket league", "helldivers", "hollow knight", "silent hill",
     ]) {
         return "games";
     }
@@ -102,13 +121,20 @@ pub fn classify(title: &str, summary: &str) -> &'static str {
         "samsung", "xiaomi", "oppo", "vivo", "realme", "pixel", "galaxy",
         "điện thoại", "smartphone", "laptop", "máy tính bảng", "tai nghe", "smartwatch",
         "đồng hồ thông minh", "máy ảnh", "mirrorless", "android", " ios ",
+        "oneplus", "nothing phone", "foldable", "máy gập", "vision pro", "quest 3",
+        "smart glasses", "kính thông minh", "chromebook", "surface pro", "wearable",
+        "ipados", "watchos", "macos", "windows 11", "tablet", "earbuds",
+        "nhà thông minh", "smart home", "sạc dự phòng",
     ]) {
         return "device";
     }
     if has(&[
-        " ai ", " ai,", " ai.", " ai:", "trí tuệ nhân tạo", "mô hình ngôn ngữ", "llm",
-        "chatgpt", "openai", "anthropic", "gemini", "claude", "copilot", "học máy",
-        "machine learning", "deep learning", "mạng nơ-ron", "chatbot", "tạo sinh",
+        " ai ", " ai,", " ai.", " ai:", " ai-", " ai’s", " ai's", "trí tuệ nhân tạo",
+        "mô hình ngôn ngữ", "llm", "chatgpt", "openai", "anthropic", "gemini", "claude",
+        "copilot", "học máy", "machine learning", "deep learning", "mạng nơ-ron",
+        "chatbot", "tạo sinh", "generative", "gpt-", "llama", "mistral", "deepseek",
+        "midjourney", "stable diffusion", "hugging face", "perplexity", "grok",
+        "fine-tuning", "agentic", "neural network", "mô hình nền tảng",
     ]) {
         return "ai";
     }
@@ -116,12 +142,19 @@ pub fn classify(title: &str, summary: &str) -> &'static str {
         "chip", "cpu", "gpu", "bán dẫn", "semiconductor", "wafer", "vi xử lý", "nvidia",
         "intel", "amd", "tsmc", "snapdragon", "nanomet", "2nm", "3nm", " ram ", " ssd ",
         "card đồ hoạ", "trung tâm dữ liệu", "máy chủ", "siêu máy tính", "bộ nhớ",
+        "qualcomm", "mediatek", "micron", "sk hynix", " asml ", "lithography", " hbm",
+        "ddr5", "geforce", "radeon", "rtx ", "ryzen", "core ultra", "apple silicon",
+        "risc-v", " arm ", "motherboard", "bo mạch chủ", "tản nhiệt", "data center",
+        "bán dẫn", "đúc chip",
     ]) {
         return "hardware";
     }
     if has(&[
         "mạng xã hội", "facebook", "instagram", "tiktok", "threads", "twitter", "youtube",
         "telegram", "zalo", "nhà sáng tạo", "livestream",
+        "reddit", "bluesky", "discord", "snapchat", "linkedin", "pinterest", "twitch",
+        "mastodon", "whatsapp", "meta platforms", "social media", "creator economy",
+        "content moderation", "kiểm duyệt nội dung", "influencer",
     ]) {
         return "social";
     }
@@ -129,6 +162,9 @@ pub fn classify(title: &str, summary: &str) -> &'static str {
         "gọi vốn", "series a", "series b", "series c", "funding", "startup", "khởi nghiệp",
         "định giá", "ipo", "vòng vốn", "rót vốn", "thương vụ", "mua lại", "sáp nhập",
         "cổ phiếu", "tỷ usd",
+        "venture capital", "seed round", "series d", "valuation", "acquisition",
+        "acquires", "raises $", "unicorn", "y combinator", "a16z", "sequoia",
+        "layoffs", "sa thải", "quỹ đầu tư",
     ]) {
         return "startup";
     }
@@ -140,8 +176,14 @@ pub fn build(articles: &[Article]) -> Vec<Cluster> {
         return Vec::new();
     }
 
-    let mut sorted: Vec<&Article> = articles.iter().collect();
-    sorted.sort_by(|a, b| parse_time(&b.published).cmp(&parse_time(&a.published)));
+    // Đọc mốc thời gian đúng một lần rồi mang theo. Vòng gộp bên dưới so từng
+    // cặp bài; nếu để nó phân tích lại chuỗi RFC3339 ở mỗi lần so thì riêng
+    // việc đọc chuỗi đã chiếm phần lớn thời gian dựng cụm.
+    let mut indexed: Vec<(&Article, DateTime<Utc>)> =
+        articles.iter().map(|a| (a, parse_time(&a.published))).collect();
+    indexed.sort_by(|a, b| b.1.cmp(&a.1));
+    let times: Vec<DateTime<Utc>> = indexed.iter().map(|(_, t)| *t).collect();
+    let sorted: Vec<&Article> = indexed.into_iter().map(|(a, _)| a).collect();
 
     let tokens: Vec<HashSet<String>> = sorted.iter().map(|a| tokenize(&a.title)).collect();
 
@@ -163,15 +205,42 @@ pub fn build(articles: &[Article]) -> Vec<Cluster> {
         .collect();
 
     // Gộp tham lam: mỗi bài tìm cụm có bài gần nhất giống nó nhất.
+    //
+    // Kèm một chỉ số ngược từ từ khoá sang cụm để khỏi phải quét hết mọi cụm
+    // cho từng bài. Hai tiêu đề không có lấy một từ chung thì độ tương đồng
+    // chắc chắn bằng 0, so tiếp cũng vô ích — mà với kho vài nghìn bài thì
+    // số phép so vô ích đó chiếm gần như toàn bộ thời gian dựng cụm.
     let mut groups: Vec<Vec<usize>> = Vec::new();
-    for (idx, article) in sorted.iter().enumerate() {
-        let published = parse_time(&article.published);
-        let mut best: Option<(usize, f32)> = None;
+    let mut index: HashMap<&str, Vec<usize>> = HashMap::new();
 
-        for (group_idx, group) in groups.iter().enumerate() {
+    for idx in 0..sorted.len() {
+        let published = times[idx];
+
+        // Xét theo thứ tự cụm tăng dần để giữ nguyên cách chọn khi hai cụm
+        // hoà điểm: cụm xuất hiện trước thắng.
+        let mut candidates: Vec<usize> = tokens[idx]
+            .iter()
+            .filter_map(|token| index.get(token.as_str()))
+            .flatten()
+            .copied()
+            .collect();
+        candidates.sort_unstable();
+        candidates.dedup();
+
+        let mut best: Option<(usize, f32)> = None;
+        for group_idx in candidates {
+            let group = &groups[group_idx];
+            // Bài được duyệt từ mới về cũ nên phần tử cuối của cụm là bài gần
+            // bài hiện tại nhất về thời gian. Nó đã quá hạn thì cả cụm cũng vậy.
+            if let Some(&closest) = group.last() {
+                if (published - times[closest]).num_hours().abs() > MAX_GAP_HOURS {
+                    continue;
+                }
+            }
+
             let mut peak = 0.0f32;
             for &member in group {
-                let gap = (published - parse_time(&sorted[member].published)).num_hours().abs();
+                let gap = (published - times[member]).num_hours().abs();
                 if gap > MAX_GAP_HOURS {
                     continue;
                 }
@@ -185,9 +254,18 @@ pub fn build(articles: &[Article]) -> Vec<Cluster> {
             }
         }
 
-        match best {
-            Some((group_idx, _)) => groups[group_idx].push(idx),
-            None => groups.push(vec![idx]),
+        let group_idx = match best {
+            Some((group_idx, _)) => {
+                groups[group_idx].push(idx);
+                group_idx
+            }
+            None => {
+                groups.push(vec![idx]);
+                groups.len() - 1
+            }
+        };
+        for token in &tokens[idx] {
+            index.entry(token.as_str()).or_default().push(group_idx);
         }
     }
 
@@ -330,6 +408,33 @@ mod tests {
             "ai"
         );
         assert_eq!(classify("iPhone 18 ra mắt với camera nâng cấp", ""), "device");
+    }
+
+    /// Phần lớn nguồn mặc định là báo tiếng Anh, nên mỗi nhóm phải bắt được
+    /// tin bằng tiếng Anh chứ không chỉ tiếng Việt.
+    #[test]
+    fn phan_loai_tin_tieng_anh_theo_dung_nhom() {
+        assert_eq!(classify("Rocket Lab launches 20 satellites into orbit", ""), "space");
+        assert_eq!(classify("Zero-day exploit hits enterprise VPN gateways", ""), "security");
+        assert_eq!(
+            classify("Rivian opens its charging network to other electric vehicle owners", ""),
+            "ev"
+        );
+        assert_eq!(classify("Valve announces a new handheld game console", ""), "games");
+        assert_eq!(classify("OnePlus unveils a foldable with a bigger cover screen", ""), "device");
+        assert_eq!(classify("DeepSeek releases a smaller model with open weights", ""), "ai");
+        assert_eq!(classify("Micron starts shipping HBM4 for data center accelerators", ""), "hardware");
+        assert_eq!(classify("Bluesky tightens content moderation after a spam wave", ""), "social");
+        assert_eq!(classify("Y Combinator startup raises $40 million in a seed round", ""), "startup");
+    }
+
+    /// Nhóm không gian được xét trước nhóm thiết bị, nên những chữ dùng chung
+    /// với tên sản phẩm phải nằm ngoài danh sách của nó.
+    #[test]
+    fn tu_ngu_khong_gian_khong_keo_nham_tin_khac() {
+        assert_eq!(classify("Samsung Galaxy S26 ra mắt với màn hình sáng hơn", ""), "device");
+        assert_eq!(classify("Rocket League nhận bản cập nhật mùa mới", ""), "games");
+        assert_eq!(classify("Eclipse ra bản mới cho nhà phát triển Java", ""), "other");
     }
 
     #[test]

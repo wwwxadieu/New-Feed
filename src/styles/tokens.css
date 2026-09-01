@@ -8,6 +8,28 @@
   /* Nền và chất liệu kính */
   --bg-base: #eef0f5;
   --bg-deep: #e4e7ef;
+
+  /* Nền chính: bốn lớp chồng nhau thay cho một màu phẳng. Ba mảng màu rất
+     nhạt đặt ở ba góc để bề mặt kính có thứ gì đó để khúc xạ, cộng một dải
+     dọc sáng dần từ dưới lên cho cửa sổ có chiều sâu. Giữ độ đục dưới 0,15
+     để nền vẫn là nền, không tranh chỗ với thẻ tin. */
+  --bg-gradient:
+    radial-gradient(1200px 820px at 10% -12%, rgba(0, 122, 255, 0.13), transparent 62%),
+    radial-gradient(1040px 720px at 94% 6%, rgba(88, 86, 214, 0.11), transparent 60%),
+    radial-gradient(920px 900px at 46% 112%, rgba(48, 176, 199, 0.11), transparent 58%),
+    linear-gradient(180deg, #f4f6fb 0%, #e9edf6 54%, #e2e7f2 100%);
+
+  /* Ánh sáng chiếu chếch trên bề mặt kính: sáng ở mép trên rồi tắt dần.
+     Đây là thứ tạo cảm giác tấm kính có độ dày, không phải một hình chữ nhật
+     màu. Đặt chồng lên màu nền của chính bề mặt đó. */
+  --sheen: linear-gradient(175deg, rgba(255, 255, 255, 0.62), rgba(255, 255, 255, 0) 58%);
+  --sheen-strong: linear-gradient(175deg, rgba(255, 255, 255, 0.78), rgba(255, 255, 255, 0.04) 70%);
+
+  /* Gradient nhấn, chỉ dùng cho chi tiết nhỏ: cột biểu đồ, nhãn, thanh tiến độ. */
+  --accent-gradient: linear-gradient(135deg, #007aff, #5856d6);
+  --accent-gradient-soft: linear-gradient(135deg, rgba(0, 122, 255, 0.16), rgba(88, 86, 214, 0.11));
+  --hot-gradient: linear-gradient(135deg, #ff9500, #ff2d55);
+  --hot-gradient-soft: linear-gradient(135deg, rgba(255, 149, 0, 0.2), rgba(255, 45, 85, 0.12));
   --glass: rgba(255, 255, 255, 0.66);
   --glass-strong: rgba(255, 255, 255, 0.8);
   --glass-thin: rgba(255, 255, 255, 0.42);
@@ -56,6 +78,9 @@
   --dur-fast: 160ms;
   --dur-base: 260ms;
   --dur-sheet: 420ms;
+  /* Cột biểu đồ đổi giá trị mỗi lượt làm mới. Chạy chậm thì con số đã thay
+     rồi mà cột vẫn đang bò, nhìn như panel chưa kịp cập nhật. */
+  --dur-chart: 150ms;
 
   --font-ui: "Inter Variable", "Inter", -apple-system, "Segoe UI Variable Text",
     "Segoe UI", system-ui, "Helvetica Neue", Arial, sans-serif;
@@ -66,6 +91,20 @@
 
   --bg-base: #0b0b0f;
   --bg-deep: #05050a;
+
+  --bg-gradient:
+    radial-gradient(1200px 820px at 10% -12%, rgba(10, 132, 255, 0.2), transparent 62%),
+    radial-gradient(1040px 720px at 94% 6%, rgba(94, 92, 230, 0.16), transparent 60%),
+    radial-gradient(920px 900px at 46% 112%, rgba(64, 200, 224, 0.11), transparent 58%),
+    linear-gradient(180deg, #12141d 0%, #0a0b12 56%, #05060b 100%);
+
+  --sheen: linear-gradient(175deg, rgba(255, 255, 255, 0.075), rgba(255, 255, 255, 0) 58%);
+  --sheen-strong: linear-gradient(175deg, rgba(255, 255, 255, 0.11), rgba(255, 255, 255, 0.01) 70%);
+
+  --accent-gradient: linear-gradient(135deg, #0a84ff, #5e5ce6);
+  --accent-gradient-soft: linear-gradient(135deg, rgba(10, 132, 255, 0.24), rgba(94, 92, 230, 0.16));
+  --hot-gradient: linear-gradient(135deg, #ff9f0a, #ff375f);
+  --hot-gradient-soft: linear-gradient(135deg, rgba(255, 159, 10, 0.24), rgba(255, 55, 95, 0.14));
   --glass: rgba(28, 28, 32, 0.62);
   --glass-strong: rgba(34, 34, 39, 0.78);
   --glass-thin: rgba(40, 40, 46, 0.4);

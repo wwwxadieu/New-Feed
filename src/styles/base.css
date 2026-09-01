@@ -23,20 +23,23 @@ body {
   transition: background var(--dur-base) ease, color var(--dur-base) ease;
 }
 
-/* Nền môi trường: các mảng màu mờ để lớp kính có thứ gì đó để khúc xạ. */
+/* Nền môi trường: nền chuyển màu nhiều lớp, cộng vài mảng màu mờ để lớp
+   kính có thứ gì đó để khúc xạ. Nền đã mang màu sẵn nên các mảng này nhạt
+   hơn trước — chồng cả hai ở độ đậm cũ thì cửa sổ loang lổ. */
 .ambient {
   position: fixed;
   inset: 0;
   z-index: 0;
   pointer-events: none;
   overflow: hidden;
-  background: var(--bg-deep);
+  background: var(--bg-gradient);
+  background-color: var(--bg-deep);
 }
 .ambient span {
   position: absolute;
   border-radius: 50%;
   filter: blur(90px);
-  opacity: 0.5;
+  opacity: 0.3;
 }
 .ambient span:nth-child(1) {
   width: 620px; height: 620px; top: -220px; left: -120px;
@@ -45,16 +48,16 @@ body {
 .ambient span:nth-child(2) {
   width: 520px; height: 520px; top: 30%; right: -180px;
   background: radial-gradient(circle, var(--indigo), transparent 70%);
-  opacity: 0.34;
+  opacity: 0.2;
 }
 .ambient span:nth-child(3) {
   width: 480px; height: 480px; bottom: -200px; left: 32%;
   background: radial-gradient(circle, var(--teal), transparent 70%);
-  opacity: 0.3;
+  opacity: 0.18;
 }
-:root[data-theme="dark"] .ambient span { opacity: 0.28; }
-:root[data-theme="dark"] .ambient span:nth-child(2) { opacity: 0.2; }
-:root[data-theme="dark"] .ambient span:nth-child(3) { opacity: 0.18; }
+:root[data-theme="dark"] .ambient span { opacity: 0.2; }
+:root[data-theme="dark"] .ambient span:nth-child(2) { opacity: 0.15; }
+:root[data-theme="dark"] .ambient span:nth-child(3) { opacity: 0.13; }
 
 button,
 input,

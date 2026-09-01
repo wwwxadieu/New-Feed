@@ -66,8 +66,14 @@ thẳng địa chỉ RSS cũng được.
 Mỗi nguồn hiện logo lấy từ chính trang của nó, bật tắt và xoá riêng từng
 nguồn, và báo rõ nguồn nào đang lỗi.
 
-Sáu nguồn có sẵn ngay lần chạy đầu: VnExpress Số hóa, GenK, VietnamNet Công
-nghệ, TechCrunch, The Verge, Ars Technica.
+Hơn ba mươi nguồn có sẵn ngay lần chạy đầu, xếp theo đúng các chủ đề mà ứng
+dụng phân loại: báo công nghệ trong nước (VnExpress Số hóa, GenK, VietnamNet,
+Tinh tế, Dân trí, Tuổi Trẻ, Thanh Niên), báo quốc tế đưa tin rộng (TechCrunch,
+The Verge, Ars Technica, Engadget), rồi các nguồn chuyên đề cho AI, bảo mật,
+phần cứng, thiết bị, game, startup, xe điện, mạng xã hội và không gian.
+
+Bản cập nhật thêm nguồn mới thì máy đang dùng dở cũng nhận được — ứng dụng ghi
+lại từng nguồn đã đề nghị một lần, nên nguồn bạn cố ý xoá không mọc lại.
 
 ### Tự phân loại chủ đề
 
@@ -174,7 +180,7 @@ trang đổi tên chuyên mục vẫn dò được.
 `<media:content>`, rồi `<enclosure>` (VnExpress), rồi thẻ `<img>` đầu tiên
 trong phần mô tả (GenK). Nguồn nào không kèm ảnh trong feed thì đọc `og:image`
 của trang bài — chỉ tải phần đầu trang rồi dừng ngay khi hết `<head>`. Đo trên
-sáu nguồn mặc định: 125/125 bài có ảnh.
+nhóm nguồn mặc định: 125/125 bài có ảnh.
 
 **Giới hạn khi giải mã ảnh.** Ảnh tải từ Internet là dữ liệu không kiểm soát
 được. Một tệp PNG 60 KB có thể khai báo 8000x8000 và bung ra 183 MB dạng RGB,

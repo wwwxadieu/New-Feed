@@ -72,7 +72,7 @@ export function InsightRail({ snapshot, clusters, onOpen }: Props) {
 
   return (
     <aside className="rail">
-      <section className="panel" style={{ animationDelay: "40ms" }}>
+      <section className="panel" style={{ animationDelay: "0ms" }}>
         <div className="panel-head">
           <h3>Đang nóng</h3>
           <span className="note">{clockTime(snapshot.lastRefresh)}</span>
@@ -102,7 +102,7 @@ export function InsightRail({ snapshot, clusters, onOpen }: Props) {
         )}
       </section>
 
-      <section className="panel" style={{ animationDelay: "90ms" }}>
+      <section className="panel" style={{ animationDelay: "35ms" }}>
         <div className="panel-head">
           <h3>Mật độ theo chủ đề</h3>
           <span className="note">số bài</span>
@@ -122,7 +122,7 @@ export function InsightRail({ snapshot, clusters, onOpen }: Props) {
         )}
       </section>
 
-      <section className="panel" style={{ animationDelay: "140ms" }}>
+      <section className="panel" style={{ animationDelay: "70ms" }}>
         <div className="panel-head">
           <h3>Nhịp đưa tin</h3>
           <span className="note">24 giờ</span>
@@ -134,7 +134,7 @@ export function InsightRail({ snapshot, clusters, onOpen }: Props) {
         </div>
       </section>
 
-      <section className="panel" style={{ animationDelay: "190ms" }}>
+      <section className="panel" style={{ animationDelay: "105ms" }}>
         <div className="panel-head">
           <h3>Kho tin cục bộ</h3>
         </div>

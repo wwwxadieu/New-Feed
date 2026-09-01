@@ -24,7 +24,7 @@
   align-items: center;
   gap: 10px;
   padding-left: 14px;
-  background: var(--glass-thin);
+  background: var(--sheen), var(--glass-thin);
   backdrop-filter: blur(24px) saturate(180%);
   -webkit-backdrop-filter: blur(24px) saturate(180%);
   border-bottom: 1px solid var(--hairline);
@@ -88,7 +88,7 @@
   gap: 20px;
   padding: 16px 12px;
   overflow-y: auto;
-  background: var(--glass-thin);
+  background: var(--sheen), var(--glass-thin);
   backdrop-filter: blur(30px) saturate(180%);
   -webkit-backdrop-filter: blur(30px) saturate(180%);
   border-right: 1px solid var(--hairline);
@@ -118,7 +118,7 @@
 }
 .nav-item:hover { background: var(--fill); color: var(--label); }
 .nav-item[aria-current="true"] {
-  background: var(--blue-soft);
+  background: var(--accent-gradient-soft);
   color: var(--blue);
   font-weight: 600;
 }
@@ -204,7 +204,7 @@
   gap: 10px;
   padding: 10px 20px;
   border-bottom: 1px solid var(--hairline);
-  background: var(--glass-thin);
+  background: var(--sheen), var(--glass-thin);
   backdrop-filter: blur(30px) saturate(180%);
   -webkit-backdrop-filter: blur(30px) saturate(180%);
 }
@@ -268,11 +268,33 @@
 .icon-button.spinning svg { animation: spin 900ms linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
+/* Việc đang chạy ở nền sau khi danh sách tin đã hiện ra. Chữ nhỏ và mực nhạt:
+   đây là tin phụ, người dùng đã đọc được tin rồi. */
+.work-chip {
+  display: flex; align-items: center; gap: 6px;
+  margin-right: 4px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--fill);
+  font-size: 11.5px;
+  color: var(--label-2);
+  white-space: nowrap;
+}
+.work-chip i {
+  width: 6px; height: 6px; border-radius: 50%; flex: none;
+  background: var(--blue);
+  animation: pulse 1.4s ease-in-out infinite;
+}
+/* Cửa sổ hẹp thì thanh công cụ đã chật, giấu chữ đi và chỉ giữ chấm báo. */
+@media (max-width: 1080px) {
+  .work-chip { font-size: 0; padding: 6px; gap: 0; }
+}
+
 .progress-strip { flex: none; height: 2px; background: transparent; overflow: hidden; }
 .progress-strip i {
   display: block; height: 100%;
-  background: var(--blue);
-  transition: width var(--dur-base) var(--ease-out);
+  background: var(--accent-gradient);
+  transition: width var(--dur-chart) var(--ease-out);
 }
 
 /* ================= Dòng cụm sự kiện ================= */
@@ -280,11 +302,13 @@
 
 /* Trên màn hình rộng, cột giữa không được kéo dài vô hạn: dòng chữ vượt quá
    tầm mắt và thẻ tin biến thành một dải gần như trống. Giới hạn bề ngang
-   vùng đọc rồi căn giữa, giữ đúng khổ đã dùng ở cửa sổ cỡ thường. */
+   vùng đọc rồi căn giữa. Chỗ thừa ra không để trống mà xếp thêm cột thẻ. */
 .feed-head,
 .cluster-list,
+.feed-more,
+.feed-end,
 .empty-state {
-  max-width: 880px;
+  max-width: 1680px;
   margin-inline: auto;
 }
 
@@ -296,8 +320,46 @@
 .feed-head p { margin: 0; font-size: 13px; color: var(--label-2); }
 .feed-head p b { font-weight: 600; color: var(--label); font-variant-numeric: tabular-nums; }
 
-.cluster-list { display: flex; flex-direction: column; gap: 10px; }
+/* Bao nhiêu cột là do bề ngang thật của dòng tin quyết định, không phải do
+   một mốc màn hình đoán trước: thanh bên và panel phải tự ẩn hiện theo cửa
+   sổ nên cùng một bề rộng cửa sổ vẫn cho ra vùng tin rộng hẹp khác nhau.
+   Mỗi cột không hẹp hơn 352px để tiêu đề không bị bẻ vụn.
+   `align-items: start` giữ mỗi thẻ đúng chiều cao nội dung của nó, không bị
+   kéo giãn theo thẻ cao nhất cùng hàng — ảnh đại diện dựa vào tỷ lệ 4:3 nên
+   thẻ bị kéo giãn sẽ làm ảnh méo theo. */
+.cluster-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 352px), 1fr));
+  gap: 10px;
+  align-items: start;
+}
 
+/* Tin dẫn chạy hết bề ngang: ở một cột thì như cũ, ở nhiều cột thành khối
+   mở đầu tách hẳn khỏi lưới bên dưới. */
+.cluster-card.lead { grid-column: 1 / -1; }
+
+/* Chỗ báo đang dựng thêm tin khi cuộn tới cuối, và dòng khép lại khi đã hết. */
+.feed-more,
+.feed-end {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  margin-top: 18px;
+  font-size: 12.5px;
+  color: var(--label-3);
+}
+.feed-more-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--blue);
+  animation: pulse 1.4s ease-in-out infinite;
+}
+
+/* Cố ý không có backdrop-filter ở đây, khác với các panel.
+   Nền môi trường phía sau vốn đã là mấy mảng màu blur(90px), làm mờ thêm một
+   lần nữa gần như không đổi hình ảnh — nhưng mỗi thẻ tin lại thành một lớp
+   hợp ảnh riêng, và một dòng tin vài chục thẻ thì WebView phải dựng lại toàn
+   bộ chỗ đó ở mỗi khung hình cuộn. Đây là nguyên nhân chính làm cuộn giật. */
 .cluster-card {
   display: grid;
   grid-template-columns: 116px minmax(0, 1fr);
@@ -306,9 +368,7 @@
   text-align: left;
   padding: 13px;
   border-radius: var(--r-lg);
-  background: var(--glass);
-  backdrop-filter: blur(30px) saturate(180%);
-  -webkit-backdrop-filter: blur(30px) saturate(180%);
+  background: var(--sheen), var(--glass);
   border: 1px solid var(--glass-border);
   box-shadow: var(--shadow-card);
   animation: card-in 460ms var(--ease-out) both;
@@ -316,9 +376,17 @@
   transition: transform var(--dur-base) var(--ease-out), box-shadow var(--dur-base) ease,
     background var(--dur-fast) ease;
 }
-.cluster-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-raised); background: var(--glass-strong); }
+.cluster-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-raised);
+  background: var(--sheen-strong), var(--glass-strong);
+}
 .cluster-card:active { transform: translateY(0) scale(0.995); }
-.cluster-card.lead { grid-template-columns: 188px minmax(0, 1fr); padding: 15px; }
+.cluster-card.lead {
+  grid-template-columns: 188px minmax(0, 1fr);
+  padding: 15px;
+  background: var(--sheen-strong), var(--glass-strong);
+}
 
 @keyframes card-in {
   from { opacity: 0; transform: translateY(12px) scale(0.99); }
@@ -355,9 +423,9 @@
   padding: 2.5px 8px;
   border-radius: 999px;
   font-size: 11px; font-weight: 600; letter-spacing: -0.005em;
-  background: var(--blue-soft); color: var(--blue);
+  background: var(--accent-gradient-soft); color: var(--blue);
 }
-.pill.hot { background: rgba(255, 149, 0, 0.16); color: var(--orange); }
+.pill.hot { background: var(--hot-gradient-soft); color: var(--orange); }
 /* Nhãn cho biết tiêu đề là bản dịch máy, không phải nguyên văn của báo. */
 .pill.quiet { background: var(--fill); color: var(--label-3); font-weight: 500; }
 .stamp { font-size: 11.5px; color: var(--label-3); }
@@ -393,11 +461,14 @@
 }
 .source-line b { color: var(--label); font-weight: 600; font-variant-numeric: tabular-nums; }
 
+/* Nằm trong lưới thẻ tin nên phải nói rõ là chiếm hết bề ngang, không thì
+   nó co lại vừa một cột. */
 .empty-state {
+  grid-column: 1 / -1;
   margin-top: 40px;
   padding: 36px 28px;
   border-radius: var(--r-xl);
-  background: var(--glass);
+  background: var(--sheen), var(--glass);
   backdrop-filter: blur(30px) saturate(180%);
   -webkit-backdrop-filter: blur(30px) saturate(180%);
   border: 1px solid var(--glass-border);
@@ -406,22 +477,6 @@
 }
 .empty-state h2 { margin: 0 0 6px; font-size: 17px; font-weight: 650; letter-spacing: -0.015em; }
 .empty-state p { margin: 0 auto 18px; max-width: 44ch; font-size: 13.5px; color: var(--label-2); }
-
-/* Màn hình siêu rộng: xếp hai cột thẻ thay vì để trống hai bên. Bề ngang
-   mỗi thẻ vẫn xấp xỉ khổ ở cửa sổ thường nên chữ không bị dài quá tầm mắt. */
-@media (min-width: 1700px) {
-  .feed-head,
-  .cluster-list,
-  .empty-state {
-    max-width: 1520px;
-  }
-  .cluster-list {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    align-items: start;
-  }
-}
 
 /* ================= Cột phải ================= */
 .rail {
@@ -433,12 +488,12 @@
 .panel {
   padding: 14px;
   border-radius: var(--r-lg);
-  background: var(--glass);
+  background: var(--sheen), var(--glass);
   backdrop-filter: blur(30px) saturate(180%);
   -webkit-backdrop-filter: blur(30px) saturate(180%);
   border: 1px solid var(--glass-border);
   box-shadow: var(--shadow-card);
-  animation: card-in 500ms var(--ease-out) both;
+  animation: card-in 320ms var(--ease-out) both;
 }
 .panel-head { display: flex; align-items: baseline; gap: 8px; margin-bottom: 11px; }
 .panel-head h3 {
@@ -477,16 +532,20 @@
 }
 .hot-row .sub { font-size: 11px; color: var(--label-3); margin-top: 5px; display: block; }
 .meter { display: block; height: 3px; border-radius: 2px; background: var(--fill); overflow: hidden; }
-.meter i { display: block; height: 100%; border-radius: 2px; background: var(--blue); transition: width var(--dur-base) var(--ease-out); }
-.hot-row:first-child .meter i { background: var(--orange); }
+.meter i {
+  display: block; height: 100%; border-radius: 2px;
+  background: var(--accent-gradient);
+  transition: width var(--dur-chart) var(--ease-out);
+}
+.hot-row:first-child .meter i { background: var(--hot-gradient); }
 
 .bar-row { display: grid; grid-template-columns: 96px minmax(0, 1fr) 32px; gap: 9px; align-items: center; padding: 3.5px 0; }
 .bar-row .name { font-size: 12.4px; color: var(--label-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .bar-row .track { height: 8px; border-radius: 0 3px 3px 0; background: var(--fill); }
 .bar-row .track i {
   display: block; height: 100%; border-radius: 0 3px 3px 0;
-  background: var(--blue);
-  transition: width var(--dur-sheet) var(--ease-out);
+  background: var(--accent-gradient);
+  transition: width var(--dur-chart) var(--ease-out);
 }
 .bar-row .value { font-size: 11.5px; color: var(--label-2); text-align: right; font-variant-numeric: tabular-nums; }
 
@@ -497,7 +556,7 @@
 .stat {
   padding: 10px 11px;
   border-radius: var(--r-md);
-  background: var(--fill);
+  background: var(--sheen), var(--fill);
 }
 .stat:first-child { grid-column: 1 / -1; }
 .stat .n { display: block; font-size: 19px; font-weight: 700; letter-spacing: -0.025em; font-variant-numeric: tabular-nums; }
@@ -778,8 +837,10 @@
 
   .feed-head,
   .cluster-list,
+  .feed-more,
+  .feed-end,
   .empty-state {
-    max-width: 1760px;
+    max-width: 2000px;
   }
 
   .nav-item { font-size: 15.5px; }
@@ -791,6 +852,7 @@
   .c-summary { font-size: 15px; }
   .cluster-card { grid-template-columns: 136px minmax(0, 1fr); }
   .cluster-card.lead { grid-template-columns: 220px minmax(0, 1fr); }
+  .cluster-list { grid-template-columns: repeat(auto-fill, minmax(min(100%, 412px), 1fr)); }
 
   .hot-row p { font-size: 14.8px; }
   .bar-row .name { font-size: 14px; }
@@ -812,8 +874,10 @@
   .columns { grid-template-columns: minmax(0, 1fr) 440px; }
   .feed-head,
   .cluster-list,
+  .feed-more,
+  .feed-end,
   .empty-state {
-    max-width: 2000px;
+    max-width: 2440px;
   }
   .sheet { width: min(1660px, 100%); }
   .reader-grid { grid-template-columns: minmax(0, 1fr) 340px; }
