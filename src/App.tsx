@@ -38,6 +38,14 @@ const AUTO_REFRESH_MS = 10 * 60 * 1000;
  * đọc gần như không bao giờ cuộn hết chỗ đó.
  */
 const PAGE_SIZE = 30;
+/**
+ * Trần chờ cho một lượt làm mới.
+ *
+ * Cờ "đang làm mới" chặn lượt sau chồng lên lượt trước, nên nếu backend không
+ * bao giờ trả lời thì cờ đó kẹt lại vĩnh viễn: nút làm mới câm và nhịp tự
+ * động cũng đứng, cho tới khi mở lại ứng dụng. Thà báo hỏng còn hơn treo im.
+ */
+const REFRESH_TIMEOUT_MS = 120 * 1000;
 
 export default function App() {
   const { choice: theme, setChoice: setTheme } = useTheme();
@@ -129,8 +137,17 @@ export default function App() {
       refreshingRef.current = true;
       setRefreshing(true);
       setProgress({ done: 0, total: snapshotRef.current?.sources.filter((s) => s.enabled).length ?? 1 });
+
+      let guard = 0;
+      const deadline = new Promise<never>((_, reject) => {
+        guard = window.setTimeout(
+          () => reject(new Error("Lượt làm mới không phản hồi. Xem Quản lý nguồn để biết nguồn nào đang hỏng.")),
+          REFRESH_TIMEOUT_MS,
+        );
+      });
+
       try {
-        const next = await api.refresh();
+        const next = await Promise.race([api.refresh(), deadline]);
         setSnapshot(next);
         if (next.translateNotice) notify(next.translateNotice, true);
         const failed = next.sources.filter((s) => s.enabled && s.lastError).length;
@@ -142,6 +159,7 @@ export default function App() {
       } catch (err: unknown) {
         if (!silent) notify(err instanceof Error ? err.message : String(err), true);
       } finally {
+        window.clearTimeout(guard);
         refreshingRef.current = false;
         setRefreshing(false);
         setProgress(null);

@@ -14,9 +14,23 @@ const MAX_LOGO_BYTES: usize = 120_000;
 const COMMON_FEED_PATHS: &[&str] = &["/feed", "/rss", "/rss.xml", "/feed.xml", "/atom.xml", "/index.xml", "/feeds/posts/default"];
 
 pub fn client() -> Result<reqwest::Client, String> {
+    // Không khai báo Accept thì có CDN trả thẳng 404 cho chính địa chỉ feed
+    // mà trình duyệt mở được — Engadget là một trường hợp như vậy.
+    let mut headers = reqwest::header::HeaderMap::new();
+    headers.insert(
+        reqwest::header::ACCEPT,
+        reqwest::header::HeaderValue::from_static(
+            "application/rss+xml, application/atom+xml, application/xml;q=0.9, text/html;q=0.8, */*;q=0.7",
+        ),
+    );
+
     reqwest::Client::builder()
         .user_agent(USER_AGENT)
+        .default_headers(headers)
+        // Trần chờ cho cả lượt gọi, và một trần riêng ngắn hơn cho khâu bắt
+        // tay: máy chủ chết thì nhả chỗ sớm cho nguồn khác thay vì giữ đủ 20s.
         .timeout(Duration::from_secs(20))
+        .connect_timeout(Duration::from_secs(8))
         .redirect(reqwest::redirect::Policy::limited(5))
         .build()
         .map_err(|e| format!("Không khởi tạo được HTTP client: {e}"))
@@ -372,6 +386,7 @@ pub async fn fetch_source(client: &reqwest::Client, source: &Source, limit: usiz
             title_vi: None,
             summary_vi: None,
             thumb: None,
+            image_checked: false,
             // Giữ lại bản HTML của feed: có nguồn dựng bài bằng JavaScript nên
             // trang gốc không chứa chữ, lúc đó đây là thứ duy nhất đọc được.
             content_html: Some(summary_html.chars().take(20_000).collect()),
@@ -521,7 +536,12 @@ pub(crate) fn decode_entities(input: &str) -> String {
         let tail = &rest[start..];
 
         // Thực thể hợp lệ luôn kết thúc bằng ';' trong vòng vài ký tự.
-        let Some(end) = tail[..tail.len().min(12)].find(';') else {
+        //
+        // Cắt theo ranh giới ký tự chứ không theo byte. Chữ tiếng Việt chiếm
+        // nhiều byte, nên mốc byte thứ 12 hay rơi vào giữa một chữ — và cắt
+        // chuỗi giữa chừng một ký tự là chương trình dừng ngay tại đó.
+        let window = tail.char_indices().nth(12).map_or(tail.len(), |(at, _)| at);
+        let Some(end) = tail[..window].find(';') else {
             out.push('&');
             rest = &tail[1..];
             continue;
@@ -569,6 +589,48 @@ fn strip_tags(input: &str) -> String {
 mod tests {
     use super::*;
 
+    /// Đo thời gian đọc từng nguồn mặc định trên đường truyền thật.
+    ///
+    /// Dùng khi tin về chậm hoặc không về: nó chỉ ra nguồn nào ngốn thời gian
+    /// và nguồn nào chạm trần chờ, thay vì phải ngồi đoán.
+    /// Chạy bằng: cargo test -- --ignored --nocapture do_thoi_gian_doc_nguon
+    #[test]
+    #[ignore]
+    fn do_thoi_gian_doc_nguon_mac_dinh() {
+        use futures::StreamExt;
+
+        let runtime = tokio::runtime::Runtime::new().unwrap();
+        let client = client().unwrap();
+        let sources = crate::store::default_sources();
+
+        let started = std::time::Instant::now();
+        let mut rows: Vec<(u128, String, String)> = runtime.block_on(async {
+            futures::stream::iter(sources)
+                .map(|(title, home, feed)| {
+                    let client = client.clone();
+                    async move {
+                        let source = make_source(title.to_string(), home, feed);
+                        let at = std::time::Instant::now();
+                        let outcome = fetch_source(&client, &source, 25).await;
+                        let note = match outcome {
+                            Ok(articles) => format!("{} bài", articles.len()),
+                            Err(message) => message.chars().take(70).collect(),
+                        };
+                        (at.elapsed().as_millis(), title.to_string(), note)
+                    }
+                })
+                .buffer_unordered(crate::FETCH_CONCURRENCY)
+                .collect()
+                .await
+        });
+
+        rows.sort_by(|a, b| b.0.cmp(&a.0));
+        for (ms, title, note) in &rows {
+            println!("{ms:>6} ms  {title:<24} {note}");
+        }
+        println!("---- tổng cả lượt: {} ms", started.elapsed().as_millis());
+    }
+
     #[test]
     fn giai_ma_thuc_the_html() {
         assert_eq!(
@@ -576,6 +638,14 @@ mod tests {
             "Rockstar responds to \u{2018}heartbreaking\u{2019} GTA 6 leaks"
         );
         assert_eq!(decode_entities("Q&amp;A v&#x1EDB;i CEO"), "Q&A với CEO");
+        // Sau dấu & là chữ tiếng Việt nhiều byte: mốc cắt phải theo ký tự,
+        // nếu tính theo byte thì rơi vào giữa chữ "ủ" và chương trình dừng.
+        assert_eq!(
+            decode_entities("&amp; Max của LG học thói quen sử dụng"),
+            "& Max của LG học thói quen sử dụng"
+        );
+        // Dấu & đứng một mình ngay trước chữ có dấu cũng phải qua được.
+        assert_eq!(decode_entities("Điều hoà & tủ lạnh thông minh"), "Điều hoà & tủ lạnh thông minh");
         assert_eq!(decode_entities("Giá 25 tri&#7879;u &mdash; r&#7867;"), "Giá 25 triệu — rẻ");
         // Chuỗi không phải thực thể thì giữ nguyên, không được nuốt mất.
         assert_eq!(decode_entities("Tom & Jerry"), "Tom & Jerry");

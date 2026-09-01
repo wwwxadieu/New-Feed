@@ -27,6 +27,9 @@ const IMAGE_BACKFILL_LIMIT: usize = 60;
 const IMAGE_BACKFILL_CONCURRENCY: usize = 8;
 /// Lấy logo phải tải cả trang chủ của báo nên nặng hơn tải feed, giữ tay hơn.
 const LOGO_CONCURRENCY: usize = 4;
+/// Khoảng cách tối thiểu giữa hai lần đẩy ảnh chụp sang giao diện trong lúc
+/// đang làm mới.
+const EMIT_EVERY: std::time::Duration = std::time::Duration::from_millis(700);
 /// Hạn ngạch ký tự cho mỗi lượt dịch. Dịch vụ cho 5.000 ký tự mỗi ngày khi
 /// dùng ẩn danh và 50.000 khi có khai báo email; chừa lại một khoảng đệm.
 const TRANSLATE_BUDGET_ANON: usize = 4_500;
@@ -150,11 +153,11 @@ fn apply_thumbs(data: &mut AppData, done: Vec<(String, String)>) {
     }
 }
 
-/// Danh sách bài mới nhất còn thiếu ảnh.
+/// Danh sách bài mới nhất còn thiếu ảnh và chưa từng đi tìm.
 fn articles_missing_images(data: &AppData) -> Vec<(String, String)> {
     data.articles
         .iter()
-        .filter(|a| a.image.is_none())
+        .filter(|a| a.image.is_none() && !a.image_checked)
         .take(IMAGE_BACKFILL_LIMIT)
         .map(|a| (a.id.clone(), a.url.clone()))
         .collect()
@@ -347,9 +350,17 @@ async fn enrich(app: &AppHandle, state: &AppState) -> Result<(), String> {
     let missing_images = articles_missing_images(&*state.data.lock().await);
     if !missing_images.is_empty() {
         emit_phase(app, Some("Đang tìm ảnh cho bài chưa có"));
+        let attempted: std::collections::HashSet<String> =
+            missing_images.iter().map(|(id, _)| id.clone()).collect();
         let found = backfill_images(&state.client, missing_images).await;
+
         let mut data = state.data.lock().await;
         apply_images(&mut data, found);
+        // Đánh dấu đã thử kể cả khi không tìm ra: bài không kèm ảnh thì lượt
+        // sau đọc lại trang của nó cũng vẫn không có, chỉ tốn thêm lượt tải.
+        for article in data.articles.iter_mut().filter(|a| attempted.contains(&a.id)) {
+            article.image_checked = true;
+        }
     }
 
     let pending_thumbs = thumbs_to_cache(&*state.data.lock().await);
@@ -497,18 +508,36 @@ async fn refresh(app: AppHandle, state: State<'_, AppState>) -> Result<Snapshot,
     let done = Arc::new(AtomicUsize::new(0));
     let client = state.client.clone();
 
-    type FetchResult = (String, Result<Vec<Article>, String>);
-
     // Giai đoạn này chỉ đọc feed. Logo, ảnh đại diện và bản dịch chiếm gần hết
     // thời gian chờ của một lượt làm mới nhưng không thứ nào cần để đọc tin,
     // nên chúng được dời sang lượt bổ sung nền ở cuối hàm.
-    let results: Vec<FetchResult> = stream::iter(targets)
-        .map(|source| {
+    // Bản sao riêng cho dòng tải, để `app` gốc còn dùng được ở cuối hàm.
+    let emitter = app.clone();
+    let mut arriving = stream::iter(targets)
+        .map(move |source| {
             let client = client.clone();
-            let app = app.clone();
+            let app = emitter.clone();
             let done = done.clone();
             async move {
-                let outcome = fetcher::fetch_source(&client, &source, limit).await;
+                // Đọc feed trong một tác vụ riêng.
+                //
+                // Feed là dữ liệu lấy từ Internet, tức không kiểm soát được:
+                // bộ đọc có thể hoảng giữa chừng vì một chuỗi dị dạng. Nằm
+                // thẳng trong dòng này thì cú hoảng đó cuốn theo cả lượt làm
+                // mới — không nguồn nào được ghi nhận, kể cả những nguồn đã
+                // tải xong. Tách ra thì nó chỉ là lỗi của riêng nguồn đó.
+                let reading = tauri::async_runtime::spawn({
+                    let client = client.clone();
+                    let source = source.clone();
+                    async move { fetcher::fetch_source(&client, &source, limit).await }
+                });
+                let outcome = reading.await.unwrap_or_else(|_| {
+                    Err(format!(
+                        "Feed của {} có dữ liệu làm bộ đọc dừng giữa chừng.",
+                        source.title
+                    ))
+                });
+
                 let finished = done.fetch_add(1, Ordering::SeqCst) + 1;
                 let _ = app.emit(
                     "refresh:progress",
@@ -517,31 +546,49 @@ async fn refresh(app: AppHandle, state: State<'_, AppState>) -> Result<Snapshot,
                 (source.id, outcome)
             }
         })
-        .buffer_unordered(FETCH_CONCURRENCY)
-        .collect()
-        .await;
+        .buffer_unordered(FETCH_CONCURRENCY);
 
-    let mut data = state.data.lock().await;
     let now = Utc::now().to_rfc3339_opts(SecondsFormat::Secs, true);
-    let mut incoming = Vec::new();
+    let mut last_emit: Option<std::time::Instant> = None;
 
-    for (source_id, outcome) in results {
-        let Some(source) = data.sources.iter_mut().find(|s| s.id == source_id) else {
-            continue;
-        };
-        match outcome {
-            Ok(articles) => {
-                source.last_fetched = Some(now.clone());
-                source.last_error = None;
-                // Nhận diện lại mỗi lượt để nguồn đổi ngôn ngữ vẫn theo kịp.
-                source.language = Some(detect_language(&articles));
-                incoming.extend(articles);
+    // Ghi nhận từng nguồn ngay khi nó về, không đợi nguồn cuối cùng.
+    //
+    // Gom hết rồi mới ghi một lượt thì tin chỉ hiện ra sau nguồn chậm nhất,
+    // và đóng ứng dụng giữa chừng là mất trắng cả những nguồn đã tải xong.
+    while let Some((source_id, outcome)) = arriving.next().await {
+        let mut data = state.data.lock().await;
+
+        let mut fetched = None;
+        {
+            let Some(source) = data.sources.iter_mut().find(|s| s.id == source_id) else {
+                continue;
+            };
+            match outcome {
+                Ok(articles) => {
+                    source.last_fetched = Some(now.clone());
+                    source.last_error = None;
+                    // Nhận diện lại mỗi lượt để nguồn đổi ngôn ngữ vẫn theo kịp.
+                    source.language = Some(detect_language(&articles));
+                    fetched = Some(articles);
+                }
+                Err(message) => source.last_error = Some(message),
             }
-            Err(message) => source.last_error = Some(message),
+        }
+        if let Some(articles) = fetched {
+            merge_articles(&mut data, articles);
+        }
+
+        // Phát ảnh chụp thưa tay: dựng cụm cho cả kho tin không rẻ, mà mắt
+        // người cũng không theo kịp ba mươi lần vẽ lại trong ba giây.
+        let due = last_emit.is_none_or(|at| at.elapsed() >= EMIT_EVERY);
+        if due {
+            last_emit = Some(std::time::Instant::now());
+            let _ = store::save(&app, &data);
+            emit_snapshot(&app, &data);
         }
     }
 
-    merge_articles(&mut data, incoming);
+    let mut data = state.data.lock().await;
     data.last_refresh = Some(now);
     store::save(&app, &data)?;
     let snap = snapshot(&data);
