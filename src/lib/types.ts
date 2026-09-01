@@ -91,7 +91,6 @@ export const TOPICS: Topic[] = [
   { id: "hardware", label: "Phần cứng" },
   { id: "device", label: "Điện thoại & thiết bị" },
   { id: "games", label: "Game & esports" },
-  { id: "startup", label: "Startup & vốn" },
   { id: "ev", label: "Xe điện" },
   { id: "social", label: "Mạng xã hội" },
   { id: "space", label: "Không gian" },

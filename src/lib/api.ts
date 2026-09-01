@@ -25,6 +25,13 @@ function demoDelay<T>(value: T, ms = 320): Promise<T> {
   return new Promise((resolve) => setTimeout(() => resolve(value), ms));
 }
 
+/** Đăng ký nghe một sự kiện của backend, trả về hàm để huỷ đăng ký. */
+async function onEvent<T>(name: string, handler: (payload: T) => void): Promise<() => void> {
+  if (!isDesktop) return () => {};
+  const { listen } = await import("@tauri-apps/api/event");
+  return listen<T>(name, (event) => handler(event.payload));
+}
+
 export const api = {
   getSnapshot: (): Promise<Snapshot> =>
     isDesktop ? call<Snapshot>("get_snapshot") : demoDelay(demoSnapshot(), 120),
@@ -63,15 +70,20 @@ export const api = {
     }
   },
 
-  onRefreshProgress: async (
+  onRefreshProgress: (
     handler: (payload: { done: number; total: number; source: string }) => void,
-  ): Promise<() => void> => {
-    if (!isDesktop) return () => {};
-    const { listen } = await import("@tauri-apps/api/event");
-    return listen<{ done: number; total: number; source: string }>("refresh:progress", (event) =>
-      handler(event.payload),
-    );
-  },
+  ): Promise<() => void> => onEvent("refresh:progress", handler),
+
+  /**
+   * Ảnh chụp mới do backend tự đẩy lên sau khi bổ sung xong ảnh hoặc bản dịch.
+   * Lệnh `refresh` trả về ngay khi đọc xong feed, phần còn lại tới sau qua đây.
+   */
+  onSnapshotUpdated: (handler: (snapshot: Snapshot) => void): Promise<() => void> =>
+    onEvent("snapshot:updated", handler),
+
+  /** Việc backend đang làm ở nền, hoặc null khi đã xong. */
+  onEnrichPhase: (handler: (label: string | null) => void): Promise<() => void> =>
+    onEvent("enrich:phase", handler),
 };
 
 function demoArticle(): CleanedArticle {

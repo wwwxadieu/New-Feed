@@ -23,38 +23,19 @@ body {
   transition: background var(--dur-base) ease, color var(--dur-base) ease;
 }
 
-/* Nền môi trường: các mảng màu mờ để lớp kính có thứ gì đó để khúc xạ. */
+/* Nền: một lớp duy nhất, cố ý phẳng và yên.
+   Chỗ nào cũng có màu thì không chỗ nào nổi lên. Nội dung đã là bề mặt đặc,
+   nền chỉ còn việc làm phông cho nó — nên đây là một dải dọc và một vùng
+   sáng cân giữa, không có khối màu rời nào nữa. */
 .ambient {
   position: fixed;
   inset: 0;
   z-index: 0;
   pointer-events: none;
   overflow: hidden;
-  background: var(--bg-deep);
+  background: var(--bg-gradient);
+  background-color: var(--bg-deep);
 }
-.ambient span {
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(90px);
-  opacity: 0.5;
-}
-.ambient span:nth-child(1) {
-  width: 620px; height: 620px; top: -220px; left: -120px;
-  background: radial-gradient(circle, var(--blue), transparent 70%);
-}
-.ambient span:nth-child(2) {
-  width: 520px; height: 520px; top: 30%; right: -180px;
-  background: radial-gradient(circle, var(--indigo), transparent 70%);
-  opacity: 0.34;
-}
-.ambient span:nth-child(3) {
-  width: 480px; height: 480px; bottom: -200px; left: 32%;
-  background: radial-gradient(circle, var(--teal), transparent 70%);
-  opacity: 0.3;
-}
-:root[data-theme="dark"] .ambient span { opacity: 0.28; }
-:root[data-theme="dark"] .ambient span:nth-child(2) { opacity: 0.2; }
-:root[data-theme="dark"] .ambient span:nth-child(3) { opacity: 0.18; }
 
 button,
 input,

@@ -10,7 +10,6 @@ const TOPIC_TINT: Record<string, string> = {
   security: "var(--red)",
   hardware: "var(--teal)",
   device: "var(--blue)",
-  startup: "var(--green)",
   ev: "var(--orange)",
   games: "var(--purple)",
   social: "var(--pink)",
@@ -41,7 +40,9 @@ export function ClusterCard({ cluster, index, lead, onOpen }: Props) {
   return (
     <button
       className={`cluster-card${lead ? " lead" : ""}`}
-      style={{ "--i": index } as React.CSSProperties}
+      // Chỉ so le vài thẻ đầu. Không chặn thì thẻ thứ 60 phải đợi hơn một
+      // giây rưỡi mới hiện, trông như ứng dụng đang treo chứ không phải hiệu ứng.
+      style={{ "--i": Math.min(index, 10) } as React.CSSProperties}
       onClick={() => onOpen(cluster)}
     >
       <span className="thumb" style={{ "--tint": TOPIC_TINT[cluster.topic] ?? "var(--blue)" } as React.CSSProperties}>

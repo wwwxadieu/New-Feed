@@ -28,6 +28,25 @@ const SORTS = [
   { value: "new" as const, label: "Mới nhất" },
 ];
 
+/** Lần làm mới gần nhất cũ hơn ngần này thì tự làm mới lại. */
+const STALE_AFTER_MS = 5 * 60 * 1000;
+/** Nhịp kiểm tra tin mới trong lúc ứng dụng đang mở. */
+const AUTO_REFRESH_MS = 10 * 60 * 1000;
+/**
+ * Số cụm dựng sẵn mỗi lượt. Cuộn tới cuối thì nạp thêm bấy nhiêu nữa: dựng
+ * cả vài trăm thẻ tin ngay từ đầu làm lượt vẽ đầu tiên chậm hẳn, mà người
+ * đọc gần như không bao giờ cuộn hết chỗ đó.
+ */
+const PAGE_SIZE = 30;
+/**
+ * Trần chờ cho một lượt làm mới.
+ *
+ * Cờ "đang làm mới" chặn lượt sau chồng lên lượt trước, nên nếu backend không
+ * bao giờ trả lời thì cờ đó kẹt lại vĩnh viễn: nút làm mới câm và nhịp tự
+ * động cũng đứng, cho tới khi mở lại ứng dụng. Thà báo hỏng còn hơn treo im.
+ */
+const REFRESH_TIMEOUT_MS = 120 * 1000;
+
 export default function App() {
   const { choice: theme, setChoice: setTheme } = useTheme();
 
@@ -49,6 +68,17 @@ export default function App() {
   const [addingSource, setAddingSource] = useState(false);
   const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
   const [toast, setToast] = useState<{ message: string; error?: boolean } | null>(null);
+  /** Việc backend đang làm ở nền sau khi danh sách tin đã hiện ra. */
+  const [phase, setPhase] = useState<string | null>(null);
+  /** Số cụm đang được dựng; tăng dần khi cuộn tới cuối. */
+  const [visible, setVisible] = useState(PAGE_SIZE);
+
+  const sentinelRef = useRef<HTMLDivElement>(null);
+  // Bản mới nhất để các bộ hẹn giờ đọc mà không phải dựng lại theo mỗi lần
+  // trạng thái đổi — nếu không, mỗi lượt bổ sung nền sẽ đặt lại đồng hồ.
+  const snapshotRef = useRef<Snapshot | null>(null);
+  const refreshingRef = useRef(false);
+  snapshotRef.current = snapshot;
 
   const pickTopic = useCallback((next: string) => {
     setTopic(next);
@@ -79,37 +109,104 @@ export default function App() {
     return () => dispose?.();
   }, []);
 
-  const refresh = useCallback(async () => {
-    if (refreshing) return;
-    setRefreshing(true);
-    setProgress({ done: 0, total: snapshot?.sources.filter((s) => s.enabled).length ?? 1 });
-    try {
-      const next = await api.refresh();
-      setSnapshot(next);
-      if (next.translateNotice) notify(next.translateNotice, true);
-      const failed = next.sources.filter((s) => s.enabled && s.lastError).length;
-      notify(
-        failed > 0
-          ? `Đã làm mới. ${failed} nguồn không tải được — xem chi tiết trong Quản lý nguồn.`
-          : `Đã làm mới ${next.sources.filter((s) => s.enabled).length} nguồn.`,
-        failed > 0,
-      );
-    } catch (err: unknown) {
-      notify(err instanceof Error ? err.message : String(err), true);
-    } finally {
-      setRefreshing(false);
-      setProgress(null);
-    }
-  }, [refreshing, snapshot, notify]);
-
-  // Làm mới ngay lần mở đầu tiên nếu kho tin còn trống.
+  // Ảnh và bản dịch về sau lượt đọc feed, backend tự đẩy lên khi xong.
   useEffect(() => {
-    if (isDesktop && snapshot && snapshot.articleCount === 0 && snapshot.sources.length > 0 && !refreshing) {
-      void refresh();
-    }
-    // Chỉ chạy khi ảnh chụp trạng thái lần đầu về tới.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [snapshot?.sources.length]);
+    const disposers: (() => void)[] = [];
+    let cancelled = false;
+    const keep = (off: () => void) => (cancelled ? off() : disposers.push(off));
+
+    api
+      .onSnapshotUpdated((next) => {
+        setSnapshot(next);
+        if (next.translateNotice) notify(next.translateNotice, true);
+      })
+      .then(keep);
+    api.onEnrichPhase(setPhase).then(keep);
+
+    return () => {
+      cancelled = true;
+      disposers.forEach((off) => off());
+    };
+  }, [notify]);
+
+  const refresh = useCallback(
+    // Lượt tự động chạy im lặng: chỉ báo khi có nguồn hỏng, còn lại không
+    // bắn thông báo để không quấy người đang đọc.
+    async (silent = false) => {
+      if (refreshingRef.current) return;
+      refreshingRef.current = true;
+      setRefreshing(true);
+      setProgress({ done: 0, total: snapshotRef.current?.sources.filter((s) => s.enabled).length ?? 1 });
+
+      let guard = 0;
+      const deadline = new Promise<never>((_, reject) => {
+        guard = window.setTimeout(
+          () => reject(new Error("Lượt làm mới không phản hồi. Xem Quản lý nguồn để biết nguồn nào đang hỏng.")),
+          REFRESH_TIMEOUT_MS,
+        );
+      });
+
+      try {
+        const next = await Promise.race([api.refresh(), deadline]);
+        setSnapshot(next);
+        if (next.translateNotice) notify(next.translateNotice, true);
+        const failed = next.sources.filter((s) => s.enabled && s.lastError).length;
+        if (failed > 0) {
+          notify(`Đã làm mới. ${failed} nguồn không tải được — xem chi tiết trong Quản lý nguồn.`, true);
+        } else if (!silent) {
+          notify(`Đã làm mới ${next.sources.filter((s) => s.enabled).length} nguồn.`);
+        }
+      } catch (err: unknown) {
+        if (!silent) notify(err instanceof Error ? err.message : String(err), true);
+      } finally {
+        window.clearTimeout(guard);
+        refreshingRef.current = false;
+        setRefreshing(false);
+        setProgress(null);
+      }
+    },
+    [notify],
+  );
+
+  /** Làm mới nếu tin đã cũ. Dùng chung cho lúc mở app, nhịp định kỳ và lúc
+   *  cửa sổ được quay lại sau một lúc bỏ đó. */
+  const refreshIfStale = useCallback(() => {
+    const snap = snapshotRef.current;
+    if (!isDesktop || refreshingRef.current || !snap) return;
+    if (!snap.sources.some((s) => s.enabled)) return;
+    const age = snap.lastRefresh ? Date.now() - Date.parse(snap.lastRefresh) : Number.POSITIVE_INFINITY;
+    // So sánh thuận để mốc thời gian hỏng (NaN) rơi vào nhánh không làm mới.
+    if (snap.articleCount > 0 && !(age > STALE_AFTER_MS)) return;
+    void refresh(true);
+  }, [refresh]);
+
+  const staleRef = useRef(refreshIfStale);
+  staleRef.current = refreshIfStale;
+
+  // Tự làm mới ngay lần đầu ảnh chụp về tới, nếu tin đã cũ hoặc kho còn trống.
+  const bootstrapped = useRef(false);
+  useEffect(() => {
+    if (!snapshot || bootstrapped.current) return;
+    bootstrapped.current = true;
+    staleRef.current();
+  }, [snapshot]);
+
+  // Nhịp định kỳ trong lúc app đang mở, và mỗi lần cửa sổ được quay lại.
+  useEffect(() => {
+    if (!isDesktop) return;
+    const check = () => staleRef.current();
+    const timer = window.setInterval(check, AUTO_REFRESH_MS);
+    const onVisible = () => {
+      if (document.visibilityState === "visible") check();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("focus", check);
+    return () => {
+      window.clearInterval(timer);
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("focus", check);
+    };
+  }, []);
 
   const addSource = useCallback(
     async (input: string) => {
@@ -186,6 +283,37 @@ export default function App() {
     [snapshot],
   );
 
+  // Đổi bộ lọc thì quay lại trang đầu và kéo dòng tin lên đầu.
+  useEffect(() => {
+    setVisible(PAGE_SIZE);
+    if (feedRef.current) feedRef.current.scrollTop = 0;
+  }, [topic, sourceId, sort, windowHours, query]);
+
+  const shown = useMemo(() => clusters.slice(0, visible), [clusters, visible]);
+
+  // Cuộn gần tới cuối thì dựng thêm một trang nữa.
+  //
+  // Quan sát được dựng lại sau mỗi lần nạp thêm: IntersectionObserver chỉ báo
+  // khi trạng thái giao nhau thay đổi, mà cột mốc thường vẫn còn trong tầm
+  // nhìn sau khi trang mới vẽ xong — không dựng lại thì nó im luôn.
+  useEffect(() => {
+    const root = feedRef.current;
+    const mark = sentinelRef.current;
+    if (!root || !mark) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+          setVisible((count) => Math.min(count + PAGE_SIZE, clusters.length));
+        }
+      },
+      // Nạp trước khi người đọc chạm đáy thật, để không thấy khoảng trống.
+      { root, rootMargin: "900px 0px" },
+    );
+    observer.observe(mark);
+    return () => observer.disconnect();
+  }, [visible, clusters.length]);
+
   // Bất kỳ tấm trượt nào đang mở thì nội dung phía sau đều phải lùi lại.
   const sheetOpen = reader !== null || sourcesOpen;
   const windowLabel = WINDOWS.find((w) => w.value === windowHours)?.label ?? "24 giờ";
@@ -193,11 +321,7 @@ export default function App() {
 
   return (
     <SourcesContext.Provider value={sourceMap}>
-      <div className="ambient" aria-hidden="true">
-        <span />
-        <span />
-        <span />
-      </div>
+      <div className="ambient" aria-hidden="true" />
 
       <div className={`window${sheetOpen ? " behind-sheet" : ""}`} aria-hidden={sheetOpen}>
         <TitleBar />
@@ -240,7 +364,13 @@ export default function App() {
                 onChange={setWindowHours}
               />
 
-              <div style={{ marginLeft: "auto", display: "flex", gap: 4 }}>
+              <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 4 }}>
+                {phase && (
+                  <span className="work-chip" title="Danh sách tin đã sẵn sàng, phần này đang được bổ sung ở nền">
+                    <i />
+                    {phase}
+                  </span>
+                )}
                 <button
                   className="icon-button"
                   onClick={() => setSourcesOpen(true)}
@@ -251,7 +381,7 @@ export default function App() {
                 </button>
                 <button
                   className={`icon-button${refreshing ? " spinning" : ""}`}
-                  onClick={refresh}
+                  onClick={() => void refresh()}
                   disabled={refreshing}
                   title="Làm mới"
                   aria-label="Làm mới"
@@ -300,7 +430,7 @@ export default function App() {
                       )}
                     </div>
                   ) : (
-                    clusters.map((cluster, index) => (
+                    shown.map((cluster, index) => (
                       <ClusterCard
                         key={cluster.id}
                         cluster={cluster}
@@ -311,6 +441,19 @@ export default function App() {
                     ))
                   )}
                 </div>
+
+                {visible < clusters.length ? (
+                  <div className="feed-more" ref={sentinelRef} role="status">
+                    <span className="feed-more-dot" />
+                    Đang dựng thêm tin…
+                  </div>
+                ) : (
+                  clusters.length > PAGE_SIZE && (
+                    <p className="feed-end">
+                      Hết {formatNumber(clusters.length)} cụm tin trong {windowLabel.toLowerCase()} qua
+                    </p>
+                  )
+                )}
                 </div>
               </main>
 

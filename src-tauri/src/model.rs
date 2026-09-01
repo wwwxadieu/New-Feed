@@ -55,6 +55,13 @@ pub struct Article {
     /// Đường dẫn ảnh đại diện đã tải về và thu nhỏ trên máy.
     #[serde(default)]
     pub thumb: Option<String>,
+    /// Đã đi tìm ảnh cho bài này rồi, dù có tìm được hay không.
+    ///
+    /// Không ghi lại thì mỗi lượt bổ sung lại tải trang của đúng những bài
+    /// không có ảnh — và vì danh sách chỉ lấy sáu mươi bài đầu, chỗ bài hỏng
+    /// đó chặn luôn những bài phía sau, mãi mãi.
+    #[serde(default)]
+    pub image_checked: bool,
     /// Nội dung HTML lấy từ feed, dùng làm phương án dự phòng khi không bóc
     /// tách được thân bài từ trang gốc.
     #[serde(default)]
@@ -151,6 +158,12 @@ pub struct AppData {
     pub settings: Settings,
     #[serde(default)]
     pub last_refresh: Option<String>,
+    /// Mã của những nguồn mặc định đã từng được nạp vào máy này.
+    ///
+    /// Nhờ đó bản cập nhật có thêm nguồn mới vẫn tới được máy đang dùng dở,
+    /// mà nguồn người dùng đã cố ý xoá thì không mọc lại ở lần mở sau.
+    #[serde(default)]
+    pub seeded_defaults: Vec<String>,
     /// Thông báo tạm về việc dịch, ví dụ khi hết hạn mức. Không lưu ra đĩa.
     #[serde(skip)]
     pub translate_notice: Option<String>,

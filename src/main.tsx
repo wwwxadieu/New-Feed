@@ -8,6 +8,13 @@ import "./styles/tokens.css";
 import "./styles/base.css";
 import "./styles/app.css";
 import App from "./App";
+import { suppressWebviewContextMenu } from "./lib/nativeChrome";
+
+// Bản dev giữ nguyên menu chuột phải, vì "Inspect" trong đó là đường mở
+// devtools. Bản dựng để dùng thật thì không cần tới nó nữa.
+if (import.meta.env.PROD) {
+  suppressWebviewContextMenu();
+}
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>

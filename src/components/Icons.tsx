@@ -87,6 +87,15 @@ export const AutoIcon = ({ size = 15 }: IconProps) => (
   </svg>
 );
 
+/** Ngọn lửa — tin đang được nhiều báo cùng đưa. */
+export const FlameIcon = ({ size = 13 }: IconProps) => (
+  <svg {...base(size)}>
+    <path d="M12 2.8c2.7 3 4.1 5.3 4.1 7a4.1 4.1 0 0 1-8.2 0c0-.9.3-1.8.9-2.7.5 1 1.1 1.6 1.8 1.9-.2-2.2.3-4.3 1.4-6.2Z" />
+    <path d="M12 21.2a6.6 6.6 0 0 0 6.6-6.6c0-1-.2-2-.6-2.9" />
+    <path d="M5.4 14.6A6.6 6.6 0 0 0 12 21.2" />
+  </svg>
+);
+
 export const SourceIcon = ({ size = 15 }: IconProps) => (
   <svg {...base(size)}>
     <path d="M4 6.5h11M4 12h11M4 17.5h7" />
