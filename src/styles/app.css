@@ -454,7 +454,10 @@
   padding: 0;
   overflow: hidden;
   text-align: left;
-  border-radius: var(--r-lg);
+  /* Vuông hai góc dưới: tấm kính chạy hết bề ngang và kết thúc đúng ở cạnh
+     thẻ. Để bo góc thì mép tấm phải cong theo và hở ra một mảnh viền phía
+     ngoài đường cong, nhìn như bị khuyết một miếng. */
+  border-radius: var(--r-lg) var(--r-lg) 0 0;
   background: var(--fill);
   border: 1px solid var(--surface-border);
   box-shadow: var(--shadow-card);
@@ -491,12 +494,12 @@
   pointer-events: none;
 }
 .card-pic img.blur.soft {
-  filter: blur(7px);
+  filter: blur(7px) saturate(150%);
   -webkit-mask-image: linear-gradient(to top, #000 0 34%, rgba(0, 0, 0, 0.55) 58%, transparent 80%);
   mask-image: linear-gradient(to top, #000 0 34%, rgba(0, 0, 0, 0.55) 58%, transparent 80%);
 }
 .card-pic img.blur.deep {
-  filter: blur(22px) saturate(140%);
+  filter: blur(22px) saturate(165%);
   -webkit-mask-image: linear-gradient(to top, #000 0 18%, rgba(0, 0, 0, 0.5) 36%, transparent 56%);
   mask-image: linear-gradient(to top, #000 0 18%, rgba(0, 0, 0, 0.5) 36%, transparent 56%);
 }
@@ -517,6 +520,8 @@
 /* Tấm kính không phải một khối chữ nhật có viền, mà là một dải chuyển sắc:
    đục nhất ở đáy rồi nhạt dần lên trên cho tới trong suốt. Nhờ vậy nó tan
    vào tấm ảnh thay vì nằm đè lên như một thẻ riêng.
+   Đỉnh dải giữ ở 0,8 chứ không đục hơn: phải nhìn thấy phần ảnh đã nhoè phía
+   sau thì mới ra chất kính, đục quá thì thành một lớp sơn trắng.
    Đệm trên dày để phần nhạt nhất của dải rơi vào khoảng trống chứ không phải
    vào dòng chữ đầu tiên. */
 .card-body {
@@ -527,10 +532,10 @@
   color: #16161a;
   background: linear-gradient(
     to top,
-    rgba(255, 255, 255, 0.94) 0%,
-    rgba(255, 255, 255, 0.92) 52%,
-    rgba(255, 255, 255, 0.84) 76%,
-    rgba(255, 255, 255, 0.42) 91%,
+    rgba(255, 255, 255, 0.8) 0%,
+    rgba(255, 255, 255, 0.78) 52%,
+    rgba(255, 255, 255, 0.7) 78%,
+    rgba(255, 255, 255, 0.34) 92%,
     rgba(255, 255, 255, 0) 100%
   );
 }

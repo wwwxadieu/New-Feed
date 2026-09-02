@@ -200,6 +200,14 @@ Bản thân tấm kính là một dải chuyển sắc chứ không phải khố
 ảnh thay vì nằm đè lên như một thẻ riêng. Phần đệm trên dày để chỗ nhạt nhất
 của dải rơi vào khoảng trống chứ không phải vào dòng chữ đầu tiên.
 
+Đỉnh dải giữ ở 0,8 chứ không đục hơn: phải nhìn thấy phần ảnh đã nhoè phía
+sau thì mới ra chất kính, đục quá thì thành một lớp sơn trắng. Hai lớp mờ
+cũng tăng độ bão hoà (150% và 165%) vì kính thật làm màu phía sau rực lên chứ
+không xám đi.
+
+Hai góc dưới của thẻ để vuông. Bo góc thì mép tấm kính phải cong theo và hở
+ra một mảnh viền phía ngoài đường cong, nhìn như thẻ bị khuyết một miếng.
+
 Đo tương phản ở đây phải đo sau từng dòng chữ, không lấy trung bình cả tấm:
 đỉnh dải nhạt hơn hẳn phần còn lại nên số trung bình che mất vấn đề. Đo kiểu
 đó trên ảnh đen tuyền thì thấy dòng thời gian chỉ đạt 3,5:1 vì nó nằm đúng
