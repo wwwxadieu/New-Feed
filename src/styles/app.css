@@ -472,22 +472,33 @@
 }
 .card-pic img[hidden] { display: none; }
 
-/* Bản sao ảnh đã làm mờ, chỉ hiện ở dải đáy nơi tấm kính nằm lên. Đây là cơ
-   chế tạo kính mờ duy nhất, dùng cho mọi thẻ, không còn backdrop-filter.
-   filter trên một tấm ảnh tĩnh được dựng một lần rồi đệm lại, còn
-   backdrop-filter phải đọc lại nền ở mỗi khung hình cuộn. Đo trên 60 thẻ khi
-   cuộn: backdrop-filter cho mọi thẻ đẩy khung hình trung vị từ 18,1ms lên
-   34,5ms và khung trễ từ 3/85 lên 82/85; content-visibility không cứu được
-   (40ms); cách này cho 18,6ms, tức bằng bản không có blur nào.
-   Dải mặt nạ phủ tới 42% chiều cao tính từ đáy rồi mới nhạt dần, trong khi
-   tấm kính cao nhất cũng chỉ chiếm 32% — nên tấm luôn nằm trọn trong vùng đã
-   nhoè, còn chỗ chuyển sắc nét sang nhoè rơi vào khoảng trống phía trên.
+/* Kính mờ dựng bằng bản sao của chính tấm ảnh, không dùng backdrop-filter.
+   Lý do là giá phải trả: filter trên một tấm ảnh tĩnh được dựng một lần rồi
+   đệm lại, còn backdrop-filter phải đọc lại nền ở mỗi khung hình cuộn. Đo
+   trên 60 thẻ khi cuộn: backdrop-filter cho mọi thẻ đẩy khung hình trung vị
+   từ 18,1ms lên 34,5ms và khung trễ từ 3/85 lên 82/85; giảm bán kính không
+   cứu được (8px cho 34,2ms, 4px cho 35,5ms) vì cái đắt là lớp hợp ảnh riêng
+   cho mỗi thẻ; content-visibility: auto càng tệ hơn (40ms).
+
+   Hai lớp bán kính khác nhau, mỗi lớp một dải mặt nạ riêng, nên độ nhoè tăng
+   dần từ trên xuống: sắc nét ở trên, nhoè nhẹ ở giữa, nhoè sâu ở đáy. Một
+   lớp duy nhất chỉ cho một độ nhoè cố định mờ dần độ đục, nhìn ra ngay là
+   có một ranh giới chứ không phải chuyển sắc thật.
+
    scale(1.08) để mép ảnh không bị nhoè ra thành viền sáng. */
 .card-pic img.blur {
-  filter: blur(18px) saturate(140%);
   transform: scale(1.08);
-  -webkit-mask-image: linear-gradient(to top, #000 0 42%, transparent 64%);
-  mask-image: linear-gradient(to top, #000 0 42%, transparent 64%);
+  pointer-events: none;
+}
+.card-pic img.blur.soft {
+  filter: blur(7px);
+  -webkit-mask-image: linear-gradient(to top, #000 0 34%, rgba(0, 0, 0, 0.55) 58%, transparent 80%);
+  mask-image: linear-gradient(to top, #000 0 34%, rgba(0, 0, 0, 0.55) 58%, transparent 80%);
+}
+.card-pic img.blur.deep {
+  filter: blur(22px) saturate(140%);
+  -webkit-mask-image: linear-gradient(to top, #000 0 18%, rgba(0, 0, 0, 0.5) 36%, transparent 56%);
+  mask-image: linear-gradient(to top, #000 0 18%, rgba(0, 0, 0, 0.5) 36%, transparent 56%);
 }
 .card-pic .fallback {
   position: absolute; inset: 0;

@@ -210,10 +210,12 @@ mỗi thẻ chứ không phải bán kính; `content-visibility: auto` cũng kh�
 Cách dùng bản sao cho 18,5ms với 6/85 khung trễ, tức ngang với thẻ đặc không
 có hiệu ứng nào.
 
-Dải mặt nạ phủ tới 42% chiều cao tính từ đáy rồi mới nhạt dần, trong khi tấm
-kính cao nhất cũng chỉ chiếm 32% — nên tấm luôn nằm trọn trong vùng đã nhoè,
-còn chỗ chuyển từ sắc nét sang nhoè rơi vào khoảng trống phía trên và đọc ra
-như hiệu ứng chiều sâu.
+Độ nhoè tăng dần từ trên xuống chứ không bật tắt theo một ranh giới: hai bản
+sao chồng nhau, bán kính 7px và 22px, mỗi bản một dải mặt nạ riêng. Trên cùng
+là ảnh sắc nét, xuống giữa thì bản 7px hiện dần, tới đáy thì bản 22px phủ
+kín. Dùng một lớp duy nhất thì chỉ có một độ nhoè cố định mờ dần độ đục, và
+nhìn ra ngay là có một đường ranh giới. Lớp thứ hai tốn thêm 0,7ms mỗi khung
+hình, từ 18,5 lên 19,2ms.
 
 Kính thật chỉ đặt ở tin hero và ba tin đặc tả, tức bốn thẻ, chứ không phải cả
 dòng tin. Đo trên 60 thẻ khi cuộn: để kính ở mọi thẻ thì khung hình trung vị

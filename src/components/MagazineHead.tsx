@@ -93,8 +93,11 @@ function Picture({ cluster, className }: { cluster: Cluster; className: string }
               event.currentTarget.hidden = true;
             }}
           />
-          {/* Bản sao đã làm mờ sẵn cho vùng đáy, nơi tấm kính nằm lên. */}
-          <img className="blur" src={image} alt="" aria-hidden="true" decoding="async" />
+          {/* Hai lớp mờ chồng nhau, bán kính khác nhau, mỗi lớp một dải mặt
+              nạ riêng: càng xuống đáy càng nhoè. Một lớp duy nhất thì chỉ là
+              một độ nhoè cố định mờ dần độ đục, không phải nhoè tăng dần. */}
+          <img className="blur soft" src={image} alt="" aria-hidden="true" decoding="async" />
+          <img className="blur deep" src={image} alt="" aria-hidden="true" decoding="async" />
         </>
       )}
     </span>
