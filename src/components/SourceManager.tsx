@@ -80,8 +80,7 @@ export function SourceManager({
         </form>
 
         <p className="form-hint">
-          Có thể dán địa chỉ trang chủ — ứng dụng sẽ tự dò feed. Ví dụ: vnexpress.net/so-hoa hoặc
-          arstechnica.com
+          Dán được cả địa chỉ trang chủ, ứng dụng tự dò feed. Ví dụ: vnexpress.net/so-hoa
         </p>
 
         <div className="sheet-body">
@@ -131,57 +130,60 @@ export function SourceManager({
             ))
           )}
 
-          <div className="sheet-section">
-            <span className="section-title">Hạn mức dịch</span>
-            <p className="form-hint" style={{ padding: "0 0 8px", border: "none" }}>
-              Dịch vụ dịch cho 5.000 ký tự mỗi ngày khi dùng ẩn danh, hoặc 50.000 nếu khai báo
-              một địa chỉ email. Để trống vẫn dùng được bình thường.
-            </p>
-            <div style={{ display: "flex", gap: 8 }}>
-              <input
-                className="text-field"
-                type="email"
-                placeholder="email@example.com (không bắt buộc)"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-              <button
-                className="link-button"
-                onClick={() => onTranslateEmail(email.trim())}
-                disabled={email.trim() === translateEmail}
-              >
-                Lưu
-              </button>
-            </div>
-          </div>
-
-          <div className="sheet-section">
-            <span className="section-title">Vị trí thời tiết</span>
-            <p className="form-hint" style={{ padding: "0 0 8px", border: "none" }}>
-              Để trống thì ứng dụng tự dò theo địa chỉ IP — cách này chỉ đúng tới mức thành phố
-              và sai hẳn nếu bạn dùng VPN. Gõ tên thành phố để đặt cố định.
-            </p>
-            <div style={{ display: "flex", gap: 8 }}>
-              <input
-                className="text-field"
-                type="text"
-                placeholder="Hà Nội, Đà Nẵng… (để trống là tự dò)"
-                value={place}
-                onChange={(e) => setPlace(e.target.value)}
-              />
-              <button
-                className="link-button"
-                onClick={() => onWeatherPlace(place.trim())}
-                disabled={place.trim() === weatherPlace}
-              >
-                Lưu
-              </button>
-            </div>
-            {resolved && (
-              <p className="form-hint" style={{ padding: "8px 0 0", border: "none" }}>
-                Đang lấy số liệu ở <b>{resolved}</b>.
+          {/* Hai ô cài đặt xếp cạnh nhau. Xếp dọc thì riêng phần này đã chiếm
+              289px, tức hơn một phần ba chiều cao tấm, chỉ để chứa hai ô nhập. */}
+          <div className="sheet-settings">
+            <div className="setting">
+              <span className="section-title">Hạn mức dịch</span>
+              <div className="setting-row">
+                <input
+                  className="text-field"
+                  type="email"
+                  placeholder="email@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
+                <button
+                  className="link-button"
+                  onClick={() => onTranslateEmail(email.trim())}
+                  disabled={email.trim() === translateEmail}
+                >
+                  Lưu
+                </button>
+              </div>
+              <p className="setting-hint">
+                Ẩn danh được 5.000 ký tự mỗi ngày, khai email thì 50.000.
               </p>
-            )}
+            </div>
+
+            <div className="setting">
+              <span className="section-title">Vị trí thời tiết</span>
+              <div className="setting-row">
+                <input
+                  className="text-field"
+                  type="text"
+                  placeholder="Hà Nội, Đà Nẵng…"
+                  value={place}
+                  onChange={(e) => setPlace(e.target.value)}
+                />
+                <button
+                  className="link-button"
+                  onClick={() => onWeatherPlace(place.trim())}
+                  disabled={place.trim() === weatherPlace}
+                >
+                  Lưu
+                </button>
+              </div>
+              <p className="setting-hint">
+                {resolved ? (
+                  <>
+                    Đang lấy ở <b>{resolved}</b>. Để trống là tự dò theo IP, sai nếu dùng VPN.
+                  </>
+                ) : (
+                  <>Để trống là tự dò theo IP, sai nếu dùng VPN.</>
+                )}
+              </p>
+            </div>
           </div>
         </div>
       </div>
