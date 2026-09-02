@@ -511,37 +511,34 @@
   opacity: 0.6;
 }
 
-/* Lớp phủ sáng chuyển dần ở đáy thẻ.
-   Giữ nhẹ thôi: tấm kính vốn đã đủ đục để bảo đảm tương phản một mình, nên
-   lớp này chỉ còn việc làm mềm chỗ tiếp giáp. Đặt đậm như bản đầu thì nửa
-   dưới tấm ảnh bị trắng bệch, đúng cái ngược với ý ảnh phủ toàn thẻ. */
-.poster::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background: linear-gradient(to top, rgba(255, 255, 255, 0.34) 0%, rgba(255, 255, 255, 0.08) 46%, transparent 70%);
-}
-
 /* Tấm kính sáng, chữ tối. Giữ nguyên một chất liệu ở cả giao diện sáng lẫn
    tối: nền của nó là ảnh bài chứ không phải nền của ứng dụng, nên nó không
    có lý do gì để đổi theo chủ đề. */
+/* Tấm kính không phải một khối chữ nhật có viền, mà là một dải chuyển sắc:
+   đục nhất ở đáy rồi nhạt dần lên trên cho tới trong suốt. Nhờ vậy nó tan
+   vào tấm ảnh thay vì nằm đè lên như một thẻ riêng.
+   Đệm trên dày để phần nhạt nhất của dải rơi vào khoảng trống chứ không phải
+   vào dòng chữ đầu tiên. */
 .card-body {
   position: relative;
   z-index: 1;
-  margin: 10px;
-  padding: 13px 15px 14px;
-  border-radius: var(--r-md);
-  background: rgba(255, 255, 255, 0.58);
-  border: 1px solid rgba(255, 255, 255, 0.55);
-  box-shadow: 0 1px 12px rgba(0, 0, 0, 0.1);
+  margin: 0;
+  padding: 46px 18px 16px;
   color: #16161a;
+  background: linear-gradient(
+    to top,
+    rgba(255, 255, 255, 0.94) 0%,
+    rgba(255, 255, 255, 0.92) 52%,
+    rgba(255, 255, 255, 0.84) 76%,
+    rgba(255, 255, 255, 0.42) 91%,
+    rgba(255, 255, 255, 0) 100%
+  );
 }
 
-/* Tin hero và tin đặc tả để tấm trong hơn một chút: khổ lớn nên nhìn rõ phần
-   ảnh nhoè phía sau hơn, và chữ ở đó cũng lớn hơn. */
-.hero-card .card-body,
-.feature-card .card-body { background: rgba(255, 255, 255, 0.54); }
+/* Thẻ càng cao thì chỗ chuyển sắc càng có nhiều không gian để trải ra, nên
+   đệm trên dày hơn. */
+.hero-card .card-body { padding: 78px 22px 20px; }
+.feature-card .card-body { padding: 58px 18px 16px; }
 
 /* Mọi màu chữ bên trong tấm kính đều phải tự khai lại: token của ứng dụng
    được tính cho nền sáng hoặc nền tối của app, không phải cho nền ảnh. */
@@ -550,7 +547,9 @@
 .card-body .feature-title { color: #101014; }
 .card-body .c-summary,
 .card-body .hero-summary { color: rgba(0, 0, 0, 0.72); }
-.card-body .stamp { color: rgba(0, 0, 0, 0.6); }
+/* Đậm hơn các chữ phụ khác: dòng này nằm ở đỉnh dải chuyển sắc, chỗ nền
+   nhạt nhất. Đo trên ảnh đen tuyền, để 0,6 thì chỉ đạt 3,5:1. */
+.card-body .stamp { color: rgba(0, 0, 0, 0.78); }
 .card-body .source-line { color: rgba(0, 0, 0, 0.62); }
 .card-body .source-line b { color: #101014; }
 .card-body .pill { background: rgba(0, 82, 204, 0.12); color: #0a52c4; }
@@ -586,7 +585,6 @@
   animation: card-in 460ms var(--ease-out) both;
 }
 .hero-card .card-pic .glyph svg { width: 60px; height: 60px; }
-.hero-card .card-body { margin: 14px; padding: 16px 18px 17px; }
 
 .feature-card.poster {
   aspect-ratio: 4 / 3;

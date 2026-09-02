@@ -195,9 +195,16 @@ nền của nó là ảnh bài chứ không phải nền của ứng dụng, nê
 gì để đổi theo chủ đề. Trường hợp xấu nhất vì thế là ảnh đen tuyền; đo ra
 được 10,0–11,8:1, trên ngưỡng dễ đọc 4,5:1 khá xa.
 
-Lớp phủ sáng chuyển dần ở đáy thẻ chỉ để làm mềm chỗ tiếp giáp, giữ nhẹ thôi:
-tấm kính vốn đã đủ đục để một mình bảo đảm tương phản, mà đặt lớp phủ đậm thì
-nửa dưới tấm ảnh bị trắng bệch — đúng cái ngược với ý ảnh phủ toàn thẻ.
+Bản thân tấm kính là một dải chuyển sắc chứ không phải khối chữ nhật có viền:
+đục nhất ở đáy rồi nhạt dần lên trên cho tới trong suốt, nên nó tan vào tấm
+ảnh thay vì nằm đè lên như một thẻ riêng. Phần đệm trên dày để chỗ nhạt nhất
+của dải rơi vào khoảng trống chứ không phải vào dòng chữ đầu tiên.
+
+Đo tương phản ở đây phải đo sau từng dòng chữ, không lấy trung bình cả tấm:
+đỉnh dải nhạt hơn hẳn phần còn lại nên số trung bình che mất vấn đề. Đo kiểu
+đó trên ảnh đen tuyền thì thấy dòng thời gian chỉ đạt 3,5:1 vì nó nằm đúng
+chỗ nhạt nhất, trong khi tiêu đề đạt 9:1. Sau khi kéo dải đục thêm và làm
+đậm riêng dòng đó: thấp nhất 5,9:1, cao nhất 15,6:1.
 
 **Kính mờ không dùng backdrop-filter.** Thay vào đó là một bản sao của chính
 tấm ảnh, đã làm mờ sẵn và che mặt nạ để chỉ hiện ở dải đáy nơi tấm kính nằm
