@@ -189,11 +189,15 @@ phát, từ chối ảnh vượt 24 triệu điểm ảnh, và bọc phần gi�
 `catch_unwind` để một tấm ảnh dị dạng không thoát ra ngoài phạm vi của nó.
 Bản release cố ý không đặt `panic = "abort"` vì lý do đó.
 
-**Thẻ tin dạng áp phích.** Ảnh phủ toàn thẻ, chữ đặt trên một tấm kính mờ ở
-đáy. Chữ luôn màu sáng ở cả giao diện sáng lẫn tối, vì nền của nó là ảnh bài
-chứ không phải nền của ứng dụng, kèm một lớp phủ tối chuyển dần để tương phản
-không phụ thuộc vào tấm ảnh vớ được. Đo trên trường hợp xấu nhất là ảnh trắng
-toát: 5,9–6,8:1, trên ngưỡng dễ đọc 4,5:1.
+**Thẻ tin dạng áp phích.** Ảnh phủ toàn thẻ, chữ đặt trên một tấm kính mờ và
+sáng ở đáy. Tấm kính giữ nguyên một chất liệu ở cả giao diện sáng lẫn tối, vì
+nền của nó là ảnh bài chứ không phải nền của ứng dụng, nên nó không có lý do
+gì để đổi theo chủ đề. Trường hợp xấu nhất vì thế là ảnh đen tuyền; đo ra
+được 10,0–11,8:1, trên ngưỡng dễ đọc 4,5:1 khá xa.
+
+Lớp phủ sáng chuyển dần ở đáy thẻ chỉ để làm mềm chỗ tiếp giáp, giữ nhẹ thôi:
+tấm kính vốn đã đủ đục để một mình bảo đảm tương phản, mà đặt lớp phủ đậm thì
+nửa dưới tấm ảnh bị trắng bệch — đúng cái ngược với ý ảnh phủ toàn thẻ.
 
 Kính thật chỉ đặt ở tin hero và ba tin đặc tả, tức bốn thẻ, chứ không phải cả
 dòng tin. Đo trên 60 thẻ khi cuộn: để kính ở mọi thẻ thì khung hình trung vị
