@@ -48,9 +48,15 @@ export function Sidebar({
 
   const visibleTopics = TOPICS.filter((t) => (counts[t.id] ?? 0) > 0);
   const enabled = sources.filter((s) => s.enabled);
+  // Dấu hiệu nguồn hỏng trước đây nằm ở panel bên phải; panel đó đã bỏ nên
+  // đưa xuống dòng trạng thái để tín hiệu này không mất hẳn.
+  const failing = enabled.filter((s) => s.lastError).length;
 
   return (
     <aside className="sidebar">
+      {/* Chỉ phần này cuộn. Khối Giao diện nằm ngoài nên luôn thấy, kể cả khi
+          danh sách nguồn dài hơn chiều cao cửa sổ. */}
+      <div className="sidebar-scroll">
       <nav className="nav-section" aria-label="Chủ đề">
         <span className="section-title">Chủ đề</span>
         <button
@@ -104,6 +110,7 @@ export function Sidebar({
           ))
         )}
       </nav>
+      </div>
 
       <div className="sidebar-foot">
         <div className="nav-section" aria-label="Giao diện">
@@ -152,9 +159,15 @@ export function Sidebar({
           Quản lý nguồn ({sources.length})
         </button>
 
-        <div className="status-line">
+        <div className={`status-line${failing > 0 ? " warn" : ""}`}>
           <span className="pulse-dot" />
-          Cập nhật lúc {clockTime(lastRefresh)}
+          {failing > 0 ? (
+            <>
+              {failing} nguồn lỗi · {clockTime(lastRefresh)}
+            </>
+          ) : (
+            <>Cập nhật lúc {clockTime(lastRefresh)}</>
+          )}
         </div>
       </div>
     </aside>

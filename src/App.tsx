@@ -8,7 +8,7 @@ import { Segmented } from "./components/Segmented";
 import { Sidebar } from "./components/Sidebar";
 import { TitleBar } from "./components/TitleBar";
 import { ClusterCard } from "./components/ClusterCard";
-import { InsightRail } from "./components/InsightRail";
+import { HotStrip } from "./components/HotStrip";
 import { ReaderSheet } from "./components/ReaderSheet";
 import { SourceManager } from "./components/SourceManager";
 import { SourcesContext } from "./components/SourceLogo";
@@ -397,9 +397,10 @@ export default function App() {
               )}
             </div>
 
-            <div className="columns">
-              <main className="feed" ref={feedRef}>
-                <div className="feed-inner" ref={feedInnerRef}>
+            <main className="feed" ref={feedRef}>
+              <div className="feed-inner" ref={feedInnerRef}>
+                <HotStrip clusters={clusters} onOpen={setReader} />
+
                 <div className="feed-head">
                   <div>
                     <h1>{sourceId ? (sourceMap.get(sourceId)?.title ?? "Tổng quan") : "Tổng quan"}</h1>
@@ -454,11 +455,8 @@ export default function App() {
                     </p>
                   )
                 )}
-                </div>
-              </main>
-
-              {snapshot && <InsightRail snapshot={snapshot} clusters={clusters} onOpen={setReader} />}
-            </div>
+              </div>
+            </main>
           </div>
 
         </div>

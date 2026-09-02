@@ -73,25 +73,34 @@
   flex-direction: column;
 }
 
-.columns {
-  flex: 1;
-  min-height: 0;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 328px;
-}
+
 
 /* ================= Thanh bên ================= */
+/* Chỉ vùng giữa cuộn, chân cột ghim lại.
+   Trước đây cả cột đặt overflow-y: auto và chân cột chỉ dựa vào margin-top:
+   auto, nên khi danh sách nguồn dài hơn cửa sổ thì khối Giao diện bị đẩy
+   xuống dưới đáy màn hình. Đo ở cửa sổ cao 700px: nội dung cột cao 837px,
+   đáy khối Giao diện nằm ở 861px — thấp hơn đáy màn hình 161px. */
 .sidebar {
   min-height: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  padding: 16px 12px;
-  overflow-y: auto;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  gap: 14px;
+  padding: 18px 12px 14px;
+  overflow: hidden;
   background: var(--sheen), var(--glass-thin);
   backdrop-filter: blur(30px) saturate(180%);
   -webkit-backdrop-filter: blur(30px) saturate(180%);
   border-right: 1px solid var(--hairline);
+}
+.sidebar-scroll {
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  /* Chừa chỗ để mục cuối không dính sát đường kẻ của chân cột. */
+  padding-bottom: 4px;
 }
 .nav-section { display: flex; flex-direction: column; gap: 2px; }
 .section-title {
@@ -173,7 +182,13 @@
 .switch.small i { width: 16px; height: 16px; }
 .switch.small[aria-checked="true"] i { transform: translateX(14px); }
 
-.sidebar-foot { margin-top: auto; display: flex; flex-direction: column; gap: 8px; }
+.sidebar-foot {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  padding-top: 14px;
+  border-top: 1px solid var(--hairline);
+}
 .ghost-button {
   display: flex; align-items: center; justify-content: center; gap: 7px;
   padding: 9px 12px;
@@ -185,6 +200,8 @@
 }
 .ghost-button:hover { background: var(--fill-strong); }
 .ghost-button:active { transform: scale(0.97); }
+.status-line.warn { color: var(--orange); }
+.status-line.warn .pulse-dot { background: var(--orange); }
 .status-line {
   display: flex; align-items: center; gap: 7px;
   padding: 0 4px; font-size: 11.5px; color: var(--label-3);
@@ -298,7 +315,7 @@
 }
 
 /* ================= Dòng cụm sự kiện ================= */
-.feed { flex: 1; min-height: 0; overflow-y: auto; padding: 20px 20px 56px; }
+.feed { flex: 1; min-height: 0; overflow-y: auto; padding: 22px 28px 64px; }
 
 /* Trên màn hình rộng, cột giữa không được kéo dài vô hạn: dòng chữ vượt quá
    tầm mắt và thẻ tin biến thành một dải gần như trống. Giới hạn bề ngang
@@ -312,7 +329,89 @@
   margin-inline: auto;
 }
 
-.feed-head { display: flex; align-items: flex-end; gap: 16px; margin-bottom: 16px; flex-wrap: wrap; }
+/* ================= Dải tin đang nóng (nằm ngang) =================
+   Thay cho cột phải cũ. Nằm ngang nên chỉ tốn chiều cao một dải thay vì ăn
+   328px bề ngang suốt chiều cao cửa sổ. */
+.hot-strip {
+  display: flex;
+  align-items: stretch;
+  gap: 14px;
+  margin-bottom: 20px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--hairline);
+  animation: view-in var(--dur-base) var(--ease-out) both;
+}
+.hot-strip-label {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex: none;
+  align-self: center;
+  padding-right: 14px;
+  border-right: 1px solid var(--hairline);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.055em;
+  text-transform: uppercase;
+  color: var(--orange);
+}
+.hot-strip-label svg { width: 14px; height: 14px; }
+
+/* Cuộn ngang khi cửa sổ hẹp: thà kéo ngang còn hơn bóp tiêu đề đến mức
+   không đọc được. Thanh cuộn ẩn đi cho gọn. */
+.hot-strip-track {
+  display: flex;
+  gap: 6px;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.hot-strip-track::-webkit-scrollbar { display: none; }
+
+.hot-tab {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  flex: 1 1 0;
+  min-width: 168px;
+  padding: 8px 11px;
+  text-align: left;
+  border-radius: var(--r-md);
+  transition: background var(--dur-fast) ease, transform var(--dur-fast) var(--ease-out);
+  animation: view-in var(--dur-base) var(--ease-out) both;
+  animation-delay: calc(var(--i, 0) * 32ms);
+}
+.hot-tab:hover { background: var(--fill); }
+.hot-tab:active { transform: scale(0.98); }
+
+.hot-tab-rank {
+  flex: none;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.5;
+  color: var(--orange);
+  font-variant-numeric: tabular-nums;
+}
+.hot-tab-body { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.hot-tab-title {
+  font-size: 13px;
+  font-weight: 550;
+  line-height: 1.36;
+  letter-spacing: -0.008em;
+  color: var(--label);
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+/* Một dòng duy nhất. Để nó xuống dòng thì tab nào có thêm chữ "Đang tăng"
+   sẽ cao hơn các tab còn lại và cả dải bị lệch. */
+.hot-tab-meta {
+  font-size: 11.5px;
+  color: var(--label-3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.feed-head { display: flex; align-items: flex-end; gap: 16px; margin-bottom: 22px; flex-wrap: wrap; }
 .feed-head h1 {
   margin: 0 0 2px;
   font-size: 26px; font-weight: 700; letter-spacing: -0.024em;
@@ -327,10 +426,13 @@
    `align-items: start` giữ mỗi thẻ đúng chiều cao nội dung của nó, không bị
    kéo giãn theo thẻ cao nhất cùng hàng — ảnh đại diện dựa vào tỷ lệ 4:3 nên
    thẻ bị kéo giãn sẽ làm ảnh méo theo. */
+/* Mỗi cột rộng tối thiểu 440px thay vì 352px. Cột phải bỏ đi trả lại 328px
+   bề ngang, và số đó dồn hết vào thẻ tin chứ không dùng để xếp thêm cột: ở
+   cửa sổ 1600px thẻ tin đi từ 489px lên khoảng 640px. */
 .cluster-list {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 352px), 1fr));
-  gap: 10px;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 440px), 1fr));
+  gap: 14px;
   align-items: start;
 }
 
@@ -362,11 +464,11 @@
    bộ chỗ đó ở mỗi khung hình cuộn. */
 .cluster-card {
   display: grid;
-  grid-template-columns: 116px minmax(0, 1fr);
-  gap: 15px;
+  grid-template-columns: 168px minmax(0, 1fr);
+  gap: 18px;
   width: 100%;
   text-align: left;
-  padding: 13px;
+  padding: 16px;
   border-radius: var(--r-lg);
   background: var(--surface);
   border: 1px solid var(--surface-border);
@@ -384,8 +486,9 @@
 .cluster-card:active { transform: translateY(0) scale(0.995); }
 /* Tin dẫn đầu là một trong hai chỗ được dùng bề mặt nhấn. */
 .cluster-card.lead {
-  grid-template-columns: 188px minmax(0, 1fr);
-  padding: 15px;
+  grid-template-columns: 300px minmax(0, 1fr);
+  gap: 24px;
+  padding: 20px;
   background: var(--surface-accent);
   border-color: var(--surface-accent-border);
 }
@@ -405,10 +508,12 @@
 }
 .thumb img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
 .thumb img[hidden] { display: none; }
+/* Ô dự phòng chỉ nhắc màu chủ đề chứ không tranh chỗ với ảnh thật: sáu bảy
+   thẻ không ảnh cạnh nhau với nền rực là phần làm dòng tin rối nhất. */
 .thumb .fallback {
   position: absolute; inset: 0;
-  background: linear-gradient(150deg, var(--tint, var(--blue)), transparent 78%), var(--fill);
-  opacity: 0.5;
+  background: linear-gradient(150deg, var(--tint, var(--blue)), transparent 72%), var(--fill);
+  opacity: 0.22;
 }
 /* Chỉ hiện khi bài không có ảnh: icon chủ đề mờ, không tranh chỗ với ảnh thật. */
 .thumb .glyph {
@@ -417,8 +522,8 @@
   color: var(--label-3);
   opacity: 0.75;
 }
-.thumb .glyph svg { width: 26px; height: 26px; }
-.cluster-card.lead .thumb .glyph svg { width: 34px; height: 34px; }
+.thumb .glyph svg { width: 30px; height: 30px; }
+.cluster-card.lead .thumb .glyph svg { width: 44px; height: 44px; }
 
 .c-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 5px; }
 .pill {
@@ -433,19 +538,19 @@
 .stamp { font-size: 11.5px; color: var(--label-3); }
 
 .c-title {
-  margin: 0 0 5px;
-  font-size: 15.5px; font-weight: 650; line-height: 1.34; letter-spacing: -0.012em;
+  margin: 0 0 7px;
+  font-size: 17.5px; font-weight: 650; line-height: 1.32; letter-spacing: -0.014em;
   text-wrap: balance;
 }
-.cluster-card.lead .c-title { font-size: 20px; line-height: 1.26; letter-spacing: -0.02em; }
+.cluster-card.lead .c-title { font-size: 27px; line-height: 1.22; letter-spacing: -0.022em; }
 .c-summary {
   margin: 0;
-  font-size: 13px; line-height: 1.52; color: var(--label-2);
+  font-size: 14px; line-height: 1.55; color: var(--label-2);
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
 }
 .cluster-card.lead .c-summary { -webkit-line-clamp: 3; }
 
-.c-foot { display: flex; align-items: center; gap: 9px; margin-top: 9px; min-width: 0; }
+.c-foot { display: flex; align-items: center; gap: 9px; margin-top: 12px; min-width: 0; }
 .avatar-stack { display: flex; flex: none; }
 .avatar {
   width: 20px; height: 20px; border-radius: 50%; margin-right: -6px;
@@ -477,109 +582,6 @@
 }
 .empty-state h2 { margin: 0 0 6px; font-size: 17px; font-weight: 650; letter-spacing: -0.015em; }
 .empty-state p { margin: 0 auto 18px; max-width: 44ch; font-size: 13.5px; color: var(--label-2); }
-
-/* ================= Cột phải ================= */
-.rail {
-  min-height: 0;
-  overflow-y: auto;
-  padding: 20px 20px 56px 0;
-  display: flex; flex-direction: column; gap: 12px;
-}
-.panel {
-  padding: 14px;
-  border-radius: var(--r-lg);
-  background: var(--surface);
-  border: 1px solid var(--surface-border);
-  box-shadow: var(--shadow-card);
-  animation: card-in 320ms var(--ease-out) both;
-}
-
-/* Chỗ nhấn thứ hai và cũng là cuối cùng: panel Tin hot. */
-.panel.accent {
-  background: var(--surface-accent);
-  border-color: var(--surface-accent-border);
-}
-
-.panel-head { display: flex; align-items: center; gap: 8px; margin-bottom: 11px; }
-/* Huy hiệu lửa của panel Tin hot. Khối màu đặc duy nhất trong cả cột phải,
-   nên mắt bắt được ngay panel nào là panel chính. */
-.panel-head .panel-icon {
-  display: grid; place-items: center;
-  width: 19px; height: 19px;
-  flex: none;
-  border-radius: 6px;
-  color: #fff;
-  background: var(--hot-gradient);
-  box-shadow: 0 1px 4px rgba(255, 79, 40, 0.34);
-}
-.panel-head h3 {
-  margin: 0;
-  font-size: 11px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase;
-  color: var(--label-3);
-}
-.panel-head .note { margin-left: auto; font-size: 11px; color: var(--label-3); font-variant-numeric: tabular-nums; }
-
-/* Mỗi dòng là một nút mở thẳng tin đó, vùng bấm nới rộng hết bề ngang panel. */
-.hot-row {
-  display: grid;
-  grid-template-columns: 15px minmax(0, 1fr);
-  gap: 9px;
-  width: calc(100% + 16px);
-  margin: 0 -8px;
-  padding: 7px 8px;
-  text-align: left;
-  border-radius: var(--r-sm);
-  transition: background var(--dur-fast) ease;
-}
-.hot-row + .hot-row { border-top: 1px solid var(--hairline); }
-.hot-row:hover { background: var(--fill); }
-.hot-row:active { background: var(--fill-strong); }
-.hot-row:hover p { color: var(--blue); }
-.hot-row .rank { font-size: 11px; color: var(--label-3); padding-top: 2px; font-variant-numeric: tabular-nums; }
-/* Chữ nghiêng để panel này khác hẳn phần còn lại. Chỉ nghiêng tiêu đề, còn
-   dòng đếm nguồn giữ chữ đứng cho dễ đọc. */
-.hot-row p {
-  margin: 0 0 6px;
-  font-size: 12.8px;
-  line-height: 1.38;
-  font-style: italic;
-  letter-spacing: 0.002em;
-  transition: color var(--dur-fast) ease;
-}
-.hot-row .sub { font-size: 11px; color: var(--label-3); margin-top: 5px; display: block; }
-.meter { display: block; height: 3px; border-radius: 2px; background: var(--fill); overflow: hidden; }
-.meter i {
-  display: block; height: 100%; border-radius: 2px;
-  background: var(--accent-gradient);
-  transition: width var(--dur-chart) var(--ease-out);
-}
-.hot-row:first-child .meter i { background: var(--hot-gradient); }
-
-.bar-row { display: grid; grid-template-columns: 96px minmax(0, 1fr) 32px; gap: 9px; align-items: center; padding: 3.5px 0; }
-.bar-row .name { font-size: 12.4px; color: var(--label-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.bar-row .track { height: 8px; border-radius: 0 3px 3px 0; background: var(--fill); }
-.bar-row .track i {
-  display: block; height: 100%; border-radius: 0 3px 3px 0;
-  background: var(--accent-gradient);
-  transition: width var(--dur-chart) var(--ease-out);
-}
-.bar-row .value { font-size: 11.5px; color: var(--label-2); text-align: right; font-variant-numeric: tabular-nums; }
-
-.spark { display: block; width: 100%; height: 58px; }
-.spark-axis { display: flex; justify-content: space-between; margin-top: 5px; font-size: 10.5px; color: var(--label-3); }
-
-.stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-/* Ô lõm bên trong một panel đặc: phân biệt bằng độ sâu, không bằng chất liệu. */
-.stat {
-  padding: 10px 11px;
-  border-radius: var(--r-md);
-  background: var(--surface-sunken);
-}
-.stat:first-child { grid-column: 1 / -1; }
-.stat .n { display: block; font-size: 19px; font-weight: 700; letter-spacing: -0.025em; font-variant-numeric: tabular-nums; }
-.stat .k { display: block; margin-top: 1px; font-size: 11.5px; color: var(--label-3); }
-.stat.green .n { color: var(--green); }
-.stat.orange .n { color: var(--orange); }
 
 /* ================= Lớp phủ và tấm trượt ================= */
 .overlay {
@@ -805,8 +807,6 @@
 /* ================= Cửa sổ hẹp ================= */
 @media (max-width: 1180px) {
   .shell { grid-template-columns: 232px minmax(0, 1fr); }
-  .columns { grid-template-columns: minmax(0, 1fr); }
-  .rail { display: none; }
 }
 @media (max-width: 900px) {
   .shell { grid-template-columns: minmax(0, 1fr); }
@@ -821,7 +821,6 @@
    CSS nên máy đặt tỷ lệ hiển thị 125–150% vẫn nhận đúng khổ chữ của nó. */
 @media (min-width: 1800px) {
   .shell { grid-template-columns: 268px minmax(0, 1fr); }
-  .columns { grid-template-columns: minmax(0, 1fr) 360px; }
 
   .nav-item { font-size: 14.5px; }
   .nav-item .count { font-size: 12.5px; }
@@ -829,14 +828,12 @@
 
   .feed-head h1 { font-size: 29px; }
   .feed-head p { font-size: 14px; }
-  .c-title { font-size: 16.5px; }
-  .cluster-card.lead .c-title { font-size: 21.5px; }
-  .c-summary { font-size: 14px; }
+  .c-title { font-size: 18.5px; }
+  .cluster-card.lead .c-title { font-size: 29px; }
+  .c-summary { font-size: 14.5px; }
+  .hot-tab-title { font-size: 13.6px; }
   .searchfield input { font-size: 14px; }
 
-  .hot-row p { font-size: 13.8px; }
-  .bar-row .name { font-size: 13.2px; }
-  .panel-head h3 { font-size: 11.5px; }
 
   .sheet { width: min(1180px, 100%); }
   .reader-grid { grid-template-columns: minmax(0, 1fr) 264px; gap: 28px; padding: 24px 30px 56px; }
@@ -850,7 +847,6 @@
 
 @media (min-width: 2400px) {
   .shell { grid-template-columns: 300px minmax(0, 1fr); }
-  .columns { grid-template-columns: minmax(0, 1fr) 400px; }
 
   .feed-head,
   .cluster-list,
@@ -864,15 +860,14 @@
   .nav-item .count { font-size: 13.5px; }
 
   .feed-head h1 { font-size: 32px; }
-  .c-title { font-size: 18px; }
-  .cluster-card.lead .c-title { font-size: 23.5px; }
-  .c-summary { font-size: 15px; }
-  .cluster-card { grid-template-columns: 136px minmax(0, 1fr); }
-  .cluster-card.lead { grid-template-columns: 220px minmax(0, 1fr); }
-  .cluster-list { grid-template-columns: repeat(auto-fill, minmax(min(100%, 412px), 1fr)); }
+  .c-title { font-size: 20px; }
+  .cluster-card.lead .c-title { font-size: 32px; }
+  .c-summary { font-size: 15.5px; }
+  .cluster-card { grid-template-columns: 196px minmax(0, 1fr); }
+  .cluster-card.lead { grid-template-columns: 360px minmax(0, 1fr); }
+  .cluster-list { grid-template-columns: repeat(auto-fill, minmax(min(100%, 520px), 1fr)); }
+  .hot-tab-title { font-size: 14.5px; }
 
-  .hot-row p { font-size: 14.8px; }
-  .bar-row .name { font-size: 14px; }
 
   .sheet { width: min(1400px, 100%); }
   .reader-grid { grid-template-columns: minmax(0, 1fr) 296px; gap: 34px; padding: 28px 36px 64px; }
@@ -888,7 +883,6 @@
    để nới thêm một nấc. Máy đặt 150% chỉ báo 2560px CSS nên không rơi vào đây. */
 @media (min-width: 3000px) {
   .shell { grid-template-columns: 330px minmax(0, 1fr); }
-  .columns { grid-template-columns: minmax(0, 1fr) 440px; }
   .feed-head,
   .cluster-list,
   .feed-more,
@@ -901,7 +895,8 @@
   .reader-title { font-size: 38px; }
   .reader-body p { font-size: 19.5px; margin-bottom: 21px; }
   .reader-body h3 { font-size: 22px; }
-  .c-title { font-size: 19px; }
-  .c-summary { font-size: 15.5px; }
+  .c-title { font-size: 21.5px; }
+  .c-summary { font-size: 16.5px; }
+  .cluster-list { grid-template-columns: repeat(auto-fill, minmax(min(100%, 600px), 1fr)); }
   .nav-item { font-size: 16.5px; }
 }
