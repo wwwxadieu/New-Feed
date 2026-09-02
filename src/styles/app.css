@@ -436,6 +436,138 @@
   align-items: start;
 }
 
+/* ================= Phần đầu kiểu tạp chí =================
+   Một tin hero rồi một hàng tin đặc tả, phía dưới mới là lưới thẻ đều.
+
+   Chỉ vài cụm đầu được đối xử như vậy. Phân cấp kiểu tạp chí cần tín hiệu đủ
+   mạnh để nói tin nào xứng đáng lớn hơn; ở đây là điểm cụm, mà điểm chỉ tách
+   bạch ở vài cụm đầu — xuống dưới thì thẻ to nhỏ khác nhau thành lộn xộn. */
+.magazine {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-bottom: 4px;
+}
+
+/* Ảnh chiếm phần lớn hơn phần chữ. Ô ảnh rộng khoảng 700px CSS, khớp với
+   bản ảnh 1440px tải sẵn ở thư mục đệm. */
+.hero-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1.12fr) minmax(0, 1fr);
+  gap: 30px;
+  width: 100%;
+  text-align: left;
+  padding: 20px;
+  border-radius: var(--r-xl);
+  background: var(--surface-accent);
+  border: 1px solid var(--surface-accent-border);
+  box-shadow: var(--shadow-card);
+  animation: card-in 460ms var(--ease-out) both;
+  transition: transform var(--dur-base) var(--ease-out), box-shadow var(--dur-base) ease;
+}
+.hero-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-raised); }
+.hero-card:active { transform: translateY(0) scale(0.996); }
+
+.hero-text { display: flex; flex-direction: column; min-width: 0; align-self: center; }
+
+/* Cỡ chữ bám theo bề ngang cửa sổ chứ không nhảy nấc theo mốc màn hình: tin
+   hero là chỗ duy nhất mà một bước nhảy cỡ chữ lộ rõ. */
+.hero-title {
+  margin: 2px 0 10px;
+  font-size: clamp(26px, 2.5vw, 42px);
+  font-weight: 700;
+  line-height: 1.13;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+.hero-summary {
+  margin: 0;
+  font-size: 15px; line-height: 1.58; color: var(--label-2);
+  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+}
+.hero-card .c-foot { margin-top: 16px; }
+
+.feature-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+.feature-card {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+  padding: 14px;
+  border-radius: var(--r-lg);
+  background: var(--surface);
+  border: 1px solid var(--surface-border);
+  box-shadow: var(--shadow-card);
+  animation: card-in 460ms var(--ease-out) both;
+  animation-delay: calc(var(--i, 0) * 40ms);
+  transition: transform var(--dur-base) var(--ease-out), box-shadow var(--dur-base) ease,
+    background var(--dur-fast) ease;
+}
+.feature-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-raised);
+  background: var(--surface-hover);
+}
+.feature-card:active { transform: translateY(0) scale(0.995); }
+.feature-text { display: flex; flex-direction: column; min-width: 0; margin-top: 12px; }
+.feature-title {
+  margin: 2px 0 0;
+  font-size: 19px; font-weight: 650; line-height: 1.28; letter-spacing: -0.018em;
+  text-wrap: balance;
+  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+}
+.feature-card .c-foot { margin-top: 12px; }
+
+/* Ảnh của hero và tin đặc tả dùng chung cách dựng với ô ảnh thẻ thường. */
+.hero-pic,
+.feature-pic {
+  position: relative;
+  border-radius: var(--r-md);
+  overflow: hidden;
+  background: var(--fill);
+}
+.hero-pic { aspect-ratio: 16 / 10; }
+.feature-pic { aspect-ratio: 16 / 9; }
+.hero-pic img,
+.feature-pic img {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.hero-pic img[hidden],
+.feature-pic img[hidden] { display: none; }
+.hero-pic .fallback,
+.feature-pic .fallback {
+  position: absolute; inset: 0;
+  background: linear-gradient(150deg, var(--tint, var(--blue)), transparent 72%), var(--fill);
+  opacity: 0.22;
+}
+.hero-pic .glyph,
+.feature-pic .glyph {
+  position: absolute; inset: 0;
+  display: grid; place-items: center;
+  color: var(--label-3);
+  opacity: 0.75;
+}
+.hero-pic .glyph svg { width: 56px; height: 56px; }
+.feature-pic .glyph svg { width: 32px; height: 32px; }
+
+/* Cửa sổ hẹp: hero xếp dọc, hàng đặc tả rút còn hai rồi một cột. Ép ba cột
+   ở khổ hẹp thì tiêu đề tiếng Việt bị bẻ vụn từng chữ một. */
+@media (max-width: 1240px) {
+  .feature-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 960px) {
+  .hero-card { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+  .hero-text { align-self: stretch; }
+  .feature-row { grid-template-columns: minmax(0, 1fr); }
+}
+
 /* Tin dẫn chạy hết bề ngang: ở một cột thì như cũ, ở nhiều cột thành khối
    mở đầu tách hẳn khỏi lưới bên dưới. */
 .cluster-card.lead { grid-column: 1 / -1; }

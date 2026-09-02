@@ -11,9 +11,20 @@ use std::collections::HashSet;
 use std::path::PathBuf;
 use tauri::{AppHandle, Manager};
 
-/// Bề ngang tối đa của ảnh đệm. Khung lớn nhất là thẻ dẫn 220px, nhân đôi
-/// cho màn hình mật độ cao rồi làm tròn lên.
+/// Bề ngang ảnh đệm cho lưới thẻ tin. Khung lớn nhất ở lưới là 196px, nhân
+/// đôi cho màn hình mật độ cao rồi làm tròn lên.
 const THUMB_WIDTH: u32 = 480;
+
+/// Bề ngang ảnh cho tin hero và hàng đặc tả.
+///
+/// Ô ảnh của hero rộng khoảng 700px CSS, trên màn mật độ cao là 1400 điểm
+/// ảnh thật. Dùng ảnh 480px ở đó phải kéo giãn gần ba lần và mờ thấy rõ.
+/// Chỉ vài cụm đầu bảng mới cần cỡ này nên không nhân đôi cả thư mục đệm.
+const HERO_WIDTH: u32 = 1440;
+
+/// Hậu tố tên tệp của bản lớn. Mã bài là 16 ký tự hex nên dấu ngã không thể
+/// trùng với một mã bài thật.
+const HERO_SUFFIX: &str = "~hero";
 /// Bỏ qua ảnh gốc lớn bất thường để một tấm hỏng không làm nghẽn lượt tải.
 const MAX_SOURCE_BYTES: usize = 8 * 1024 * 1024;
 /// Chặn trên cho kích thước ảnh sau khi giải nén.
@@ -70,12 +81,14 @@ fn decode_within_limits(bytes: &[u8]) -> Option<image::DynamicImage> {
     reader.decode().ok()
 }
 
-fn shrink_to_file(bytes: &[u8], path: &std::path::Path) -> Option<()> {
+fn shrink_to_file(bytes: &[u8], path: &std::path::Path, width: u32) -> Option<()> {
     let decoded = decode_within_limits(bytes)?;
-    let resized = if decoded.width() > THUMB_WIDTH {
-        let height = (decoded.height() as u64 * THUMB_WIDTH as u64 / decoded.width().max(1) as u64)
+    // Ảnh gốc nhỏ hơn khung thì giữ nguyên: phóng to lên chỉ làm mờ thêm
+    // chứ không thêm được chi tiết nào.
+    let resized = if decoded.width() > width {
+        let height = (decoded.height() as u64 * width as u64 / decoded.width().max(1) as u64)
             .clamp(1, MAX_DIMENSION as u64) as u32;
-        decoded.resize_exact(THUMB_WIDTH, height, FilterType::Triangle)
+        decoded.resize_exact(width, height, FilterType::Triangle)
     } else {
         decoded
     };
@@ -87,6 +100,7 @@ async fn download_and_shrink(
     client: &reqwest::Client,
     url: &str,
     destination: PathBuf,
+    width: u32,
 ) -> Option<String> {
     let response = client.get(url).send().await.ok()?;
     if !response.status().is_success() {
@@ -103,7 +117,7 @@ async fn download_and_shrink(
         // Bộ giải mã ảnh có thể panic với tệp dị dạng. Chặn ngay tại đây để
         // một tấm ảnh hỏng không kéo đổ cả ứng dụng.
         let done = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-            shrink_to_file(&bytes, &path)
+            shrink_to_file(&bytes, &path, width)
         }));
         match done {
             Ok(Some(())) => Some(path.to_string_lossy().to_string()),
@@ -120,16 +134,35 @@ pub async fn ensure(
     dir: &PathBuf,
     targets: Vec<(String, String)>,
 ) -> Vec<(String, String)> {
+    fetch_all(client, dir, targets, THUMB_WIDTH, "").await
+}
+
+/// Như ensure nhưng lưu bản lớn dùng cho tin hero và hàng đặc tả.
+pub async fn ensure_hero(
+    client: &reqwest::Client,
+    dir: &PathBuf,
+    targets: Vec<(String, String)>,
+) -> Vec<(String, String)> {
+    fetch_all(client, dir, targets, HERO_WIDTH, HERO_SUFFIX).await
+}
+
+async fn fetch_all(
+    client: &reqwest::Client,
+    dir: &PathBuf,
+    targets: Vec<(String, String)>,
+    width: u32,
+    suffix: &str,
+) -> Vec<(String, String)> {
     stream::iter(targets)
         .map(|(id, url)| {
             let client = client.clone();
-            let destination = dir.join(format!("{id}.jpg"));
+            let destination = dir.join(format!("{id}{suffix}.jpg"));
             async move {
                 // Đã có sẵn trên đĩa thì dùng lại, không tải lại.
                 if destination.is_file() {
                     return Some((id, destination.to_string_lossy().to_string()));
                 }
-                download_and_shrink(&client, &url, destination)
+                download_and_shrink(&client, &url, destination, width)
                     .await
                     .map(|path| (id, path))
             }
@@ -149,10 +182,14 @@ pub fn prune(dir: &PathBuf, keep: &HashSet<String>) {
     };
     for entry in entries.flatten() {
         let path = entry.path();
+        // Bản lớn có thêm hậu tố trong tên tệp. Không cắt hậu tố ra trước khi
+        // đối chiếu thì mã bài không bao giờ khớp và mọi ảnh hero bị xoá ngay
+        // ở lượt làm mới kế tiếp, tức tải lại từ đầu mỗi lượt.
         let still_needed = path
             .file_stem()
             .and_then(|stem| stem.to_str())
-            .is_some_and(|stem| keep.contains(stem));
+            .map(|stem| stem.strip_suffix(HERO_SUFFIX).unwrap_or(stem))
+            .is_some_and(|id| keep.contains(id));
         if !still_needed {
             let _ = std::fs::remove_file(path);
         }
@@ -163,6 +200,43 @@ pub fn prune(dir: &PathBuf, keep: &HashSet<String>) {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// prune phải giữ lại bản lớn của bài còn trong kho.
+    ///
+    /// Bản lớn có hậu tố trong tên tệp nên nếu đối chiếu thẳng file_stem với
+    /// danh sách mã bài thì không bao giờ khớp, và mọi ảnh hero bị xoá ngay
+    /// lượt làm mới kế tiếp — tải lại từ đầu mỗi lượt mà không ai thấy lỗi.
+    #[test]
+    fn prune_khong_xoa_nham_ban_lon() {
+        let dir = std::env::temp_dir().join(format!("newsfeed-prune-{}", std::process::id()));
+        let _ = std::fs::create_dir_all(&dir);
+
+        let con_dung = "0123456789abcdef";
+        let da_bo = "fedcba9876543210";
+        for name in [
+            format!("{con_dung}.jpg"),
+            format!("{con_dung}{HERO_SUFFIX}.jpg"),
+            format!("{da_bo}.jpg"),
+            format!("{da_bo}{HERO_SUFFIX}.jpg"),
+        ] {
+            std::fs::write(dir.join(name), b"x").expect("ghi tệp thử");
+        }
+
+        let keep: HashSet<String> = [con_dung.to_string()].into_iter().collect();
+        prune(&dir, &keep);
+
+        assert!(dir.join(format!("{con_dung}.jpg")).is_file(), "ảnh thường của bài còn dùng bị xoá");
+        assert!(
+            dir.join(format!("{con_dung}{HERO_SUFFIX}.jpg")).is_file(),
+            "ảnh lớn của bài còn dùng bị xoá"
+        );
+        assert!(!dir.join(format!("{da_bo}.jpg")).exists(), "ảnh của bài đã bỏ vẫn còn");
+        assert!(
+            !dir.join(format!("{da_bo}{HERO_SUFFIX}.jpg")).exists(),
+            "ảnh lớn của bài đã bỏ vẫn còn"
+        );
+        let _ = std::fs::remove_dir_all(&dir);
+    }
 
     /// Dựng một tệp PNG nhỏ nhưng khai báo kích thước khổng lồ.
     fn decompression_bomb(width: u32, height: u32) -> Vec<u8> {

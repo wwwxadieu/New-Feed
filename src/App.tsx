@@ -9,6 +9,7 @@ import { Sidebar } from "./components/Sidebar";
 import { TitleBar } from "./components/TitleBar";
 import { ClusterCard } from "./components/ClusterCard";
 import { HotStrip } from "./components/HotStrip";
+import { FEATURE_COUNT, MAGAZINE_MIN, MagazineHead } from "./components/MagazineHead";
 import { ReaderSheet } from "./components/ReaderSheet";
 import { SourceManager } from "./components/SourceManager";
 import { SourcesContext } from "./components/SourceLogo";
@@ -318,6 +319,8 @@ export default function App() {
   const sheetOpen = reader !== null || sourcesOpen;
   const windowLabel = WINDOWS.find((w) => w.value === windowHours)?.label ?? "24 giờ";
   const articlesInView = clusters.reduce((sum, c) => sum + c.articles.length, 0);
+  // Ít tin quá thì không đủ để dựng phân cấp, quay về lưới thường.
+  const magazine = shown.length >= MAGAZINE_MIN;
 
   return (
     <SourcesContext.Provider value={sourceMap}>
@@ -430,6 +433,23 @@ export default function App() {
                         </button>
                       )}
                     </div>
+                  ) : magazine ? (
+                    <>
+                      <MagazineHead
+                        hero={shown[0]}
+                        features={shown.slice(1, 1 + FEATURE_COUNT)}
+                        onOpen={setReader}
+                      />
+                      {shown.slice(1 + FEATURE_COUNT).map((cluster, index) => (
+                        <ClusterCard
+                          key={cluster.id}
+                          cluster={cluster}
+                          index={index}
+                          lead={false}
+                          onOpen={setReader}
+                        />
+                      ))}
+                    </>
                   ) : (
                     shown.map((cluster, index) => (
                       <ClusterCard

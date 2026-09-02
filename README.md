@@ -189,6 +189,24 @@ phát, từ chối ảnh vượt 24 triệu điểm ảnh, và bọc phần gi�
 `catch_unwind` để một tấm ảnh dị dạng không thoát ra ngoài phạm vi của nó.
 Bản release cố ý không đặt `panic = "abort"` vì lý do đó.
 
+**Phần đầu kiểu tạp chí.** Bốn cụm đầu dòng tin được dựng theo lối tạp chí:
+một tin hero với ảnh lớn và tiêu đề cỡ 40px, dưới là hàng ba tin đặc tả. Phần
+còn lại giữ lưới thẻ đều của dashboard.
+
+Chỉ vài cụm đầu được đối xử như vậy là có chủ ý. Phân cấp kiểu tạp chí là một
+thủ pháp biên tập, nó cần tín hiệu đủ mạnh để nói tin nào xứng đáng lớn hơn;
+ở đây tín hiệu đó là điểm cụm, mà điểm chỉ tách bạch ở vài cụm đầu. Xuống tới
+cụm thứ hai ba mươi thì điểm gần bằng nhau, lúc đó thẻ to nhỏ khác nhau không
+còn là phân cấp mà thành lộn xộn. Dưới năm cụm thì không đủ để dựng phân cấp
+nên quay hẳn về lưới thường.
+
+**Hai cỡ ảnh.** Ảnh lưới rộng 480px, vừa đủ cho khung lớn nhất của lưới là
+196px trên màn mật độ cao. Ô ảnh của tin hero rộng 649px CSS, tức 1.298 điểm
+ảnh thật ở màn mật độ cao, nên dùng bản 480px ở đó phải kéo giãn gần ba lần và
+mờ thấy rõ. Vì vậy 16 cụm đầu bảng được tải thêm một bản rộng 1.440px. Không
+tải cho cả kho vì chỉ vài cụm đầu mới lên hero, mà giới hạn 16 là để còn phủ
+được các kiểu sắp xếp và bộ lọc khác nhau của người dùng.
+
 **Ảnh đại diện tải sẵn.** Ảnh được tải và thu về bề ngang 480px ngay trong
 lượt làm mới, lưu vào thư mục đệm rồi hiển thị qua giao thức asset của Tauri.
 Để giao diện tự tải từ máy chủ của báo thì mỗi thẻ tin là một lượt gọi mạng

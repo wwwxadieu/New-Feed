@@ -386,6 +386,7 @@ pub async fn fetch_source(client: &reqwest::Client, source: &Source, limit: usiz
             title_vi: None,
             summary_vi: None,
             thumb: None,
+            hero: None,
             image_checked: false,
             // Giữ lại bản HTML của feed: có nguồn dựng bài bằng JavaScript nên
             // trang gốc không chứa chữ, lúc đó đây là thứ duy nhất đọc được.

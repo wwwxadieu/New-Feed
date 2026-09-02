@@ -7,6 +7,31 @@ import type { Article, Cluster, Snapshot, Source } from "./types";
 const now = Date.now();
 const at = (hoursAgo: number) => new Date(now - hoursAgo * 3_600_000).toISOString();
 
+
+/**
+ * Ảnh nền trừu tượng cho chế độ demo trong trình duyệt.
+ *
+ * Dữ liệu mẫu không có ảnh thật, mà bố cục tạp chí ở phần đầu dòng tin lại
+ * sống nhờ ảnh: để trống thì tin hero chỉ còn một ô màu và không thấy được
+ * thiết kế thật sự trông ra sao. Dựng bằng SVG nội tuyến nên mỗi ảnh chỉ vài
+ * trăm byte và không phải kèm tệp nào vào bản dựng.
+ */
+function backdrop(from: string, to: string): string {
+  const svg =
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 10">` +
+    `<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1">` +
+    `<stop offset="0%" stop-color="${from}"/><stop offset="100%" stop-color="${to}"/>` +
+    `</linearGradient></defs><rect width="16" height="10" fill="url(#g)"/></svg>`;
+  return `data:image/svg+xml,${encodeURIComponent(svg)}`;
+}
+
+const BACKDROPS = [
+  backdrop("#c7d7f5", "#eddcf0"),
+  backdrop("#f6d9c8", "#dfe3f2"),
+  backdrop("#cfe8e2", "#e6dcf2"),
+  backdrop("#e9dcc6", "#cfdcf0"),
+];
+
 let seq = 0;
 function article(sourceTitle: string, title: string, hoursAgo: number, summary = ""): Article {
   seq += 1;
@@ -18,10 +43,11 @@ function article(sourceTitle: string, title: string, hoursAgo: number, summary =
     url: `https://example.com/demo/${seq}`,
     summary,
     published: at(hoursAgo),
-    image: null,
+    image: BACKDROPS[seq % BACKDROPS.length],
     titleVi: null,
     summaryVi: null,
     thumb: null,
+    hero: null,
   };
 }
 

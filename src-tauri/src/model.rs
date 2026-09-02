@@ -55,6 +55,9 @@ pub struct Article {
     /// Đường dẫn ảnh đại diện đã tải về và thu nhỏ trên máy.
     #[serde(default)]
     pub thumb: Option<String>,
+    /// Bản ảnh lớn, chỉ có ở vài bài đủ điểm để lên tin hero hoặc hàng đặc tả.
+    #[serde(default)]
+    pub hero: Option<String>,
     /// Đã đi tìm ảnh cho bài này rồi, dù có tìm được hay không.
     ///
     /// Không ghi lại thì mỗi lượt bổ sung lại tải trang của đúng những bài

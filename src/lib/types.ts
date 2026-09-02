@@ -26,6 +26,8 @@ export interface Article {
   summaryVi: string | null;
   /** Đường dẫn ảnh đã tải sẵn trên máy. */
   thumb: string | null;
+  /** Bản ảnh lớn, chỉ có ở vài bài đủ điểm lên tin hero. */
+  hero: string | null;
 }
 
 export interface Cluster {

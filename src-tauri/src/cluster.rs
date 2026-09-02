@@ -327,6 +327,7 @@ mod tests {
             title_vi: None,
             summary_vi: None,
             thumb: None,
+            hero: None,
             image_checked: false,
             content_html: None,
             published: (Utc::now() - Duration::hours(hours_ago))

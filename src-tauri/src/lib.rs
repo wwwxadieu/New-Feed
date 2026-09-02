@@ -24,6 +24,13 @@ const FETCH_CONCURRENCY: usize = 12;
 /// Số bài được bù ảnh mỗi lượt. Chỉ bù cho tin mới nhất để lượt làm mới
 /// không kéo dài; bài cũ hơn sẽ được bù ở các lượt sau.
 const IMAGE_BACKFILL_LIMIT: usize = 60;
+/// Số cụm đầu bảng được tải sẵn ảnh cỡ lớn.
+///
+/// Giao diện chỉ hiện một tin hero và ba tin đặc tả, nhưng người dùng còn
+/// đổi cách sắp xếp và lọc theo chủ đề hay nguồn, nên cụm nào lên đầu là
+/// thay đổi được. Mười sáu cụm phủ hết các lựa chọn thường gặp mà vẫn xa
+/// mức nhân đôi cả thư mục đệm.
+const HERO_IMAGE_LIMIT: usize = 16;
 const IMAGE_BACKFILL_CONCURRENCY: usize = 8;
 /// Lấy logo phải tải cả trang chủ của báo nên nặng hơn tải feed, giữ tay hơn.
 const LOGO_CONCURRENCY: usize = 4;
@@ -134,6 +141,34 @@ async fn backfill_images(
         .into_iter()
         .flatten()
         .collect()
+}
+
+/// Bài đại diện của những cụm đầu bảng, cần bản ảnh lớn cho tin hero.
+///
+/// Ảnh lưới rộng 480px, còn ô ảnh của hero rộng khoảng 700px CSS tức 1400
+/// điểm ảnh thật trên màn mật độ cao. Dùng bản lưới ở đó thì mờ thấy rõ.
+fn hero_targets(data: &AppData) -> Vec<(String, String)> {
+    let clusters = cluster::build(&data.articles);
+    let leading: std::collections::HashSet<&str> = clusters
+        .iter()
+        .take(HERO_IMAGE_LIMIT)
+        .filter_map(|c| c.articles.iter().find(|a| a.image.is_some()))
+        .map(|a| a.id.as_str())
+        .collect();
+
+    data.articles
+        .iter()
+        .filter(|a| a.hero.is_none() && leading.contains(a.id.as_str()))
+        .filter_map(|a| a.image.clone().map(|url| (a.id.clone(), url)))
+        .collect()
+}
+
+fn apply_heroes(data: &mut AppData, done: Vec<(String, String)>) {
+    for (id, path) in done {
+        if let Some(article) = data.articles.iter_mut().find(|a| a.id == id) {
+            article.hero = Some(path);
+        }
+    }
 }
 
 /// Bài đã có địa chỉ ảnh nhưng chưa tải về máy.
@@ -369,6 +404,18 @@ async fn enrich(app: &AppHandle, state: &AppState) -> Result<(), String> {
         let cached = thumbs::ensure(&state.client, &cache, pending_thumbs).await;
         let mut data = state.data.lock().await;
         apply_thumbs(&mut data, cached);
+        let _ = store::save(app, &data);
+        emit_snapshot(app, &data);
+    }
+
+    // Bản ảnh lớn cho tin hero, sau ảnh lưới: lưới phải đầy trước đã, vì
+    // ảnh lưới cũng đủ dùng cho hero trong lúc chờ, chỉ hơi mềm nét.
+    let pending_heroes = hero_targets(&*state.data.lock().await);
+    if !pending_heroes.is_empty() {
+        emit_phase(app, Some("Đang tải ảnh lớn cho tin nổi bật"));
+        let cached = thumbs::ensure_hero(&state.client, &cache, pending_heroes).await;
+        let mut data = state.data.lock().await;
+        apply_heroes(&mut data, cached);
         let _ = store::save(app, &data);
         emit_snapshot(app, &data);
     }
