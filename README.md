@@ -114,10 +114,16 @@ Apple, phần khung dùng kính mờ còn vùng đọc để nền đục cho d�
 Ô nhỏ cạnh thanh tìm kiếm hiện nhiệt độ, biểu tượng thời tiết và giờ hiện
 tại. Chỉ để liếc qua: không bấm được, không mở ra gì thêm.
 
-Vị trí dò theo địa chỉ IP nên chỉ đúng tới mức thành phố, và sai hẳn nếu bạn
-dùng VPN — đo thử trên cùng một máy thì hai dịch vụ định vị trả về hai thành
-phố cách nhau hơn hai nghìn cây số. Rê chuột vào ô sẽ thấy tên nơi đang lấy
-số liệu để biết nó có đúng không.
+Mặc định vị trí dò theo địa chỉ IP nên chỉ đúng tới mức thành phố, và sai hẳn
+nếu bạn dùng VPN — đo thử trên cùng một máy thì hai dịch vụ định vị trả về hai
+thành phố cách nhau hơn hai nghìn cây số. Vì vậy tên nơi đang lấy số liệu hiện
+ngay cạnh nhiệt độ, không phải giấu trong chú thích.
+
+Đặt cố định được trong **Quản lý nguồn → Vị trí thời tiết**: gõ tên thành phố,
+ứng dụng tra toạ độ qua dịch vụ geocoding của Open-Meteo. Ngay dưới ô nhập có
+dòng cho biết nơi thực sự đang lấy số liệu, để bạn biết tên mình gõ có được
+nhận hay không. Gõ tên không tra được thì ứng dụng lùi về tự dò theo IP chứ
+không bỏ trống ô thời tiết. Để trống ô này là quay lại chế độ tự dò.
 
 Không lấy được thời tiết thì ô chỉ còn giờ, không hiện lỗi. Lượt làm mới nào
 hỏng thì vẫn giữ số liệu lần trước thay vì để trống — dịch vụ ngoài thỉnh
@@ -134,10 +140,11 @@ nằm trong `%APPDATA%/app.newsfeed.desktop` trên máy bạn.
 - **Nguồn tin bạn thêm vào** — tải feed, trang bài và ảnh minh hoạ.
 - **MyMemory** — dịch tiêu đề nguồn nước ngoài, chỉ khi bạn bật mục dịch.
 - **ipwho.is** — dò thành phố đang ở cho ô thời tiết. Chỗ này gửi địa chỉ IP
-  của bạn đi; tắt được bằng cách nào thì chưa có, nếu bạn không muốn thì báo
-  để thêm công tắc.
-- **Open-Meteo** — nhiệt độ và tình trạng thời tiết, chỉ nhận toạ độ chứ
-  không nhận thông tin nào khác về máy bạn.
+  của bạn đi. Đặt cố định một thành phố trong cài đặt thì ứng dụng không gọi
+  tới đây nữa.
+- **Open-Meteo** — nhiệt độ, tình trạng thời tiết, và tra toạ độ từ tên thành
+  phố bạn nhập. Chỉ nhận toạ độ hoặc tên thành phố, không nhận thông tin nào
+  khác về máy bạn.
 
 Bản cài **2,6 MB**, chạy tốn khoảng 80 MB RAM.
 

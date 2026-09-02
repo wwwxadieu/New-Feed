@@ -654,7 +654,8 @@ async fn refresh(app: AppHandle, state: State<'_, AppState>) -> Result<Snapshot,
 /// đó lặng lẽ không hiện chứ không được làm phiền người đang đọc tin.
 #[tauri::command]
 async fn get_weather(state: State<'_, AppState>) -> Result<Option<weather::Weather>, String> {
-    Ok(weather::fetch(&state.client, &state.weather).await)
+    let wanted = { state.data.lock().await.settings.weather_place.clone() };
+    Ok(weather::fetch(&state.client, &state.weather, &wanted).await)
 }
 
 /// Dịch một loạt đoạn văn theo yêu cầu, dùng cho nút dịch ở màn hình đọc.

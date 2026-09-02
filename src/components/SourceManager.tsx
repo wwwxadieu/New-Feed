@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { Source } from "../lib/types";
 import { clockTime, formatNumber, hostOf } from "../lib/format";
+import * as api from "../lib/api";
 import { CloseIcon, PlusIcon, TrashIcon } from "./Icons";
 import { SourceLogo } from "./SourceLogo";
 
@@ -9,6 +10,8 @@ interface Props {
   busy: boolean;
   translateEmail: string;
   onTranslateEmail: (email: string) => void;
+  weatherPlace: string;
+  onWeatherPlace: (place: string) => void;
   onAdd: (input: string) => Promise<void>;
   onRemove: (id: string) => void;
   onToggle: (id: string, enabled: boolean) => void;
@@ -20,6 +23,8 @@ export function SourceManager({
   busy,
   translateEmail,
   onTranslateEmail,
+  weatherPlace,
+  onWeatherPlace,
   onAdd,
   onRemove,
   onToggle,
@@ -27,6 +32,16 @@ export function SourceManager({
 }: Props) {
   const [input, setInput] = useState("");
   const [email, setEmail] = useState(translateEmail);
+  const [place, setPlace] = useState(weatherPlace);
+  // Nơi thực sự đang lấy số liệu, để người dùng biết thành phố mình gõ có
+  // được nhận hay không — gõ sai thì ứng dụng lặng lẽ lùi về tự dò theo IP.
+  const [resolved, setResolved] = useState<string | null>(null);
+
+  useEffect(() => {
+    let alive = true;
+    api.getWeather().then((w) => { if (alive) setResolved(w?.place ?? null); }).catch(() => {});
+    return () => { alive = false; };
+  }, [weatherPlace]);
 
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -138,6 +153,35 @@ export function SourceManager({
                 Lưu
               </button>
             </div>
+          </div>
+
+          <div className="sheet-section">
+            <span className="section-title">Vị trí thời tiết</span>
+            <p className="form-hint" style={{ padding: "0 0 8px", border: "none" }}>
+              Để trống thì ứng dụng tự dò theo địa chỉ IP — cách này chỉ đúng tới mức thành phố
+              và sai hẳn nếu bạn dùng VPN. Gõ tên thành phố để đặt cố định.
+            </p>
+            <div style={{ display: "flex", gap: 8 }}>
+              <input
+                className="text-field"
+                type="text"
+                placeholder="Hà Nội, Đà Nẵng… (để trống là tự dò)"
+                value={place}
+                onChange={(e) => setPlace(e.target.value)}
+              />
+              <button
+                className="link-button"
+                onClick={() => onWeatherPlace(place.trim())}
+                disabled={place.trim() === weatherPlace}
+              >
+                Lưu
+              </button>
+            </div>
+            {resolved && (
+              <p className="form-hint" style={{ padding: "8px 0 0", border: "none" }}>
+                Đang lấy số liệu ở <b>{resolved}</b>.
+              </p>
+            )}
           </div>
         </div>
       </div>

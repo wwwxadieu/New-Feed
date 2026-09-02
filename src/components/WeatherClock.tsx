@@ -30,7 +30,7 @@ function describe(code: number): string {
  * Không lấy được thời tiết thì ô chỉ còn giờ, chứ không hiện lỗi — đây là
  * phần phụ, không đáng làm phiền người đang đọc tin.
  */
-export function WeatherClock() {
+export function WeatherClock({ place }: { place: string }) {
   const [weather, setWeather] = useState<Weather | null>(null);
   const [now, setNow] = useState(() => new Date());
 
@@ -51,7 +51,9 @@ export function WeatherClock() {
       alive = false;
       window.clearInterval(timer);
     };
-  }, []);
+    // Đổi vị trí trong cài đặt thì lấy lại ngay. Không phụ thuộc vào giá trị
+    // này thì người dùng đổi xong vẫn thấy nơi cũ suốt mười lăm phút.
+  }, [place]);
 
   // Nhịp đồng hồ bám đúng đầu phút thay vì đếm mỗi 60 giây từ lúc mở app,
   // nếu không thì số phút đổi lệch tới gần một phút so với đồng hồ máy.
@@ -81,6 +83,9 @@ export function WeatherClock() {
             <WeatherIcon code={weather.code} isDay={weather.isDay} />
           </span>
           <span className="wc-temp">{weather.tempC}°</span>
+          {/* Tên nơi lấy số liệu. Cắt bớt khi quá dài: "Thành phố Hồ Chí Minh"
+              để nguyên sẽ đẩy thanh công cụ xuống dòng. */}
+          <span className="wc-place">{weather.place}</span>
           <span className="wc-sep" aria-hidden="true" />
         </>
       )}

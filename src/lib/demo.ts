@@ -201,7 +201,14 @@ export function demoSnapshot(): Snapshot {
   return {
     sources: SOURCES,
     clusters: CLUSTERS,
-    settings: { theme: "auto", windowHours: 24, maxPerSource: 25, translate: true, translateEmail: "" },
+    settings: {
+      theme: "auto",
+      windowHours: 24,
+      maxPerSource: 25,
+      translate: true,
+      translateEmail: "",
+      weatherPlace: "",
+    },
     articleCount: 284,
     topicCounts,
     hourly: [12, 9, 7, 5, 4, 6, 11, 19, 28, 34, 31, 27, 33, 41, 38, 30, 26, 24, 29, 36, 44, 52, 47, 38],

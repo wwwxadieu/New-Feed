@@ -132,6 +132,9 @@ pub struct Settings {
     /// từ 5.000 lên 50.000 ký tự. Để trống vẫn dùng được.
     #[serde(default)]
     pub translate_email: String,
+    /// Thành phố dùng cho ô thời tiết. Để trống thì tự dò theo địa chỉ IP.
+    #[serde(default)]
+    pub weather_place: String,
 }
 
 fn default_true() -> bool {
@@ -146,6 +149,7 @@ impl Default for Settings {
             max_per_source: 25,
             translate: true,
             translate_email: String::new(),
+            weather_place: String::new(),
         }
     }
 }

@@ -361,7 +361,7 @@ export default function App() {
                 />
               </label>
 
-              <WeatherClock />
+              <WeatherClock place={snapshot?.settings.weatherPlace ?? ""} />
 
               <Segmented
                 label="Khoảng thời gian"
@@ -492,6 +492,13 @@ export default function App() {
           translateEmail={snapshot.settings.translateEmail}
           onTranslateEmail={(email) => {
             const next = { ...snapshot.settings, translateEmail: email };
+            api.saveSettings(next).then(setSnapshot).catch((err: unknown) => {
+              notify(err instanceof Error ? err.message : String(err), true);
+            });
+          }}
+          weatherPlace={snapshot.settings.weatherPlace}
+          onWeatherPlace={(place) => {
+            const next = { ...snapshot.settings, weatherPlace: place };
             api.saveSettings(next).then(setSnapshot).catch((err: unknown) => {
               notify(err instanceof Error ? err.message : String(err), true);
             });

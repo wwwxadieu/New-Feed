@@ -39,7 +39,10 @@ const TIMEOUT: Duration = Duration::from_secs(8);
 
 #[derive(Default)]
 pub struct Cache {
-    place: Option<(Instant, Place)>,
+    /// Kèm cả chuỗi đã dùng để ra vị trí này. Người dùng đổi thành phố trong
+    /// cài đặt thì chuỗi khác đi và bộ đệm tự mất hiệu lực — không có nó thì
+    /// đổi xong vẫn phải chờ hết sáu tiếng mới thấy vị trí mới.
+    place: Option<(Instant, String, Place)>,
     weather: Option<(Instant, Weather)>,
 }
 
@@ -71,6 +74,48 @@ async fn locate(client: &reqwest::Client) -> Option<Place> {
     Some(Place { lat, lon, name })
 }
 
+/// Tra toạ độ từ tên thành phố người dùng nhập.
+///
+/// Dùng dịch vụ geocoding của chính Open-Meteo, cũng không cần khoá API. Lấy
+/// kết quả đầu tiên: dịch vụ đã xếp theo mức phổ biến nên "Đà Nẵng" ra thành
+/// phố Đà Nẵng chứ không ra một xã trùng tên.
+async fn geocode(client: &reqwest::Client, name: &str) -> Option<Place> {
+    let url = format!(
+        "https://geocoding-api.open-meteo.com/v1/search?name={}&count=1&language=vi",
+        urlencoding(name)
+    );
+    let res = client.get(&url).timeout(TIMEOUT).send().await.ok()?;
+    if !res.status().is_success() {
+        return None;
+    }
+    let body: serde_json::Value = serde_json::from_str(&res.text().await.ok()?).ok()?;
+    let first = body.get("results")?.as_array()?.first()?;
+    Some(Place {
+        lat: first.get("latitude")?.as_f64()?,
+        lon: first.get("longitude")?.as_f64()?,
+        name: first
+            .get("name")
+            .and_then(serde_json::Value::as_str)
+            .unwrap_or(name)
+            .to_string(),
+    })
+}
+
+/// Mã hoá phần truy vấn. Tên thành phố tiếng Việt có dấu và có dấu cách, để
+/// nguyên thì địa chỉ hỏng.
+fn urlencoding(raw: &str) -> String {
+    let mut out = String::with_capacity(raw.len() * 3);
+    for byte in raw.as_bytes() {
+        match byte {
+            b'A'..=b'Z' | b'a'..=b'z' | b'0'..=b'9' | b'-' | b'_' | b'.' | b'~' => {
+                out.push(*byte as char)
+            }
+            _ => out.push_str(&format!("%{byte:02X}")),
+        }
+    }
+    out
+}
+
 async fn current(client: &reqwest::Client, place: &Place) -> Option<Weather> {
     let url = format!(
         "https://api.open-meteo.com/v1/forecast?latitude={:.4}&longitude={:.4}\
@@ -94,8 +139,21 @@ async fn current(client: &reqwest::Client, place: &Place) -> Option<Weather> {
 }
 
 /// Thời tiết hiện tại, dùng lại bản đã lấy nếu còn mới.
-pub async fn fetch(client: &reqwest::Client, cache: &tokio::sync::Mutex<Cache>) -> Option<Weather> {
-    {
+///
+/// `wanted` là thành phố người dùng đặt trong cài đặt; để trống thì tự dò
+/// theo địa chỉ IP.
+pub async fn fetch(
+    client: &reqwest::Client,
+    cache: &tokio::sync::Mutex<Cache>,
+    wanted: &str,
+) -> Option<Weather> {
+    let wanted = wanted.trim();
+    // Đổi thành phố thì số liệu cũ không còn đúng chỗ nữa, phải lấy lại ngay.
+    let same_query = {
+        let guard = cache.lock().await;
+        guard.place.as_ref().is_some_and(|(_, q, _)| q == wanted)
+    };
+    if same_query {
         let guard = cache.lock().await;
         if let Some((at, weather)) = &guard.weather {
             if at.elapsed() < WEATHER_TTL {
@@ -107,26 +165,39 @@ pub async fn fetch(client: &reqwest::Client, cache: &tokio::sync::Mutex<Cache>) 
     // Thả khoá trước khi đi ra mạng, để lượt gọi khác không phải xếp hàng chờ.
     let (fresh_place, any_place) = {
         let guard = cache.lock().await;
-        let any = guard.place.as_ref().map(|(_, p)| p.clone());
-        let fresh = guard
-            .place
-            .as_ref()
-            .filter(|(at, _)| at.elapsed() < PLACE_TTL)
-            .map(|(_, p)| p.clone());
+        let matching = guard.place.as_ref().filter(|(_, q, _)| q == wanted);
+        let any = matching.map(|(_, _, p)| p.clone());
+        let fresh = matching.filter(|(at, _, _)| at.elapsed() < PLACE_TTL).map(|(_, _, p)| p.clone());
         (fresh, any)
     };
 
     // Hạn vị trí hết mà dò lại hỏng thì vẫn dùng vị trí cũ: hạn ở đây chỉ để
     // thỉnh thoảng làm mới, chứ nơi ở của người dùng không đổi sau vài tiếng.
+    let resolve = async {
+        if wanted.is_empty() {
+            locate(client).await
+        } else {
+            geocode(client, wanted).await
+        }
+    };
     let place = match fresh_place {
         Some(place) => place,
-        None => match locate(client).await {
+        None => match resolve.await {
             Some(found) => {
-                cache.lock().await.place = Some((Instant::now(), found.clone()));
+                cache.lock().await.place =
+                    Some((Instant::now(), wanted.to_string(), found.clone()));
                 found
             }
             None => match any_place {
                 Some(cu) => cu,
+                // Người dùng gõ tên thành phố không tra được thì lùi về tự dò
+                // theo IP, còn hơn là ô thời tiết trống trơn.
+                None if !wanted.is_empty() => {
+                    let found = locate(client).await?;
+                    cache.lock().await.place =
+                        Some((Instant::now(), wanted.to_string(), found.clone()));
+                    found
+                }
                 None => return stale(cache).await,
             },
         },
@@ -162,7 +233,7 @@ mod tests {
         let client = crate::fetcher::client().expect("tạo client");
         let cache = tokio::sync::Mutex::new(Cache::default());
 
-        let first = fetch(&client, &cache).await.expect("phải lấy được thời tiết");
+        let first = fetch(&client, &cache, "").await.expect("phải lấy được thời tiết");
         println!("  {} · {}°C · mã {} · {}", first.place, first.temp_c, first.code,
                  if first.is_day { "ngày" } else { "đêm" });
         assert!((-60..=60).contains(&first.temp_c), "nhiệt độ vô lý: {}", first.temp_c);
@@ -171,10 +242,41 @@ mod tests {
 
         // Lượt thứ hai phải lấy từ bộ đệm, không gọi mạng lại.
         let started = Instant::now();
-        let second = fetch(&client, &cache).await.expect("lượt thứ hai");
+        let second = fetch(&client, &cache, "").await.expect("lượt thứ hai");
         println!("  lượt hai mất {:?}", started.elapsed());
         assert_eq!(second.temp_c, first.temp_c);
         assert!(started.elapsed() < Duration::from_millis(50), "lượt hai không dùng bộ đệm");
+    }
+
+    /// Đặt thành phố trong cài đặt thì phải lấy đúng thành phố đó.
+    ///
+    /// Chạm mạng thật nên bị bỏ qua ở lần chạy thường.
+    #[tokio::test]
+    #[ignore]
+    async fn lay_dung_thanh_pho_nguoi_dung_dat() {
+        let client = crate::fetcher::client().expect("tạo client");
+        let cache = tokio::sync::Mutex::new(Cache::default());
+
+        let hn = fetch(&client, &cache, "Hà Nội").await.expect("Hà Nội");
+        println!("  Hà Nội  → {} · {}°C", hn.place, hn.temp_c);
+        assert_eq!(hn.place, "Hà Nội");
+
+        // Đổi thành phố phải làm mất hiệu lực bộ đệm ngay, không đợi hết hạn.
+        let dn = fetch(&client, &cache, "Đà Nẵng").await.expect("Đà Nẵng");
+        println!("  Đà Nẵng → {} · {}°C", dn.place, dn.temp_c);
+        assert_eq!(dn.place, "Đà Nẵng");
+        assert_ne!(dn.place, hn.place, "đổi thành phố mà vẫn trả về nơi cũ");
+    }
+
+    /// Gõ tên không tra được thì lùi về tự dò theo IP, không để ô trống.
+    #[tokio::test]
+    #[ignore]
+    async fn ten_khong_tra_duoc_thi_lui_ve_tu_do() {
+        let client = crate::fetcher::client().expect("tạo client");
+        let cache = tokio::sync::Mutex::new(Cache::default());
+        let ra = fetch(&client, &cache, "zzzqqqxxx không có thật").await;
+        println!("  → {:?}", ra.as_ref().map(|w| w.place.clone()));
+        assert!(ra.is_some(), "phải lùi về tự dò theo IP");
     }
 
     /// Bộ đệm hết hạn mà dịch vụ hỏng thì vẫn phải trả số liệu cũ.
@@ -185,7 +287,7 @@ mod tests {
         let cu = Weather { temp_c: 27, code: 3, is_day: true, place: "Hà Nội".into() };
         let cache = tokio::sync::Mutex::new(Cache {
             // Đặt mốc thời gian đã quá hạn để buộc đi lấy lượt mới.
-            place: Some((Instant::now() - PLACE_TTL * 2, Place {
+            place: Some((Instant::now() - PLACE_TTL * 2, String::new(), Place {
                 lat: 21.03, lon: 105.85, name: "Hà Nội".into(),
             })),
             weather: Some((Instant::now() - WEATHER_TTL * 2, cu.clone())),
@@ -201,7 +303,7 @@ mod tests {
             .build()
             .expect("client");
 
-        let ra = fetch(&hong, &cache).await.expect("phải trả lại số liệu cũ");
+        let ra = fetch(&hong, &cache, "").await.expect("phải trả lại số liệu cũ");
         assert_eq!(ra.temp_c, cu.temp_c);
         assert_eq!(ra.place, cu.place);
     }

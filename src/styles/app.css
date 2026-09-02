@@ -261,6 +261,13 @@
 }
 .wc-icon { display: flex; color: var(--label-2); }
 .wc-temp { font-weight: 550; color: var(--label); }
+.wc-place {
+  max-width: 110px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--label-2);
+}
 .wc-sep {
   width: 1px;
   height: 12px;

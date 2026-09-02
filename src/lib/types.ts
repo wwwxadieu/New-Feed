@@ -69,6 +69,8 @@ export interface Settings {
   maxPerSource: number;
   translate: boolean;
   translateEmail: string;
+  /** Thành phố cho ô thời tiết. Để trống thì tự dò theo địa chỉ IP. */
+  weatherPlace: string;
 }
 
 export interface Snapshot {
