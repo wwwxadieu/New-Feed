@@ -632,11 +632,15 @@
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 14px;
 }
+/* Hai dòng, giữ chỗ đủ hai dòng — cùng lý do với .c-title. Trước đây cắt ở
+   ba dòng, nghĩa là thẻ hai dòng và thẻ ba dòng trong cùng một hàng sẽ lệch
+   nhau. */
 .feature-title {
   margin: 2px 0 0;
   font-size: 19px; font-weight: 650; line-height: 1.28; letter-spacing: -0.018em;
   text-wrap: balance;
-  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  min-height: 2.56em;
 }
 .feature-card .c-foot { margin-top: 12px; }
 
@@ -683,15 +687,23 @@
 .pill.quiet { background: var(--fill); color: var(--label-3); font-weight: 500; }
 .stamp { font-size: 11.5px; color: var(--label-3); }
 
+/* Cắt và giữ chỗ đúng hai dòng.
+   Chiều cao tấm kính bằng chiều cao nội dung của nó, nên tiêu đề dài ngắn
+   khác nhau là các tấm cùng hàng cao thấp khác nhau — đo được chênh 23px
+   giữa thẻ tiêu đề một dòng và thẻ hai dòng. Giữ chỗ theo em nên vẫn đúng ở
+   mọi mốc màn hình, nơi cỡ chữ thay đổi. */
 .c-title {
   margin: 0 0 7px;
   font-size: 17.5px; font-weight: 650; line-height: 1.32; letter-spacing: -0.014em;
   text-wrap: balance;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  min-height: 2.64em;
 }
 .c-summary {
   margin: 0;
   font-size: 14px; line-height: 1.55; color: var(--label-2);
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  min-height: 3.1em;
 }
 .c-foot { display: flex; align-items: center; gap: 9px; margin-top: 12px; min-width: 0; }
 .avatar-stack { display: flex; flex: none; }

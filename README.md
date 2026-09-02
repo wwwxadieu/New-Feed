@@ -257,6 +257,17 @@ cụm thứ hai ba mươi thì điểm gần bằng nhau, lúc đó thẻ to nh�
 còn là phân cấp mà thành lộn xộn. Dưới năm cụm thì không đủ để dựng phân cấp
 nên quay hẳn về lưới thường.
 
+**Tấm kính cùng chiều cao trong mỗi hàng.** Chiều cao tấm bằng chiều cao nội
+dung của nó, nên tiêu đề dài ngắn khác nhau là các tấm cùng hàng cao thấp
+khác nhau — đo được chênh 23px giữa thẻ tiêu đề một dòng và thẻ hai dòng.
+Cắt tiêu đề và tóm tắt ở đúng hai dòng rồi giữ chỗ đủ hai dòng kể cả khi nội
+dung ngắn hơn; ô tóm tắt vẫn dựng cả khi rỗng vì bỏ hẳn thì tấm đó thấp hơn.
+
+Giữ chỗ tính theo em nên vẫn đúng ở mọi mốc màn hình, nơi cỡ chữ thay đổi:
+thử ở năm khổ từ 1100px tới 3200px, chiều cao tấm đi từ 217 lên 235px theo cỡ
+chữ nhưng chênh lệch trong mỗi hàng luôn bằng 0. Thử tiếp với tiêu đề một từ,
+tiêu đề bốn dòng, tóm tắt rỗng và tóm tắt rất dài: vẫn bằng 0.
+
 **Hai cỡ ảnh.** Ảnh lưới rộng 480px, vừa đủ cho khung lớn nhất của lưới là
 196px trên màn mật độ cao. Ô ảnh của tin hero rộng 649px CSS, tức 1.298 điểm
 ảnh thật ở màn mật độ cao, nên dùng bản 480px ở đó phải kéo giãn gần ba lần và

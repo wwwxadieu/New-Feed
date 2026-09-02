@@ -85,7 +85,9 @@ export function ClusterCard({ cluster, index, onOpen }: Props) {
         </span>
 
         <h2 className="c-title">{translated || cluster.title}</h2>
-        {summary && <p className="c-summary">{summary}</p>}
+        {/* Luôn dựng ô tóm tắt kể cả khi rỗng: bỏ hẳn thì tấm kính của thẻ
+            đó thấp hơn các thẻ cùng hàng. */}
+        <p className="c-summary">{summary}</p>
 
         <span className="c-foot">
           <span className="avatar-stack">
