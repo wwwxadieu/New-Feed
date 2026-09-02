@@ -200,10 +200,15 @@ Bản thân tấm kính là một dải chuyển sắc chứ không phải khố
 ảnh thay vì nằm đè lên như một thẻ riêng. Phần đệm trên dày để chỗ nhạt nhất
 của dải rơi vào khoảng trống chứ không phải vào dòng chữ đầu tiên.
 
-Đỉnh dải giữ ở 0,8 chứ không đục hơn: phải nhìn thấy phần ảnh đã nhoè phía
-sau thì mới ra chất kính, đục quá thì thành một lớp sơn trắng. Hai lớp mờ
-cũng tăng độ bão hoà (150% và 165%) vì kính thật làm màu phía sau rực lên chứ
-không xám đi.
+Đỉnh dải giữ ở 0,6 chứ không đục hơn: phải nhìn xuyên qua thấy phần ảnh đã
+nhoè thì mới ra chất kính, đục quá thì thành một lớp sơn trắng. Hai lớp mờ
+dùng bán kính 9px và 28px, tăng độ bão hoà lên 155% và 170% vì kính thật làm
+màu phía sau rực lên chứ không xám đi.
+
+Đổi lại, chữ phụ phải tự đậm lên để gánh phần tương phản mà tấm không còn
+gánh: tóm tắt và dòng nguồn từ 0,72 và 0,62 lên 0,84 và 0,80. Sau khi cân
+lại, tương phản của mọi dòng nằm trong khoảng hẹp 5,25–6,26:1 thay vì trải từ
+5,2 tới 15,6 như trước — tấm làm ít đi, chữ làm nhiều hơn.
 
 Hai góc dưới của thẻ để vuông. Bo góc thì mép tấm kính phải cong theo và hở
 ra một mảnh viền phía ngoài đường cong, nhìn như thẻ bị khuyết một miếng.

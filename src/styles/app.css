@@ -494,12 +494,12 @@
   pointer-events: none;
 }
 .card-pic img.blur.soft {
-  filter: blur(7px) saturate(150%);
+  filter: blur(9px) saturate(155%);
   -webkit-mask-image: linear-gradient(to top, #000 0 34%, rgba(0, 0, 0, 0.55) 58%, transparent 80%);
   mask-image: linear-gradient(to top, #000 0 34%, rgba(0, 0, 0, 0.55) 58%, transparent 80%);
 }
 .card-pic img.blur.deep {
-  filter: blur(22px) saturate(165%);
+  filter: blur(28px) saturate(170%);
   -webkit-mask-image: linear-gradient(to top, #000 0 18%, rgba(0, 0, 0, 0.5) 36%, transparent 56%);
   mask-image: linear-gradient(to top, #000 0 18%, rgba(0, 0, 0, 0.5) 36%, transparent 56%);
 }
@@ -520,8 +520,9 @@
 /* Tấm kính không phải một khối chữ nhật có viền, mà là một dải chuyển sắc:
    đục nhất ở đáy rồi nhạt dần lên trên cho tới trong suốt. Nhờ vậy nó tan
    vào tấm ảnh thay vì nằm đè lên như một thẻ riêng.
-   Đỉnh dải giữ ở 0,8 chứ không đục hơn: phải nhìn thấy phần ảnh đã nhoè phía
-   sau thì mới ra chất kính, đục quá thì thành một lớp sơn trắng.
+   Đỉnh dải giữ ở 0,6 chứ không đục hơn: phải nhìn xuyên qua thấy phần ảnh đã
+   nhoè thì mới ra chất kính, đục quá thì thành một lớp sơn trắng. Đổi lại,
+   chữ phụ phải tự đậm lên để gánh phần tương phản mà tấm không còn gánh.
    Đệm trên dày để phần nhạt nhất của dải rơi vào khoảng trống chứ không phải
    vào dòng chữ đầu tiên. */
 .card-body {
@@ -532,10 +533,10 @@
   color: #16161a;
   background: linear-gradient(
     to top,
-    rgba(255, 255, 255, 0.8) 0%,
-    rgba(255, 255, 255, 0.78) 52%,
-    rgba(255, 255, 255, 0.7) 78%,
-    rgba(255, 255, 255, 0.34) 92%,
+    rgba(255, 255, 255, 0.6) 0%,
+    rgba(255, 255, 255, 0.58) 55%,
+    rgba(255, 255, 255, 0.54) 80%,
+    rgba(255, 255, 255, 0.28) 93%,
     rgba(255, 255, 255, 0) 100%
   );
 }
@@ -551,11 +552,11 @@
 .card-body .hero-title,
 .card-body .feature-title { color: #101014; }
 .card-body .c-summary,
-.card-body .hero-summary { color: rgba(0, 0, 0, 0.72); }
+.card-body .hero-summary { color: rgba(0, 0, 0, 0.84); }
 /* Đậm hơn các chữ phụ khác: dòng này nằm ở đỉnh dải chuyển sắc, chỗ nền
    nhạt nhất. Đo trên ảnh đen tuyền, để 0,6 thì chỉ đạt 3,5:1. */
-.card-body .stamp { color: rgba(0, 0, 0, 0.78); }
-.card-body .source-line { color: rgba(0, 0, 0, 0.62); }
+.card-body .stamp { color: rgba(0, 0, 0, 0.84); }
+.card-body .source-line { color: rgba(0, 0, 0, 0.8); }
 .card-body .source-line b { color: #101014; }
 .card-body .pill { background: rgba(0, 82, 204, 0.12); color: #0a52c4; }
 .card-body .pill.hot { background: rgba(214, 92, 0, 0.14); color: #b8500a; }
