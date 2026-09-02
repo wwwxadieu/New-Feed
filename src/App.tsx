@@ -445,7 +445,6 @@ export default function App() {
                           key={cluster.id}
                           cluster={cluster}
                           index={index}
-                          lead={false}
                           onOpen={setReader}
                         />
                       ))}
@@ -456,7 +455,6 @@ export default function App() {
                         key={cluster.id}
                         cluster={cluster}
                         index={index}
-                        lead={index === 0}
                         onOpen={setReader}
                       />
                     ))

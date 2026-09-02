@@ -119,9 +119,9 @@ export function MagazineHead({ hero, features, onOpen }: Props) {
 
   return (
     <div className="magazine">
-      <button className="hero-card" onClick={() => onOpen(hero)}>
-        <Picture cluster={hero} className="hero-pic" />
-        <span className="hero-text">
+      <button className="hero-card poster" onClick={() => onOpen(hero)}>
+        <Picture cluster={hero} className="card-pic" />
+        <span className="card-body">
           <Meta cluster={hero} />
           <h2 className="hero-title">{heroTitle}</h2>
           {heroSummary && <p className="hero-summary">{heroSummary}</p>}
@@ -135,12 +135,12 @@ export function MagazineHead({ hero, features, onOpen }: Props) {
           return (
             <button
               key={cluster.id}
-              className="feature-card"
+              className="feature-card poster"
               onClick={() => onOpen(cluster)}
               style={{ "--i": index } as React.CSSProperties}
             >
-              <Picture cluster={cluster} className="feature-pic" />
-              <span className="feature-text">
+              <Picture cluster={cluster} className="card-pic" />
+              <span className="card-body">
                 <Meta cluster={cluster} />
                 <h3 className="feature-title">{title}</h3>
                 <Foot cluster={cluster} />

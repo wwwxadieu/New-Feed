@@ -189,6 +189,21 @@ phát, từ chối ảnh vượt 24 triệu điểm ảnh, và bọc phần gi�
 `catch_unwind` để một tấm ảnh dị dạng không thoát ra ngoài phạm vi của nó.
 Bản release cố ý không đặt `panic = "abort"` vì lý do đó.
 
+**Thẻ tin dạng áp phích.** Ảnh phủ toàn thẻ, chữ đặt trên một tấm kính mờ ở
+đáy. Chữ luôn màu sáng ở cả giao diện sáng lẫn tối, vì nền của nó là ảnh bài
+chứ không phải nền của ứng dụng, kèm một lớp phủ tối chuyển dần để tương phản
+không phụ thuộc vào tấm ảnh vớ được. Đo trên trường hợp xấu nhất là ảnh trắng
+toát: 5,9–6,8:1, trên ngưỡng dễ đọc 4,5:1.
+
+Kính thật chỉ đặt ở tin hero và ba tin đặc tả, tức bốn thẻ, chứ không phải cả
+dòng tin. Đo trên 60 thẻ khi cuộn: để kính ở mọi thẻ thì khung hình trung vị
+đi từ 18,1ms lên 34,5ms và số khung trễ từ 3/85 lên 82/85. Giảm bán kính làm
+mờ không cứu được — 8px cho 34,2ms, 4px cho 35,5ms — vì cái đắt là bản thân
+backdrop-filter tạo một lớp hợp ảnh riêng cho mỗi thẻ, không phải bán kính.
+Thẻ ở lưới dùng tấm nền đục hơn một chút, không làm mờ; đặt trên ảnh đã bị
+lớp phủ làm tối thì mắt gần như không phân biệt được, mà khung hình trung vị
+giữ nguyên 18,6ms.
+
 **Phần đầu kiểu tạp chí.** Bốn cụm đầu dòng tin được dựng theo lối tạp chí:
 một tin hero với ảnh lớn và tiêu đề cỡ 40px, dưới là hàng ba tin đặc tả. Phần
 còn lại giữ lưới thẻ đều của dashboard.

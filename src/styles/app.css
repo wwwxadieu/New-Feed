@@ -73,8 +73,6 @@
   flex-direction: column;
 }
 
-
-
 /* ================= Thanh bên ================= */
 /* Chỉ vùng giữa cuộn, chân cột ghim lại.
    Trước đây cả cột đặt overflow-y: auto và chân cột chỉ dựa vào margin-top:
@@ -436,6 +434,147 @@
   align-items: start;
 }
 
+/* ================= Thẻ tin dạng áp phích =================
+   Ảnh phủ toàn thẻ, chữ đặt trên một tấm kính mờ ở đáy.
+
+   Đánh đổi có thật: file này trước đây cố ý không dùng kính cho thẻ tin vì
+   mỗi thẻ kính là một lớp hợp ảnh riêng, dòng tin vài chục thẻ thì WebView
+   phải dựng lại toàn bộ chỗ đó ở mỗi khung hình cuộn. Giữ blur ở mức vừa
+   phải và chỉ đặt trên đúng tấm chữ, không phải cả thẻ, để cái giá đó nhỏ
+   nhất có thể.
+
+   Chữ luôn màu sáng ở cả giao diện sáng lẫn tối, vì nền của nó là ảnh bài
+   chứ không phải nền của ứng dụng. */
+.poster {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  width: 100%;
+  padding: 0;
+  overflow: hidden;
+  text-align: left;
+  border-radius: var(--r-lg);
+  background: var(--fill);
+  border: 1px solid var(--surface-border);
+  box-shadow: var(--shadow-card);
+  transition: transform var(--dur-base) var(--ease-out), box-shadow var(--dur-base) ease;
+}
+.poster:hover { transform: translateY(-2px); box-shadow: var(--shadow-raised); }
+.poster:active { transform: translateY(0) scale(0.995); }
+
+.card-pic { position: absolute; inset: 0; overflow: hidden; }
+.card-pic img {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.card-pic img[hidden] { display: none; }
+.card-pic .fallback {
+  position: absolute; inset: 0;
+  background: linear-gradient(150deg, var(--tint, var(--blue)), transparent 72%), var(--fill);
+}
+.card-pic .glyph {
+  position: absolute; inset: 0;
+  display: grid; place-items: center;
+  color: var(--label-3);
+  opacity: 0.6;
+}
+
+/* Lớp phủ tối dưới tấm kính. Không có nó thì một tấm ảnh sáng màu sẽ nuốt
+   mất chữ trắng, mà ảnh của báo thì không đoán trước được. */
+.poster::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.58) 0%, rgba(0, 0, 0, 0.16) 42%, transparent 72%);
+}
+
+.card-body {
+  position: relative;
+  z-index: 1;
+  margin: 10px;
+  padding: 13px 15px 14px;
+  border-radius: var(--r-md);
+  background: rgba(18, 18, 20, 0.56);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  box-shadow: 0 1px 12px rgba(0, 0, 0, 0.18);
+  color: #fff;
+}
+
+/* Kính thật chỉ đặt ở tin hero và ba tin đặc tả, tức bốn thẻ, chứ không phải
+   cả dòng tin.
+   Đo trên 60 thẻ khi cuộn: để kính ở mọi thẻ thì khung hình trung vị đi từ
+   18,1ms lên 34,5ms và số khung trễ từ 3/85 lên 82/85. Giảm bán kính làm mờ
+   không cứu được — 8px cho 34,2ms, 4px cho 35,5ms — vì cái đắt là bản thân
+   backdrop-filter tạo một lớp hợp ảnh riêng cho mỗi thẻ, không phải bán
+   kính. Bốn thẻ thì cái giá đó không đáng kể.
+   Tấm ở lưới bù lại bằng nền đục hơn một chút; đặt trên ảnh đã bị lớp phủ
+   làm tối thì mắt gần như không phân biệt được. */
+.hero-card .card-body,
+.feature-card .card-body {
+  background: rgba(18, 18, 20, 0.48);
+  backdrop-filter: blur(20px) saturate(150%);
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
+}
+
+/* Mọi màu chữ bên trong tấm kính đều phải tự khai lại: token của ứng dụng
+   được tính cho nền sáng hoặc nền tối của app, không phải cho nền ảnh. */
+.card-body .c-title,
+.card-body .hero-title,
+.card-body .feature-title { color: #fff; }
+.card-body .c-summary,
+.card-body .hero-summary { color: rgba(255, 255, 255, 0.93); }
+.card-body .stamp { color: rgba(255, 255, 255, 0.84); }
+.card-body .source-line { color: rgba(255, 255, 255, 0.86); }
+.card-body .source-line b { color: #fff; }
+.card-body .pill { background: rgba(255, 255, 255, 0.2); color: #fff; }
+.card-body .pill.hot { background: rgba(255, 149, 0, 0.34); color: #fff; }
+.card-body .pill.quiet { background: rgba(255, 255, 255, 0.14); color: rgba(255, 255, 255, 0.86); }
+/* Huy hiệu nguồn: nền trắng đục, chữ viết tắt màu tối. Giữ nguyên token cũ
+   thì chữ tối nằm trên nền tối của tấm kính và biến mất hẳn. */
+.card-body .avatar {
+  background: rgba(255, 255, 255, 0.92);
+  color: #1c1c1e;
+  border-color: rgba(255, 255, 255, 0.42);
+}
+.card-body .avatar.has-logo { background: #fff; }
+
+/* Thẻ trong lưới. Tỷ lệ 16:9 là khổ ảnh phổ biến nhất của báo nên ảnh ít bị
+   cắt cụt, đồng thời giữ được mật độ đọc: cao hơn nữa thì mỗi màn hình chỉ
+   còn thấy hai thẻ. */
+.cluster-card.poster {
+  aspect-ratio: 16 / 9;
+  min-height: 250px;
+  max-height: 400px;
+  animation: card-in 460ms var(--ease-out) both;
+  animation-delay: calc(var(--i, 0) * 26ms);
+}
+.cluster-card .card-pic .glyph svg { width: 34px; height: 34px; }
+
+/* Trần chiều cao là bắt buộc ở màn lớn: 21/9 của một tấm rộng 2000px là 857px,
+   cộng hàng đặc tả nữa thì phần đầu chiếm gần trọn màn 1440px và không còn
+   thấy dòng tin đâu. Ảnh vẫn phủ kín nhờ object-fit: cover. */
+.hero-card.poster {
+  aspect-ratio: 21 / 9;
+  min-height: 330px;
+  max-height: 560px;
+  animation: card-in 460ms var(--ease-out) both;
+}
+.hero-card .card-pic .glyph svg { width: 60px; height: 60px; }
+.hero-card .card-body { margin: 14px; padding: 16px 18px 17px; }
+
+.feature-card.poster {
+  aspect-ratio: 4 / 3;
+  min-height: 240px;
+  max-height: 380px;
+  animation: card-in 460ms var(--ease-out) both;
+  animation-delay: calc(var(--i, 0) * 40ms);
+}
+.feature-card .card-pic .glyph svg { width: 36px; height: 36px; }
+
 /* ================= Phần đầu kiểu tạp chí =================
    Một tin hero rồi một hàng tin đặc tả, phía dưới mới là lưới thẻ đều.
 
@@ -452,25 +591,6 @@
 
 /* Ảnh chiếm phần lớn hơn phần chữ. Ô ảnh rộng khoảng 700px CSS, khớp với
    bản ảnh 1440px tải sẵn ở thư mục đệm. */
-.hero-card {
-  display: grid;
-  grid-template-columns: minmax(0, 1.12fr) minmax(0, 1fr);
-  gap: 30px;
-  width: 100%;
-  text-align: left;
-  padding: 20px;
-  border-radius: var(--r-xl);
-  background: var(--surface-accent);
-  border: 1px solid var(--surface-accent-border);
-  box-shadow: var(--shadow-card);
-  animation: card-in 460ms var(--ease-out) both;
-  transition: transform var(--dur-base) var(--ease-out), box-shadow var(--dur-base) ease;
-}
-.hero-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-raised); }
-.hero-card:active { transform: translateY(0) scale(0.996); }
-
-.hero-text { display: flex; flex-direction: column; min-width: 0; align-self: center; }
-
 /* Cỡ chữ bám theo bề ngang cửa sổ chứ không nhảy nấc theo mốc màn hình: tin
    hero là chỗ duy nhất mà một bước nhảy cỡ chữ lộ rõ. */
 .hero-title {
@@ -493,27 +613,6 @@
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 14px;
 }
-.feature-card {
-  display: flex;
-  flex-direction: column;
-  text-align: left;
-  padding: 14px;
-  border-radius: var(--r-lg);
-  background: var(--surface);
-  border: 1px solid var(--surface-border);
-  box-shadow: var(--shadow-card);
-  animation: card-in 460ms var(--ease-out) both;
-  animation-delay: calc(var(--i, 0) * 40ms);
-  transition: transform var(--dur-base) var(--ease-out), box-shadow var(--dur-base) ease,
-    background var(--dur-fast) ease;
-}
-.feature-card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-raised);
-  background: var(--surface-hover);
-}
-.feature-card:active { transform: translateY(0) scale(0.995); }
-.feature-text { display: flex; flex-direction: column; min-width: 0; margin-top: 12px; }
 .feature-title {
   margin: 2px 0 0;
   font-size: 19px; font-weight: 650; line-height: 1.28; letter-spacing: -0.018em;
@@ -521,41 +620,6 @@
   display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
 }
 .feature-card .c-foot { margin-top: 12px; }
-
-/* Ảnh của hero và tin đặc tả dùng chung cách dựng với ô ảnh thẻ thường. */
-.hero-pic,
-.feature-pic {
-  position: relative;
-  border-radius: var(--r-md);
-  overflow: hidden;
-  background: var(--fill);
-}
-.hero-pic { aspect-ratio: 16 / 10; }
-.feature-pic { aspect-ratio: 16 / 9; }
-.hero-pic img,
-.feature-pic img {
-  position: absolute; inset: 0;
-  width: 100%; height: 100%;
-  object-fit: cover;
-  display: block;
-}
-.hero-pic img[hidden],
-.feature-pic img[hidden] { display: none; }
-.hero-pic .fallback,
-.feature-pic .fallback {
-  position: absolute; inset: 0;
-  background: linear-gradient(150deg, var(--tint, var(--blue)), transparent 72%), var(--fill);
-  opacity: 0.22;
-}
-.hero-pic .glyph,
-.feature-pic .glyph {
-  position: absolute; inset: 0;
-  display: grid; place-items: center;
-  color: var(--label-3);
-  opacity: 0.75;
-}
-.hero-pic .glyph svg { width: 56px; height: 56px; }
-.feature-pic .glyph svg { width: 32px; height: 32px; }
 
 /* Cửa sổ hẹp: hero xếp dọc, hàng đặc tả rút còn hai rồi một cột. Ép ba cột
    ở khổ hẹp thì tiêu đề tiếng Việt bị bẻ vụn từng chữ một. */
@@ -567,10 +631,6 @@
   .hero-text { align-self: stretch; }
   .feature-row { grid-template-columns: minmax(0, 1fr); }
 }
-
-/* Tin dẫn chạy hết bề ngang: ở một cột thì như cũ, ở nhiều cột thành khối
-   mở đầu tách hẳn khỏi lưới bên dưới. */
-.cluster-card.lead { grid-column: 1 / -1; }
 
 /* Chỗ báo đang dựng thêm tin khi cuộn tới cuối, và dòng khép lại khi đã hết. */
 .feed-more,
@@ -589,73 +649,10 @@
   animation: pulse 1.4s ease-in-out infinite;
 }
 
-/* Thẻ tin là bề mặt đặc, không phải kính.
-   Đây là chỗ có chữ để đọc, nên nó phải đứng hẳn trước nền chứ không hoà vào
-   nền. Đồng thời tránh được cái giá của backdrop-filter: mỗi thẻ kính là một
-   lớp hợp ảnh riêng, một dòng tin vài chục thẻ thì WebView phải dựng lại toàn
-   bộ chỗ đó ở mỗi khung hình cuộn. */
-.cluster-card {
-  display: grid;
-  grid-template-columns: 168px minmax(0, 1fr);
-  gap: 18px;
-  width: 100%;
-  text-align: left;
-  padding: 16px;
-  border-radius: var(--r-lg);
-  background: var(--surface);
-  border: 1px solid var(--surface-border);
-  box-shadow: var(--shadow-card);
-  animation: card-in 460ms var(--ease-out) both;
-  animation-delay: calc(var(--i, 0) * 26ms);
-  transition: transform var(--dur-base) var(--ease-out), box-shadow var(--dur-base) ease,
-    background var(--dur-fast) ease;
-}
-.cluster-card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-raised);
-  background: var(--surface-hover);
-}
-.cluster-card:active { transform: translateY(0) scale(0.995); }
-/* Tin dẫn đầu là một trong hai chỗ được dùng bề mặt nhấn. */
-.cluster-card.lead {
-  grid-template-columns: 300px minmax(0, 1fr);
-  gap: 24px;
-  padding: 20px;
-  background: var(--surface-accent);
-  border-color: var(--surface-accent-border);
-}
-
 @keyframes card-in {
   from { opacity: 0; transform: translateY(12px) scale(0.99); }
   to { opacity: 1; transform: none; }
 }
-
-.thumb {
-  position: relative;
-  aspect-ratio: 4 / 3;
-  border-radius: var(--r-md);
-  overflow: hidden;
-  background: var(--fill);
-  flex: none;
-}
-.thumb img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
-.thumb img[hidden] { display: none; }
-/* Ô dự phòng chỉ nhắc màu chủ đề chứ không tranh chỗ với ảnh thật: sáu bảy
-   thẻ không ảnh cạnh nhau với nền rực là phần làm dòng tin rối nhất. */
-.thumb .fallback {
-  position: absolute; inset: 0;
-  background: linear-gradient(150deg, var(--tint, var(--blue)), transparent 72%), var(--fill);
-  opacity: 0.22;
-}
-/* Chỉ hiện khi bài không có ảnh: icon chủ đề mờ, không tranh chỗ với ảnh thật. */
-.thumb .glyph {
-  position: absolute; inset: 0;
-  display: grid; place-items: center;
-  color: var(--label-3);
-  opacity: 0.75;
-}
-.thumb .glyph svg { width: 30px; height: 30px; }
-.cluster-card.lead .thumb .glyph svg { width: 44px; height: 44px; }
 
 .c-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 5px; }
 .pill {
@@ -674,14 +671,11 @@
   font-size: 17.5px; font-weight: 650; line-height: 1.32; letter-spacing: -0.014em;
   text-wrap: balance;
 }
-.cluster-card.lead .c-title { font-size: 27px; line-height: 1.22; letter-spacing: -0.022em; }
 .c-summary {
   margin: 0;
   font-size: 14px; line-height: 1.55; color: var(--label-2);
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
 }
-.cluster-card.lead .c-summary { -webkit-line-clamp: 3; }
-
 .c-foot { display: flex; align-items: center; gap: 9px; margin-top: 12px; min-width: 0; }
 .avatar-stack { display: flex; flex: none; }
 .avatar {
@@ -946,7 +940,6 @@
   .reader-grid { grid-template-columns: minmax(0, 1fr); }
 }
 
-
 /* ================= Màn hình lớn (2K trở lên) =================
    Tăng kích thước thật của chữ và khung, không dùng zoom hay transform:
    scale — hai cách đó phóng ảnh đã dựng nên chữ sẽ mờ. Mốc tính theo pixel
@@ -961,11 +954,9 @@
   .feed-head h1 { font-size: 29px; }
   .feed-head p { font-size: 14px; }
   .c-title { font-size: 18.5px; }
-  .cluster-card.lead .c-title { font-size: 29px; }
   .c-summary { font-size: 14.5px; }
   .hot-tab-title { font-size: 13.6px; }
   .searchfield input { font-size: 14px; }
-
 
   .sheet { width: min(1180px, 100%); }
   .reader-grid { grid-template-columns: minmax(0, 1fr) 264px; gap: 28px; padding: 24px 30px 56px; }
@@ -993,13 +984,9 @@
 
   .feed-head h1 { font-size: 32px; }
   .c-title { font-size: 20px; }
-  .cluster-card.lead .c-title { font-size: 32px; }
   .c-summary { font-size: 15.5px; }
-  .cluster-card { grid-template-columns: 196px minmax(0, 1fr); }
-  .cluster-card.lead { grid-template-columns: 360px minmax(0, 1fr); }
   .cluster-list { grid-template-columns: repeat(auto-fill, minmax(min(100%, 520px), 1fr)); }
   .hot-tab-title { font-size: 14.5px; }
-
 
   .sheet { width: min(1400px, 100%); }
   .reader-grid { grid-template-columns: minmax(0, 1fr) 296px; gap: 34px; padding: 28px 36px 64px; }

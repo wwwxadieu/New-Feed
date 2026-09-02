@@ -20,11 +20,10 @@ const TOPIC_TINT: Record<string, string> = {
 interface Props {
   cluster: Cluster;
   index: number;
-  lead: boolean;
   onOpen: (cluster: Cluster) => void;
 }
 
-export function ClusterCard({ cluster, index, lead, onOpen }: Props) {
+export function ClusterCard({ cluster, index, onOpen }: Props) {
   // Ưu tiên ảnh đã tải sẵn trên máy; chưa có thì mới lấy từ máy chủ của báo.
   const cached = cluster.articles.find((a) => a.thumb)?.thumb ?? null;
   const remote = cluster.articles.find((a) => a.image)?.image ?? null;
@@ -39,13 +38,16 @@ export function ClusterCard({ cluster, index, lead, onOpen }: Props) {
 
   return (
     <button
-      className={`cluster-card${lead ? " lead" : ""}`}
+      className="cluster-card poster"
       // Chỉ so le vài thẻ đầu. Không chặn thì thẻ thứ 60 phải đợi hơn một
       // giây rưỡi mới hiện, trông như ứng dụng đang treo chứ không phải hiệu ứng.
       style={{ "--i": Math.min(index, 10) } as React.CSSProperties}
       onClick={() => onOpen(cluster)}
     >
-      <span className="thumb" style={{ "--tint": TOPIC_TINT[cluster.topic] ?? "var(--blue)" } as React.CSSProperties}>
+      <span
+        className="card-pic"
+        style={{ "--tint": TOPIC_TINT[cluster.topic] ?? "var(--blue)" } as React.CSSProperties}
+      >
         <span className="fallback" />
         <span className="glyph">
           <TopicIcon topic={cluster.topic} />
@@ -63,7 +65,7 @@ export function ClusterCard({ cluster, index, lead, onOpen }: Props) {
         )}
       </span>
 
-      <span>
+      <span className="card-body">
         <span className="c-meta">
           <span className="pill">{TOPIC_LABEL[cluster.topic] ?? "Khác"}</span>
           <span className="stamp">{relativeTime(cluster.newest)}</span>
