@@ -102,3 +102,12 @@ export const TOPICS: Topic[] = [
 export const TOPIC_LABEL: Record<string, string> = Object.fromEntries(
   TOPICS.map((t) => [t.id, t.label]),
 );
+
+/** Thời tiết hiện tại cho ô cạnh thanh tìm kiếm. */
+export interface Weather {
+  tempC: number;
+  /** Mã WMO, dùng để chọn icon. */
+  code: number;
+  isDay: boolean;
+  place: string;
+}

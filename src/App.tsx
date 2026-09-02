@@ -9,6 +9,7 @@ import { Sidebar } from "./components/Sidebar";
 import { TitleBar } from "./components/TitleBar";
 import { ClusterCard } from "./components/ClusterCard";
 import { HotStrip } from "./components/HotStrip";
+import { WeatherClock } from "./components/WeatherClock";
 import { FEATURE_COUNT, MAGAZINE_MIN, MagazineHead } from "./components/MagazineHead";
 import { ReaderSheet } from "./components/ReaderSheet";
 import { SourceManager } from "./components/SourceManager";
@@ -359,6 +360,8 @@ export default function App() {
                   aria-label="Tìm kiếm"
                 />
               </label>
+
+              <WeatherClock />
 
               <Segmented
                 label="Khoảng thời gian"

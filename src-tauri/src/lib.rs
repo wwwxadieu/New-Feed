@@ -6,6 +6,7 @@ mod model;
 mod store;
 mod thumbs;
 mod translate;
+mod weather;
 
 use chrono::{DateTime, SecondsFormat, Utc};
 use futures::stream::{self, StreamExt};
@@ -50,6 +51,8 @@ const MIN_ARTICLE_WORDS: usize = 120;
 pub struct AppState {
     data: Mutex<AppData>,
     client: reqwest::Client,
+    /// Vị trí và thời tiết đã lấy, để không hỏi lại dịch vụ ngoài mỗi lượt vẽ.
+    weather: Mutex<weather::Cache>,
     /// Đang có một lượt bổ sung nền chạy hay không. Hai lượt chồng nhau sẽ
     /// tải trùng ảnh và đốt hai lần hạn mức dịch.
     enriching: AtomicBool,
@@ -645,6 +648,15 @@ async fn refresh(app: AppHandle, state: State<'_, AppState>) -> Result<Snapshot,
     Ok(snap)
 }
 
+/// Thời tiết hiện tại cho ô cạnh thanh tìm kiếm.
+///
+/// Trả về null thay vì lỗi khi không lấy được: đây là phần phụ, hỏng thì ô
+/// đó lặng lẽ không hiện chứ không được làm phiền người đang đọc tin.
+#[tauri::command]
+async fn get_weather(state: State<'_, AppState>) -> Result<Option<weather::Weather>, String> {
+    Ok(weather::fetch(&state.client, &state.weather).await)
+}
+
 /// Dịch một loạt đoạn văn theo yêu cầu, dùng cho nút dịch ở màn hình đọc.
 #[tauri::command]
 async fn translate_texts(state: State<'_, AppState>, texts: Vec<String>) -> Result<Vec<String>, String> {
@@ -742,6 +754,7 @@ pub fn run() {
             app.manage(AppState {
                 data: Mutex::new(data),
                 client,
+                weather: Mutex::new(weather::Cache::default()),
                 enriching: AtomicBool::new(false),
                 enrich_again: AtomicBool::new(false),
             });
@@ -755,7 +768,8 @@ pub fn run() {
             save_settings,
             refresh,
             read_article,
-            translate_texts
+            translate_texts,
+            get_weather
         ])
         .run(tauri::generate_context!())
         .expect("không khởi động được ứng dụng");

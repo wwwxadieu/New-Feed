@@ -1,4 +1,4 @@
-import type { CleanedArticle, Settings, Snapshot } from "./types";
+import type { CleanedArticle, Settings, Snapshot, Weather } from "./types";
 import { demoSnapshot } from "./demo";
 
 /** Khi mở bằng `npm run dev` trong trình duyệt sẽ không có backend Rust. */
@@ -121,3 +121,12 @@ function demoArticle(): CleanedArticle {
     partial: false,
   };
 }
+
+/**
+ * Thời tiết hiện tại. Trả về null khi không lấy được — ô này là phần phụ nên
+ * hỏng thì lặng lẽ không hiện chứ không báo lỗi.
+ */
+export const getWeather = (): Promise<Weather | null> =>
+  isDesktop
+    ? call<Weather | null>("get_weather")
+    : demoDelay<Weather | null>({ tempC: 28, code: 2, isDay: true, place: "Hà Nội" }, 400);

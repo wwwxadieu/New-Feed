@@ -236,6 +236,45 @@
 }
 .searchfield input::placeholder { color: var(--label-3); }
 
+/* ================= Ô thời tiết và giờ =================
+   Chỉ để nhìn, không bấm được. Đặt cạnh thanh tìm kiếm nên phải cùng chiều
+   cao và cùng bo tròn với nó, nhưng nền nhạt hơn để không tranh chỗ với ô
+   nhập liệu — đây là thông tin liếc qua, không phải chỗ thao tác. */
+.weather-clock {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex: none;
+  padding: 6px 12px;
+  /* Bằng đúng chiều cao thanh tìm kiếm bên cạnh: ô kia cao 34px do line-height
+     của thẻ input, còn ô này chỉ có chữ nên phải tự khai. */
+  min-height: 34px;
+  box-sizing: border-box;
+  border-radius: 999px;
+  background: var(--fill);
+  color: var(--label-2);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  user-select: none;
+  cursor: default;
+}
+.wc-icon { display: flex; color: var(--label-2); }
+.wc-temp { font-weight: 550; color: var(--label); }
+.wc-sep {
+  width: 1px;
+  height: 12px;
+  background: var(--hairline);
+}
+/* Giờ là phần luôn có, kể cả khi không lấy được thời tiết. */
+.wc-time { font-weight: 550; color: var(--label); }
+
+/* Cửa sổ hẹp: bỏ ô này trước khi thanh công cụ phải xuống dòng. Giờ và thời
+   tiết là thứ liếc qua, mất đi không cản trở việc đọc tin. */
+@media (max-width: 1080px) {
+  .weather-clock { display: none; }
+}
+
 /* Segmented control với con trượt, đặc trưng của iOS/macOS */
 .segmented {
   position: relative;
