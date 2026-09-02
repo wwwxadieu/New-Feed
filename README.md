@@ -199,6 +199,22 @@ Lớp phủ sáng chuyển dần ở đáy thẻ chỉ để làm mềm chỗ ti
 tấm kính vốn đã đủ đục để một mình bảo đảm tương phản, mà đặt lớp phủ đậm thì
 nửa dưới tấm ảnh bị trắng bệch — đúng cái ngược với ý ảnh phủ toàn thẻ.
 
+**Kính mờ không dùng backdrop-filter.** Thay vào đó là một bản sao của chính
+tấm ảnh, đã làm mờ sẵn và che mặt nạ để chỉ hiện ở dải đáy nơi tấm kính nằm
+lên. Lý do là giá phải trả: filter trên một tấm ảnh tĩnh được dựng một lần
+rồi đệm lại, còn backdrop-filter phải đọc lại nền ở mỗi khung hình cuộn. Đo
+trên 60 thẻ khi cuộn — backdrop-filter cho mọi thẻ đẩy khung hình trung vị từ
+18,1ms lên 34,5ms và khung trễ từ 3/85 lên 82/85; giảm bán kính làm mờ không
+cứu được (8px cho 34,2ms, 4px cho 35,5ms) vì cái đắt là lớp hợp ảnh riêng cho
+mỗi thẻ chứ không phải bán kính; `content-visibility: auto` cũng không (40ms).
+Cách dùng bản sao cho 18,5ms với 6/85 khung trễ, tức ngang với thẻ đặc không
+có hiệu ứng nào.
+
+Dải mặt nạ phủ tới 42% chiều cao tính từ đáy rồi mới nhạt dần, trong khi tấm
+kính cao nhất cũng chỉ chiếm 32% — nên tấm luôn nằm trọn trong vùng đã nhoè,
+còn chỗ chuyển từ sắc nét sang nhoè rơi vào khoảng trống phía trên và đọc ra
+như hiệu ứng chiều sâu.
+
 Kính thật chỉ đặt ở tin hero và ba tin đặc tả, tức bốn thẻ, chứ không phải cả
 dòng tin. Đo trên 60 thẻ khi cuộn: để kính ở mọi thẻ thì khung hình trung vị
 đi từ 18,1ms lên 34,5ms và số khung trễ từ 3/85 lên 82/85. Giảm bán kính làm

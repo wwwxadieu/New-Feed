@@ -84,14 +84,18 @@ function Picture({ cluster, className }: { cluster: Cluster; className: string }
         <TopicIcon topic={cluster.topic} />
       </span>
       {image && (
-        <img
-          src={image}
-          alt=""
-          decoding="async"
-          onError={(event) => {
-            event.currentTarget.hidden = true;
-          }}
-        />
+        <>
+          <img
+            src={image}
+            alt=""
+            decoding="async"
+            onError={(event) => {
+              event.currentTarget.hidden = true;
+            }}
+          />
+          {/* Bản sao đã làm mờ sẵn cho vùng đáy, nơi tấm kính nằm lên. */}
+          <img className="blur" src={image} alt="" aria-hidden="true" decoding="async" />
+        </>
       )}
     </span>
   );

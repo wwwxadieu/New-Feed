@@ -16,20 +16,26 @@ const at = (hoursAgo: number) => new Date(now - hoursAgo * 3_600_000).toISOStrin
  * thiết kế thật sự trông ra sao. Dựng bằng SVG nội tuyến nên mỗi ảnh chỉ vài
  * trăm byte và không phải kèm tệp nào vào bản dựng.
  */
-function backdrop(from: string, to: string): string {
+function backdrop(from: string, to: string, blob: string): string {
   const svg =
-    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 10">` +
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 20">` +
     `<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1">` +
     `<stop offset="0%" stop-color="${from}"/><stop offset="100%" stop-color="${to}"/>` +
-    `</linearGradient></defs><rect width="16" height="10" fill="url(#g)"/></svg>`;
+    `</linearGradient></defs><rect width="32" height="20" fill="url(#g)"/>` +
+    // Vài khối hình để nhìn ra được hiệu ứng làm mờ; nền trơn thì mờ hay
+    // không cũng như nhau.
+    `<circle cx="8" cy="7" r="5" fill="${blob}" opacity="0.5"/>` +
+    `<circle cx="23" cy="14" r="7" fill="${blob}" opacity="0.36"/>` +
+    `<circle cx="17" cy="4" r="3" fill="${blob}" opacity="0.42"/>` +
+    `</svg>`;
   return `data:image/svg+xml,${encodeURIComponent(svg)}`;
 }
 
 const BACKDROPS = [
-  backdrop("#c7d7f5", "#eddcf0"),
-  backdrop("#f6d9c8", "#dfe3f2"),
-  backdrop("#cfe8e2", "#e6dcf2"),
-  backdrop("#e9dcc6", "#cfdcf0"),
+  backdrop("#c7d7f5", "#eddcf0", "#5b7fd4"),
+  backdrop("#f6d9c8", "#dfe3f2", "#d98a5a"),
+  backdrop("#cfe8e2", "#e6dcf2", "#4fa595"),
+  backdrop("#e9dcc6", "#cfdcf0", "#c2a05e"),
 ];
 
 let seq = 0;

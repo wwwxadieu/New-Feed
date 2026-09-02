@@ -53,15 +53,19 @@ export function ClusterCard({ cluster, index, onOpen }: Props) {
           <TopicIcon topic={cluster.topic} />
         </span>
         {image && (
-          <img
-            src={image}
-            alt=""
-            loading="lazy"
-            decoding="async"
-            onError={(event) => {
-              event.currentTarget.hidden = true;
-            }}
-          />
+          <>
+            <img
+              src={image}
+              alt=""
+              loading="lazy"
+              decoding="async"
+              onError={(event) => {
+                event.currentTarget.hidden = true;
+              }}
+            />
+            {/* Bản sao đã làm mờ sẵn cho vùng đáy, nơi tấm kính nằm lên. */}
+            <img className="blur" src={image} alt="" aria-hidden="true" loading="lazy" decoding="async" />
+          </>
         )}
       </span>
 
