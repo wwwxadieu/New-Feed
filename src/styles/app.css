@@ -808,7 +808,10 @@
   overflow: hidden;
   animation: sheet-in var(--dur-sheet) var(--ease-sheet) both;
 }
-.sheet.compact { width: min(580px, 100%); }
+/* Rộng hơn để chứa hai cột nguồn. Đổi lấy chiều cao: danh sách 20 nguồn xếp
+   một cột cao 1.120px, xếp hai cột còn một nửa. Tấm rộng mà thấp dễ nhìn hơn
+   tấm hẹp mà dài. */
+.sheet.compact { width: min(720px, 100%); }
 @keyframes sheet-in {
   from { opacity: 0; transform: translateY(26px) scale(0.965); }
   to { opacity: 1; transform: none; }
@@ -930,13 +933,29 @@
   color: var(--label-3);
 }
 
+/* Hai cột. Số cột để lưới tự quyết theo chỗ thực có, đúng như khối cài đặt:
+   mốc 300px là bề ngang tối thiểu để tên nguồn và dòng thông tin còn đọc
+   được mà không bị cắt ngay. */
+.source-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1px;
+  /* Nền ở đây là màu tấm chứ không phải màu kẻ: khi số nguồn lẻ, ô cuối hàng
+     bỏ trống, mà ô đó phải ẩn theo nền chứ không được hiện ra thành một mảng
+     xám. Đường kẻ do chính các hàng vẽ bằng box-shadow, đặt vừa khít vào khe
+     1px giữa hai ô. */
+  background: var(--sheet-bg);
+  border-top: 1px solid var(--hairline);
+  overflow: hidden; /* cắt nét thừa của cột cuối và hàng cuối */
+}
 .source-row {
   display: flex; align-items: center; gap: 11px;
   padding: 8px 14px;
+  background: var(--sheet-bg);
+  box-shadow: 1px 0 0 var(--hairline), 0 1px 0 var(--hairline);
   animation: card-in 380ms var(--ease-out) both;
   animation-delay: calc(var(--i, 0) * 24ms);
 }
-.source-row + .source-row { border-top: 1px solid var(--hairline); }
 .source-row .info { min-width: 0; flex: 1; }
 .source-row .info b { display: block; font-size: 13.2px; font-weight: 600; letter-spacing: -0.008em; }
 .source-row .info small {
@@ -978,9 +997,10 @@
    tấm trượt là thứ đắt: xếp dọc thì hai ô này chiếm 289px, hơn một phần ba
    chiều cao tấm, chỉ để chứa hai trường nhập một dòng. */
 .sheet-settings {
+  flex: none;
   display: grid;
   /* Để chính lưới quyết định số cột theo chỗ nó thực có. Đặt mốc theo bề
-     ngang cửa sổ là sai chỗ: tấm này rộng cố định 580px chứ không co theo
+     ngang cửa sổ là sai chỗ: tấm này rộng cố định 720px chứ không co theo
      cửa sổ, nên hai thứ đó không liên quan gì tới nhau. */
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 14px;
