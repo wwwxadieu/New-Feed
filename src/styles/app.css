@@ -529,11 +529,12 @@
 
    scale(1.08) để mép ảnh không bị nhoè ra thành viền sáng.
 
-   Mặt nạ vẫn tính theo chiều cao thẻ, và điều đó lại đúng ở đây: lớp kính nay
-   cao gấp 1,8 lần khối chữ, tức phủ khoảng 93–109% chiều cao thẻ, nên hai lớp
-   nhoè nằm gọn bên trong nó ở mọi cỡ cửa sổ. Trước đây kính chỉ cao bằng khối
-   chữ, thấp hơn mặt nạ nhoè, nên phía trên mép kính còn một dải ảnh đã nhoè mà
-   không có kính phủ — đúng cái cảm giác "chỉ mỗi cạnh trên là mờ".
+   Mặt nạ phải dừng trong lòng tấm kính, nếu không phía trên mép kính còn một
+   dải ảnh đã nhoè mà không có kính phủ. Nhưng kính đo theo khối chữ còn ảnh
+   nhoè đo theo thẻ, hai hệ quy chiếu khác nhau, nên --frost-h đặt theo từng
+   loại thẻ ở mức xấp xỉ 1,2 lần tỷ lệ khối chữ trên thẻ. Ở cửa sổ hẹp khối
+   chữ chiếm phần lớn hơn nên kính cao hơn mức này — lệch về phía an toàn:
+   thà kính nhô cao hơn vùng nhoè, còn hơn vùng nhoè nhô cao hơn kính.
 
    Mức tăng bão hoà hạ từ 155/170% xuống 110/115%: kính thật gần như không có
    màu của riêng nó, màu phải là màu của ảnh phía sau. Đẩy bão hoà lên cao thì
@@ -541,24 +542,34 @@
 .card-pic img.blur {
   transform: scale(1.08);
   pointer-events: none;
+  -webkit-mask-size: 100% var(--frost-h, 70%);
+  mask-size: 100% var(--frost-h, 70%);
+  -webkit-mask-position: bottom;
+  mask-position: bottom;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
 }
+.hero-card .card-pic { --frost-h: 62%; }
+.feature-card .card-pic { --frost-h: 70%; }
+.cluster-card .card-pic { --frost-h: 74%; }
+
 .card-pic img.blur.soft {
   filter: blur(11px) saturate(110%);
   --soft-mask: linear-gradient(
     to top,
-    rgb(0 0 0 / 1) 0 34%,
-    rgb(0 0 0 / 0.980) 37.83%,
-    rgb(0 0 0 / 0.926) 41.67%,
-    rgb(0 0 0 / 0.844) 45.5%,
-    rgb(0 0 0 / 0.741) 49.33%,
-    rgb(0 0 0 / 0.624) 53.17%,
-    rgb(0 0 0 / 0.500) 57%,
-    rgb(0 0 0 / 0.376) 60.83%,
-    rgb(0 0 0 / 0.259) 64.67%,
-    rgb(0 0 0 / 0.156) 68.5%,
-    rgb(0 0 0 / 0.074) 72.33%,
-    rgb(0 0 0 / 0.020) 76.17%,
-    rgb(0 0 0 / 0.000) 80%
+    rgb(0 0 0 / 1) 0 70%,
+    rgb(0 0 0 / 0.980) 72.5%,
+    rgb(0 0 0 / 0.926) 75%,
+    rgb(0 0 0 / 0.844) 77.5%,
+    rgb(0 0 0 / 0.741) 80%,
+    rgb(0 0 0 / 0.624) 82.5%,
+    rgb(0 0 0 / 0.500) 85%,
+    rgb(0 0 0 / 0.376) 87.5%,
+    rgb(0 0 0 / 0.259) 90%,
+    rgb(0 0 0 / 0.156) 92.5%,
+    rgb(0 0 0 / 0.074) 95%,
+    rgb(0 0 0 / 0.020) 97.5%,
+    rgb(0 0 0 / 0.000) 100%
   );
   -webkit-mask-image: var(--soft-mask);
   mask-image: var(--soft-mask);
@@ -567,19 +578,19 @@
   filter: blur(34px) saturate(115%);
   --deep-mask: linear-gradient(
     to top,
-    rgb(0 0 0 / 1) 0 22%,
-    rgb(0 0 0 / 0.980) 25.33%,
-    rgb(0 0 0 / 0.926) 28.67%,
-    rgb(0 0 0 / 0.844) 32%,
-    rgb(0 0 0 / 0.741) 35.33%,
-    rgb(0 0 0 / 0.624) 38.67%,
-    rgb(0 0 0 / 0.500) 42%,
-    rgb(0 0 0 / 0.376) 45.33%,
-    rgb(0 0 0 / 0.259) 48.67%,
-    rgb(0 0 0 / 0.156) 52%,
-    rgb(0 0 0 / 0.074) 55.33%,
-    rgb(0 0 0 / 0.020) 58.67%,
-    rgb(0 0 0 / 0.000) 62%
+    rgb(0 0 0 / 1) 0 44%,
+    rgb(0 0 0 / 0.980) 47%,
+    rgb(0 0 0 / 0.926) 50%,
+    rgb(0 0 0 / 0.844) 53%,
+    rgb(0 0 0 / 0.741) 56%,
+    rgb(0 0 0 / 0.624) 59%,
+    rgb(0 0 0 / 0.500) 62%,
+    rgb(0 0 0 / 0.376) 65%,
+    rgb(0 0 0 / 0.259) 68%,
+    rgb(0 0 0 / 0.156) 71%,
+    rgb(0 0 0 / 0.074) 74%,
+    rgb(0 0 0 / 0.020) 77%,
+    rgb(0 0 0 / 0.000) 80%
   );
   -webkit-mask-image: var(--deep-mask);
   mask-image: var(--deep-mask);
@@ -601,38 +612,46 @@
    thẻ khi cửa sổ rộng 1600px nhưng 60,6% khi cửa sổ rộng 790px. Mọi mốc tính
    theo phần trăm chiều cao thẻ đều trôi theo cửa sổ, và ở cửa sổ hẹp thì chữ
    rơi ra ngoài vùng đục.
-   Neo theo khối chữ thì tỷ lệ đứng yên: top âm 80% nghĩa là lớp này bắt đầu
-   cao hơn khối chữ 80% chiều cao của chính khối đó, tổng cộng cao gấp 1,8 lần
-   và luôn dính đáy thẻ. Đo được dòng chữ trên cùng ở 72,6% chiều cao khối chữ
-   (hero), 68% (đặc tả) và 78,8% (lưới) — chia cho 1,8 thì mốc cao nhất là
-   43,8%, nên vùng đục đều chạy tới 46%.
-   Phần tan chiếm 54% còn lại của lớp, tức gần trọn một lần chiều cao khối
-   chữ — dài gấp bốn lần dải cũ. */
+
+   top âm 20% nghĩa là lớp này bắt đầu cao hơn khối chữ 20% chiều cao của
+   chính khối đó, tổng cộng cao gấp 1,2 lần và luôn dính đáy thẻ. Kính vì thế
+   nằm gọn ở vùng tiêu đề, chỉ nhô lên một quãng ngắn để có chỗ tan — chứ
+   không phủ trùm nửa trên của thẻ.
+
+   Đo được dòng chữ trên cùng ở 72,6% chiều cao khối chữ (hero), 68% (đặc tả)
+   và 78,8% (lưới); chia cho 1,2 thì mốc cao nhất là 65,7%. Vùng đục đều
+   chạy tới 70%, chừa biên cho thẻ có tiêu đề dài hơn — tỷ lệ này tăng theo
+   độ dài chữ, nên mốc đo được không phải mốc xấu nhất. Phần tan chiếm 30%
+   còn lại của lớp, tức 36% chiều cao khối chữ.
+
+   Đo ở cửa sổ rộng 1900px: kính chiếm 52% chiều cao thẻ hero và 57% thẻ đặc
+   tả, tức nằm gọn ở vùng tiêu đề. Trước đó, khi lớp cao gấp 1,8 lần khối
+   chữ, hai con số này là 78% và 86% — phủ gần trọn thẻ. */
 .card-body::before {
   content: "";
   position: absolute;
   z-index: -1;
   left: 0; right: 0; bottom: 0;
-  top: -80%;
+  top: -20%;
   pointer-events: none;
   background: linear-gradient(
     to top,
-    rgb(var(--pane-rgb) / var(--pane-alpha)) 0 46%,
-    rgb(var(--pane-rgb) / calc(var(--pane-alpha) * 0.989)) 49.38%,
-    rgb(var(--pane-rgb) / calc(var(--pane-alpha) * 0.957)) 52.75%,
-    rgb(var(--pane-rgb) / calc(var(--pane-alpha) * 0.908)) 56.13%,
-    rgb(var(--pane-rgb) / calc(var(--pane-alpha) * 0.844)) 59.5%,
-    rgb(var(--pane-rgb) / calc(var(--pane-alpha) * 0.768)) 62.88%,
-    rgb(var(--pane-rgb) / calc(var(--pane-alpha) * 0.684)) 66.25%,
-    rgb(var(--pane-rgb) / calc(var(--pane-alpha) * 0.593)) 69.63%,
-    rgb(var(--pane-rgb) / calc(var(--pane-alpha) * 0.500)) 73%,
-    rgb(var(--pane-rgb) / calc(var(--pane-alpha) * 0.407)) 76.38%,
-    rgb(var(--pane-rgb) / calc(var(--pane-alpha) * 0.316)) 79.75%,
-    rgb(var(--pane-rgb) / calc(var(--pane-alpha) * 0.232)) 83.13%,
-    rgb(var(--pane-rgb) / calc(var(--pane-alpha) * 0.156)) 86.5%,
-    rgb(var(--pane-rgb) / calc(var(--pane-alpha) * 0.092)) 89.88%,
-    rgb(var(--pane-rgb) / calc(var(--pane-alpha) * 0.043)) 93.25%,
-    rgb(var(--pane-rgb) / calc(var(--pane-alpha) * 0.011)) 96.63%,
+    rgb(var(--pane-rgb) / var(--pane-alpha)) 0 70%,
+    rgb(var(--pane-rgb) / calc(var(--pane-alpha) * 0.989)) 71.88%,
+    rgb(var(--pane-rgb) / calc(var(--pane-alpha) * 0.957)) 73.75%,
+    rgb(var(--pane-rgb) / calc(var(--pane-alpha) * 0.908)) 75.63%,
+    rgb(var(--pane-rgb) / calc(var(--pane-alpha) * 0.844)) 77.5%,
+    rgb(var(--pane-rgb) / calc(var(--pane-alpha) * 0.768)) 79.38%,
+    rgb(var(--pane-rgb) / calc(var(--pane-alpha) * 0.684)) 81.25%,
+    rgb(var(--pane-rgb) / calc(var(--pane-alpha) * 0.593)) 83.13%,
+    rgb(var(--pane-rgb) / calc(var(--pane-alpha) * 0.500)) 85%,
+    rgb(var(--pane-rgb) / calc(var(--pane-alpha) * 0.407)) 86.87%,
+    rgb(var(--pane-rgb) / calc(var(--pane-alpha) * 0.316)) 88.75%,
+    rgb(var(--pane-rgb) / calc(var(--pane-alpha) * 0.232)) 90.63%,
+    rgb(var(--pane-rgb) / calc(var(--pane-alpha) * 0.156)) 92.5%,
+    rgb(var(--pane-rgb) / calc(var(--pane-alpha) * 0.092)) 94.38%,
+    rgb(var(--pane-rgb) / calc(var(--pane-alpha) * 0.043)) 96.25%,
+    rgb(var(--pane-rgb) / calc(var(--pane-alpha) * 0.011)) 98.13%,
     rgb(var(--pane-rgb) / 0) 100%
   );
 }
