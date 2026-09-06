@@ -527,20 +527,73 @@
    lớp duy nhất chỉ cho một độ nhoè cố định mờ dần độ đục, nhìn ra ngay là
    có một ranh giới chứ không phải chuyển sắc thật.
 
-   scale(1.08) để mép ảnh không bị nhoè ra thành viền sáng. */
+   scale(1.08) để mép ảnh không bị nhoè ra thành viền sáng.
+
+   Mặt nạ phải dừng trong lòng tấm kính, nếu không phía trên mép kính còn một
+   dải ảnh đã nhoè mà không có kính phủ. Nhưng kính đo theo khối chữ còn ảnh
+   nhoè đo theo thẻ, hai hệ quy chiếu khác nhau, nên --frost-h đặt theo từng
+   loại thẻ ở mức xấp xỉ 1,2 lần tỷ lệ khối chữ trên thẻ. Ở cửa sổ hẹp khối
+   chữ chiếm phần lớn hơn nên kính cao hơn mức này — lệch về phía an toàn:
+   thà kính nhô cao hơn vùng nhoè, còn hơn vùng nhoè nhô cao hơn kính.
+
+   Mức tăng bão hoà hạ từ 155/170% xuống 110/115%: kính thật gần như không có
+   màu của riêng nó, màu phải là màu của ảnh phía sau. Đẩy bão hoà lên cao thì
+   tấm ăn màu theo ảnh và mỗi thẻ một sắc, nhìn ra một tấm phim màu. */
 .card-pic img.blur {
   transform: scale(1.08);
   pointer-events: none;
+  -webkit-mask-size: 100% var(--frost-h, 70%);
+  mask-size: 100% var(--frost-h, 70%);
+  -webkit-mask-position: bottom;
+  mask-position: bottom;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
 }
+.hero-card .card-pic { --frost-h: 56%; }
+.feature-card .card-pic { --frost-h: 44%; }
+.cluster-card .card-pic { --frost-h: 50%; }
+
 .card-pic img.blur.soft {
-  filter: blur(9px) saturate(155%);
-  -webkit-mask-image: linear-gradient(to top, #000 0 34%, rgba(0, 0, 0, 0.55) 58%, transparent 80%);
-  mask-image: linear-gradient(to top, #000 0 34%, rgba(0, 0, 0, 0.55) 58%, transparent 80%);
+  filter: blur(11px) saturate(110%);
+  --soft-mask: linear-gradient(
+    to top,
+    rgb(0 0 0 / 1) 0 80%,
+    rgb(0 0 0 / 0.980) 81.67%,
+    rgb(0 0 0 / 0.926) 83.33%,
+    rgb(0 0 0 / 0.844) 85%,
+    rgb(0 0 0 / 0.741) 86.67%,
+    rgb(0 0 0 / 0.624) 88.33%,
+    rgb(0 0 0 / 0.500) 90%,
+    rgb(0 0 0 / 0.376) 91.67%,
+    rgb(0 0 0 / 0.259) 93.33%,
+    rgb(0 0 0 / 0.156) 95%,
+    rgb(0 0 0 / 0.074) 96.67%,
+    rgb(0 0 0 / 0.020) 98.33%,
+    rgb(0 0 0 / 0.000) 100%
+  );
+  -webkit-mask-image: var(--soft-mask);
+  mask-image: var(--soft-mask);
 }
 .card-pic img.blur.deep {
-  filter: blur(28px) saturate(170%);
-  -webkit-mask-image: linear-gradient(to top, #000 0 18%, rgba(0, 0, 0, 0.5) 36%, transparent 56%);
-  mask-image: linear-gradient(to top, #000 0 18%, rgba(0, 0, 0, 0.5) 36%, transparent 56%);
+  filter: blur(34px) saturate(115%);
+  --deep-mask: linear-gradient(
+    to top,
+    rgb(0 0 0 / 1) 0 50%,
+    rgb(0 0 0 / 0.980) 52.92%,
+    rgb(0 0 0 / 0.926) 55.83%,
+    rgb(0 0 0 / 0.844) 58.75%,
+    rgb(0 0 0 / 0.741) 61.67%,
+    rgb(0 0 0 / 0.624) 64.58%,
+    rgb(0 0 0 / 0.500) 67.5%,
+    rgb(0 0 0 / 0.376) 70.42%,
+    rgb(0 0 0 / 0.259) 73.33%,
+    rgb(0 0 0 / 0.156) 76.25%,
+    rgb(0 0 0 / 0.074) 79.17%,
+    rgb(0 0 0 / 0.020) 82.08%,
+    rgb(0 0 0 / 0.000) 85%
+  );
+  -webkit-mask-image: var(--deep-mask);
+  mask-image: var(--deep-mask);
 }
 .card-pic .fallback {
   position: absolute; inset: 0;
@@ -553,68 +606,107 @@
   opacity: 0.6;
 }
 
-/* Tấm kính sáng, chữ tối. Giữ nguyên một chất liệu ở cả giao diện sáng lẫn
-   tối: nền của nó là ảnh bài chứ không phải nền của ứng dụng, nên nó không
-   có lý do gì để đổi theo chủ đề. */
-/* Tấm kính không phải một khối chữ nhật có viền, mà là một dải chuyển sắc:
-   đục nhất ở đáy rồi nhạt dần lên trên cho tới trong suốt. Nhờ vậy nó tan
-   vào tấm ảnh thay vì nằm đè lên như một thẻ riêng.
-   Đỉnh dải giữ ở 0,6 chứ không đục hơn: phải nhìn xuyên qua thấy phần ảnh đã
-   nhoè thì mới ra chất kính, đục quá thì thành một lớp sơn trắng. Đổi lại,
-   chữ phụ phải tự đậm lên để gánh phần tương phản mà tấm không còn gánh.
-   Đệm trên dày để phần nhạt nhất của dải rơi vào khoảng trống chứ không phải
-   vào dòng chữ đầu tiên. */
+/* Tấm kính là một lớp riêng, neo theo khối chữ chứ không theo chiều cao thẻ.
+   Đây là chỗ dễ sai: thẻ co giãn theo bề ngang cửa sổ còn khối chữ thì gần
+   như không. Đo cùng một tấm hero, dòng chữ trên cùng nằm ở 37,5% chiều cao
+   thẻ khi cửa sổ rộng 1600px nhưng 60,6% khi cửa sổ rộng 790px. Mọi mốc tính
+   theo phần trăm chiều cao thẻ đều trôi theo cửa sổ, và ở cửa sổ hẹp thì chữ
+   rơi ra ngoài vùng đục.
+
+   top âm 20% nghĩa là lớp này bắt đầu cao hơn khối chữ 20% chiều cao của
+   chính khối đó, tổng cộng cao gấp 1,2 lần và luôn dính đáy thẻ. Kính vì thế
+   nằm gọn ở vùng tiêu đề, chỉ nhô lên một quãng ngắn để có chỗ tan — chứ
+   không phủ trùm nửa trên của thẻ.
+
+   Đo được dòng chữ trên cùng ở 72,6% chiều cao khối chữ (hero), 68% (đặc tả)
+   và 78,8% (lưới); chia cho 1,2 thì mốc cao nhất là 65,7%. Vùng đục đều
+   chạy tới 70%, chừa biên cho thẻ có tiêu đề dài hơn — tỷ lệ này tăng theo
+   độ dài chữ, nên mốc đo được không phải mốc xấu nhất. Phần tan chiếm 30%
+   còn lại của lớp, tức 36% chiều cao khối chữ.
+
+   Đo ở cửa sổ rộng 1900px: kính chiếm 52% chiều cao thẻ hero và 57% thẻ đặc
+   tả, tức nằm gọn ở vùng tiêu đề. Trước đó, khi lớp cao gấp 1,8 lần khối
+   chữ, hai con số này là 78% và 86% — phủ gần trọn thẻ. */
+.card-body::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  left: 0; right: 0; bottom: 0;
+  top: -10%;
+  pointer-events: none;
+  background: linear-gradient(
+    to top,
+    rgb(var(--pane-rgb) / var(--pane-alpha)) 0 80%,
+    rgb(var(--pane-rgb) / calc(var(--pane-alpha) * 0.989)) 81.25%,
+    rgb(var(--pane-rgb) / calc(var(--pane-alpha) * 0.957)) 82.5%,
+    rgb(var(--pane-rgb) / calc(var(--pane-alpha) * 0.908)) 83.75%,
+    rgb(var(--pane-rgb) / calc(var(--pane-alpha) * 0.844)) 85%,
+    rgb(var(--pane-rgb) / calc(var(--pane-alpha) * 0.768)) 86.25%,
+    rgb(var(--pane-rgb) / calc(var(--pane-alpha) * 0.684)) 87.5%,
+    rgb(var(--pane-rgb) / calc(var(--pane-alpha) * 0.593)) 88.75%,
+    rgb(var(--pane-rgb) / calc(var(--pane-alpha) * 0.500)) 90%,
+    rgb(var(--pane-rgb) / calc(var(--pane-alpha) * 0.407)) 91.25%,
+    rgb(var(--pane-rgb) / calc(var(--pane-alpha) * 0.316)) 92.5%,
+    rgb(var(--pane-rgb) / calc(var(--pane-alpha) * 0.232)) 93.75%,
+    rgb(var(--pane-rgb) / calc(var(--pane-alpha) * 0.156)) 95%,
+    rgb(var(--pane-rgb) / calc(var(--pane-alpha) * 0.092)) 96.25%,
+    rgb(var(--pane-rgb) / calc(var(--pane-alpha) * 0.043)) 97.5%,
+    rgb(var(--pane-rgb) / calc(var(--pane-alpha) * 0.011)) 98.75%,
+    rgb(var(--pane-rgb) / 0) 100%
+  );
+}
+
 .card-body {
   position: relative;
   z-index: 1;
   margin: 0;
-  padding: 46px 18px 16px;
-  color: #16161a;
-  background: linear-gradient(
-    to top,
-    rgba(255, 255, 255, 0.6) 0%,
-    rgba(255, 255, 255, 0.58) 55%,
-    rgba(255, 255, 255, 0.54) 80%,
-    rgba(255, 255, 255, 0.28) 93%,
-    rgba(255, 255, 255, 0) 100%
-  );
+  padding: 26px 18px 14px;
+  color: var(--pane-ink);
 }
 
 /* Thẻ càng cao thì chỗ chuyển sắc càng có nhiều không gian để trải ra, nên
    đệm trên dày hơn. */
-.hero-card .card-body { padding: 78px 22px 20px; }
-.feature-card .card-body { padding: 58px 18px 16px; }
+.hero-card .card-body { padding: 40px 22px 20px; }
+.feature-card .card-body { padding: 30px 18px 16px; }
 
-/* Mọi màu chữ bên trong tấm kính đều phải tự khai lại: token của ứng dụng
-   được tính cho nền sáng hoặc nền tối của app, không phải cho nền ảnh. */
+/* Mọi màu chữ bên trong tấm kính đều phải tự khai lại: token thường của ứng
+   dụng được tính cho nền sáng hoặc nền tối của app, không phải cho nền ảnh. */
 .card-body .c-title,
 .card-body .hero-title,
-.card-body .feature-title { color: #101014; }
+.card-body .feature-title { color: var(--pane-ink); }
 .card-body .c-summary,
-.card-body .hero-summary { color: rgba(0, 0, 0, 0.84); }
+.card-body .hero-summary { color: var(--pane-ink-2); }
 /* Đậm hơn các chữ phụ khác: dòng này nằm ở đỉnh dải chuyển sắc, chỗ nền
-   nhạt nhất. Đo trên ảnh đen tuyền, để 0,6 thì chỉ đạt 3,5:1. */
-.card-body .stamp { color: rgba(0, 0, 0, 0.84); }
-.card-body .source-line { color: rgba(0, 0, 0, 0.8); }
-.card-body .source-line b { color: #101014; }
-.card-body .pill { background: rgba(0, 82, 204, 0.12); color: #0a52c4; }
-.card-body .pill.hot { background: rgba(214, 92, 0, 0.14); color: #b8500a; }
-.card-body .pill.quiet { background: rgba(0, 0, 0, 0.07); color: rgba(0, 0, 0, 0.58); }
-/* Huy hiệu nguồn: viền sáng để tách khỏi tấm kính, chữ viết tắt màu tối. */
+   nhạt nhất, nên nó gánh phần tương phản mà dải không gánh nổi. */
+.card-body .stamp { color: var(--pane-ink-2); }
+.card-body .source-line { color: var(--pane-ink-3); }
+.card-body .source-line b { color: var(--pane-ink); }
+.card-body .pill { background: var(--pane-pill); color: var(--pane-pill-ink); }
+.card-body .pill.hot { background: var(--pane-pill-hot); color: var(--pane-pill-hot-ink); }
+.card-body .pill.quiet { background: var(--pane-pill-quiet); color: var(--pane-pill-quiet-ink); }
+/* Huy hiệu nguồn: viền tương phản để tách khỏi tấm kính. */
 .card-body .avatar {
-  background: rgba(255, 255, 255, 0.95);
-  color: #1c1c1e;
-  border-color: rgba(255, 255, 255, 0.9);
+  background: var(--pane-avatar);
+  color: var(--pane-avatar-ink);
+  border-color: var(--pane-avatar-border);
 }
+/* Logo thật luôn nằm trên nền trắng, kể cả ở chủ đề tối: phần lớn logo báo
+   được vẽ để đặt trên giấy trắng, đổi nền là mất luôn nét chữ trong logo. */
 .card-body .avatar.has-logo { background: #fff; }
 
 /* Thẻ trong lưới. Tỷ lệ 16:9 là khổ ảnh phổ biến nhất của báo nên ảnh ít bị
    cắt cụt, đồng thời giữ được mật độ đọc: cao hơn nữa thì mỗi màn hình chỉ
    còn thấy hai thẻ. */
+/* 4:3 chứ không phải 16:9. Khối chữ cao gần như cố định, nên thẻ càng thấp
+   thì chữ càng chiếm phần lớn: ở 16:9 thẻ chỉ cao 286px và riêng chữ đã ăn
+   62%, ảnh gần như không còn chỗ. Cùng tỷ lệ với thẻ đặc tả nên hai loại
+   nhìn cùng một họ.
+   Đổi lại mỗi màn hình ít thẻ hơn, tức cuộn nhiều hơn — đó là cái giá phải
+   trả để ảnh được nhìn rõ, và cuộn tới cuối thì tin tự nạp thêm. */
 .cluster-card.poster {
-  aspect-ratio: 16 / 9;
+  aspect-ratio: 4 / 3;
   min-height: 250px;
-  max-height: 400px;
+  max-height: 440px;
   animation: card-in 460ms var(--ease-out) both;
   animation-delay: calc(var(--i, 0) * 26ms);
 }
@@ -825,11 +917,14 @@
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
   min-height: 2.64em;
 }
+/* Một dòng, không phải hai. Thẻ lưới là chỗ để lướt, tiêu đề mới là thứ
+   người đọc quét; hai dòng tóm tắt đẩy khối chữ lên gần nửa thẻ và ăn mất
+   phần ảnh. Vẫn giữ chỗ đúng một dòng để các thẻ cùng hàng bằng nhau. */
 .c-summary {
   margin: 0;
   font-size: 14px; line-height: 1.55; color: var(--label-2);
-  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
-  min-height: 3.1em;
+  display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden;
+  min-height: 1.55em;
 }
 .c-foot { display: flex; align-items: center; gap: 9px; margin-top: 12px; min-width: 0; }
 .avatar-stack { display: flex; flex: none; }
