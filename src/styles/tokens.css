@@ -50,7 +50,7 @@
      còn giữ được 4,5:1 ở trường hợp xấu nhất — ảnh đen tuyền với chủ đề sáng,
      ảnh trắng tuyền với chủ đề tối. Đo được 5,3:1 cho chữ chính ở cả hai.
      Nền tối cần đục hơn nền sáng vì trắng tuyền chói hơn đen tuyền tối. */
-  --pane-rgb: 250 251 255;
+  --pane-rgb: 255 255 255;
   --pane-alpha: 0.52;
   --pane-ink: #0b0b0e;
   --pane-ink-2: rgba(0, 0, 0, 0.86);
@@ -150,7 +150,7 @@
   /* Nhãn trên tấm kính tối lấy mực gần trắng chứ không lấy màu chủ đề: nền
      sau nhãn là ảnh đã bị dải tối phủ, tức một vùng trung tính — chữ xanh
      hay cam trên nền đó chỉ đạt hơn 3:1, mực gần trắng mới qua 4,5:1. */
-  --pane-rgb: 10 11 16;
+  --pane-rgb: 0 0 0;
   --pane-alpha: 0.62;
   --pane-ink: #f7f7fa;
   --pane-ink-2: rgba(255, 255, 255, 0.88);

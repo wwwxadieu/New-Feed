@@ -527,17 +527,23 @@
    lớp duy nhất chỉ cho một độ nhoè cố định mờ dần độ đục, nhìn ra ngay là
    có một ranh giới chứ không phải chuyển sắc thật.
 
-   scale(1.08) để mép ảnh không bị nhoè ra thành viền sáng. */
+   scale(1.08) để mép ảnh không bị nhoè ra thành viền sáng.
+
+   Mặt nạ vẫn tính theo chiều cao thẻ, và điều đó lại đúng ở đây: lớp kính nay
+   cao gấp 1,8 lần khối chữ, tức phủ khoảng 93–109% chiều cao thẻ, nên hai lớp
+   nhoè nằm gọn bên trong nó ở mọi cỡ cửa sổ. Trước đây kính chỉ cao bằng khối
+   chữ, thấp hơn mặt nạ nhoè, nên phía trên mép kính còn một dải ảnh đã nhoè mà
+   không có kính phủ — đúng cái cảm giác "chỉ mỗi cạnh trên là mờ".
+
+   Mức tăng bão hoà hạ từ 155/170% xuống 110/115%: kính thật gần như không có
+   màu của riêng nó, màu phải là màu của ảnh phía sau. Đẩy bão hoà lên cao thì
+   tấm ăn màu theo ảnh và mỗi thẻ một sắc, nhìn ra một tấm phim màu. */
 .card-pic img.blur {
   transform: scale(1.08);
   pointer-events: none;
 }
-/* Mặt nạ cũng dựng theo smoothstep, cùng lý do với dải kính. Chỗ mặt nạ gãy
-   khúc là chỗ ảnh chuyển từ nhoè sang nét đột ngột — một đường viền độ nét,
-   mắt bắt được còn nhanh hơn cả sọc màu vì nó là ranh giới hình chứ không
-   phải ranh giới màu. */
 .card-pic img.blur.soft {
-  filter: blur(11px) saturate(155%);
+  filter: blur(11px) saturate(110%);
   --soft-mask: linear-gradient(
     to top,
     rgb(0 0 0 / 1) 0 34%,
@@ -558,7 +564,7 @@
   mask-image: var(--soft-mask);
 }
 .card-pic img.blur.deep {
-  filter: blur(34px) saturate(170%);
+  filter: blur(34px) saturate(115%);
   --deep-mask: linear-gradient(
     to top,
     rgb(0 0 0 / 1) 0 22%,
@@ -589,64 +595,54 @@
   opacity: 0.6;
 }
 
-/* Tấm kính không phải một khối chữ nhật có viền, mà là một dải chuyển sắc:
-   đục nhất ở đáy rồi nhạt dần lên trên cho tới trong suốt. Nhờ vậy nó tan
-   vào tấm ảnh thay vì nằm đè lên như một thẻ riêng.
+/* Tấm kính là một lớp riêng, neo theo khối chữ chứ không theo chiều cao thẻ.
+   Đây là chỗ dễ sai: thẻ co giãn theo bề ngang cửa sổ còn khối chữ thì gần
+   như không. Đo cùng một tấm hero, dòng chữ trên cùng nằm ở 37,5% chiều cao
+   thẻ khi cửa sổ rộng 1600px nhưng 60,6% khi cửa sổ rộng 790px. Mọi mốc tính
+   theo phần trăm chiều cao thẻ đều trôi theo cửa sổ, và ở cửa sổ hẹp thì chữ
+   rơi ra ngoài vùng đục.
+   Neo theo khối chữ thì tỷ lệ đứng yên: top âm 80% nghĩa là lớp này bắt đầu
+   cao hơn khối chữ 80% chiều cao của chính khối đó, tổng cộng cao gấp 1,8 lần
+   và luôn dính đáy thẻ. Đo được dòng chữ trên cùng ở 72,6% chiều cao khối chữ
+   (hero), 68% (đặc tả) và 78,8% (lưới) — chia cho 1,8 thì mốc cao nhất là
+   43,8%, nên vùng đục đều chạy tới 46%.
+   Phần tan chiếm 54% còn lại của lớp, tức gần trọn một lần chiều cao khối
+   chữ — dài gấp bốn lần dải cũ. */
+.card-body::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  left: 0; right: 0; bottom: 0;
+  top: -80%;
+  pointer-events: none;
+  background: linear-gradient(
+    to top,
+    rgb(var(--pane-rgb) / var(--pane-alpha)) 0 46%,
+    rgb(var(--pane-rgb) / calc(var(--pane-alpha) * 0.989)) 49.38%,
+    rgb(var(--pane-rgb) / calc(var(--pane-alpha) * 0.957)) 52.75%,
+    rgb(var(--pane-rgb) / calc(var(--pane-alpha) * 0.908)) 56.13%,
+    rgb(var(--pane-rgb) / calc(var(--pane-alpha) * 0.844)) 59.5%,
+    rgb(var(--pane-rgb) / calc(var(--pane-alpha) * 0.768)) 62.88%,
+    rgb(var(--pane-rgb) / calc(var(--pane-alpha) * 0.684)) 66.25%,
+    rgb(var(--pane-rgb) / calc(var(--pane-alpha) * 0.593)) 69.63%,
+    rgb(var(--pane-rgb) / calc(var(--pane-alpha) * 0.500)) 73%,
+    rgb(var(--pane-rgb) / calc(var(--pane-alpha) * 0.407)) 76.38%,
+    rgb(var(--pane-rgb) / calc(var(--pane-alpha) * 0.316)) 79.75%,
+    rgb(var(--pane-rgb) / calc(var(--pane-alpha) * 0.232)) 83.13%,
+    rgb(var(--pane-rgb) / calc(var(--pane-alpha) * 0.156)) 86.5%,
+    rgb(var(--pane-rgb) / calc(var(--pane-alpha) * 0.092)) 89.88%,
+    rgb(var(--pane-rgb) / calc(var(--pane-alpha) * 0.043)) 93.25%,
+    rgb(var(--pane-rgb) / calc(var(--pane-alpha) * 0.011)) 96.63%,
+    rgb(var(--pane-rgb) / 0) 100%
+  );
+}
 
-   Dải phải trong tới mức còn nhìn thấy phần ảnh đã nhoè phía sau — đó mới là
-   chất kính; đục hơn thì thành một lớp sơn phủ lên ảnh. Đổi lại chữ phụ phải
-   tự đậm lên để gánh phần tương phản mà tấm không còn gánh.
-
-   Màu và độ đục nằm ở tokens vì chúng đổi theo chủ đề. Đệm trên dày để phần
-   nhạt nhất của dải rơi vào khoảng trống chứ không phải vào dòng chữ đầu. */
 .card-body {
   position: relative;
   z-index: 1;
   margin: 0;
   padding: 46px 18px 16px;
   color: var(--pane-ink);
-  /* Đục đều ở vùng có chữ, rồi tan dần ở phần trên.
-     Bốn mốc kiểu cũ nối bằng đoạn thẳng nên độ dốc gãy khúc ở từng mốc, mà
-     mắt bắt được ngay chỗ độ dốc đổi đột ngột — thấy ra mấy vệt ngang. Tệ
-     hơn nữa là đoạn 0–55% gần như phẳng: alpha chỉ đi 0,52 xuống 0,50 trên
-     hơn nửa chiều cao, tức mỗi bậc màu trải ra vài chục pixel, đúng công
-     thức của sọc.
-     Nay vùng chữ phẳng tuyệt đối — phẳng thì không thể sọc, mà chữ cũng
-     được nguyên độ đục thay vì nhạt dần về phía trên. Phần tan nằm gọn ở
-     một phần tư trên, dựng theo smoothstep: độ dốc bằng không ở cả hai đầu
-     nên không có chỗ nào gãy. Mốc chữ trên cùng đo được ở 0,73 chiều cao,
-     nên vùng phẳng dừng ở 0,75.
-
-     CSS chỉ nối các mốc bằng đoạn thẳng, nên đường cong phải cắt thành nhiều
-     đoạn: mỗi mốc vẫn là một chỗ độ dốc đổi, cắt càng nhỏ thì chỗ đổi càng
-     nhỏ. Đo trên thân kính cao 285px (hero) và 181px (đặc tả), tính theo số
-     bậc màu mà độ dốc nhảy giữa hai pixel liền nhau:
-       bản cũ, bốn mốc      1,11 và 2,18 bậc/px  — nhìn ra vệt
-       tám đoạn             0,90 và 1,02
-       mười sáu đoạn        0,45 và 0,77
-     Dưới nửa bậc thì không còn gì để thấy, nên dải kính lấy mười sáu đoạn.
-     Hai mặt nạ nhoè lấy mười hai: chúng điều biến độ nhoè chứ không điều
-     biến màu, mà một nền đã nhoè thì vốn đã không có cạnh nào để lộ. */
-  background: linear-gradient(
-    to top,
-    rgb(var(--pane-rgb) / var(--pane-alpha)) 0 75%,
-    rgb(var(--pane-rgb) / calc(var(--pane-alpha) * 0.989)) 76.56%,
-    rgb(var(--pane-rgb) / calc(var(--pane-alpha) * 0.957)) 78.13%,
-    rgb(var(--pane-rgb) / calc(var(--pane-alpha) * 0.908)) 79.69%,
-    rgb(var(--pane-rgb) / calc(var(--pane-alpha) * 0.844)) 81.25%,
-    rgb(var(--pane-rgb) / calc(var(--pane-alpha) * 0.768)) 82.81%,
-    rgb(var(--pane-rgb) / calc(var(--pane-alpha) * 0.684)) 84.38%,
-    rgb(var(--pane-rgb) / calc(var(--pane-alpha) * 0.593)) 85.94%,
-    rgb(var(--pane-rgb) / calc(var(--pane-alpha) * 0.500)) 87.5%,
-    rgb(var(--pane-rgb) / calc(var(--pane-alpha) * 0.407)) 89.06%,
-    rgb(var(--pane-rgb) / calc(var(--pane-alpha) * 0.316)) 90.63%,
-    rgb(var(--pane-rgb) / calc(var(--pane-alpha) * 0.232)) 92.19%,
-    rgb(var(--pane-rgb) / calc(var(--pane-alpha) * 0.156)) 93.75%,
-    rgb(var(--pane-rgb) / calc(var(--pane-alpha) * 0.092)) 95.31%,
-    rgb(var(--pane-rgb) / calc(var(--pane-alpha) * 0.043)) 96.88%,
-    rgb(var(--pane-rgb) / calc(var(--pane-alpha) * 0.011)) 98.44%,
-    rgb(var(--pane-rgb) / 0) 100%
-  );
 }
 
 /* Thẻ càng cao thì chỗ chuyển sắc càng có nhiều không gian để trải ra, nên
