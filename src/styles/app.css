@@ -697,10 +697,16 @@
 /* Thẻ trong lưới. Tỷ lệ 16:9 là khổ ảnh phổ biến nhất của báo nên ảnh ít bị
    cắt cụt, đồng thời giữ được mật độ đọc: cao hơn nữa thì mỗi màn hình chỉ
    còn thấy hai thẻ. */
+/* 4:3 chứ không phải 16:9. Khối chữ cao gần như cố định, nên thẻ càng thấp
+   thì chữ càng chiếm phần lớn: ở 16:9 thẻ chỉ cao 286px và riêng chữ đã ăn
+   62%, ảnh gần như không còn chỗ. Cùng tỷ lệ với thẻ đặc tả nên hai loại
+   nhìn cùng một họ.
+   Đổi lại mỗi màn hình ít thẻ hơn, tức cuộn nhiều hơn — đó là cái giá phải
+   trả để ảnh được nhìn rõ, và cuộn tới cuối thì tin tự nạp thêm. */
 .cluster-card.poster {
-  aspect-ratio: 16 / 9;
+  aspect-ratio: 4 / 3;
   min-height: 250px;
-  max-height: 400px;
+  max-height: 440px;
   animation: card-in 460ms var(--ease-out) both;
   animation-delay: calc(var(--i, 0) * 26ms);
 }
