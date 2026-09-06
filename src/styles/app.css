@@ -620,15 +620,95 @@
 }
 .cluster-card .card-pic .glyph svg { width: 34px; height: 34px; }
 
-/* Trần chiều cao là bắt buộc ở màn lớn: 21/9 của một tấm rộng 2000px là 857px,
+/* ================= Băng chuyền tin hero =================
+   Khung ngoài giữ kích thước, khung viền và đổ bóng; các tấm nằm chồng bên
+   trong nó. Phải làm vậy vì tấm nào cũng position: absolute, mà một khung
+   chỉ chứa toàn phần tử tuyệt đối thì cao bằng không.
+
+   Trần chiều cao là bắt buộc ở màn lớn: 21/9 của một tấm rộng 2000px là 857px,
    cộng hàng đặc tả nữa thì phần đầu chiếm gần trọn màn 1440px và không còn
    thấy dòng tin đâu. Ảnh vẫn phủ kín nhờ object-fit: cover. */
-.hero-card.poster {
+.hero-deck {
+  position: relative;
   aspect-ratio: 21 / 9;
   min-height: 330px;
   max-height: 560px;
+  overflow: hidden;
+  border-radius: var(--r-lg) var(--r-lg) 0 0;
+  border: 1px solid var(--surface-border);
+  background: var(--fill);
+  box-shadow: var(--shadow-card);
   animation: card-in 460ms var(--ease-out) both;
+  transition: transform var(--dur-base) var(--ease-out), box-shadow var(--dur-base) ease;
 }
+.hero-deck:hover { transform: translateY(-2px); box-shadow: var(--shadow-raised); }
+
+/* Tấm bên trong nhường hết phần khung cho khung ngoài, chỉ còn việc mờ chồng.
+   Tấm không hiện phải tắt cả pointer-events, nếu không nó nằm đè lên tấm đang
+   xem và nuốt mất cú bấm. */
+.hero-deck > .hero-card.poster {
+  position: absolute;
+  inset: 0;
+  aspect-ratio: auto;
+  min-height: 0;
+  max-height: none;
+  border: none;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  animation: none;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 620ms var(--ease-out);
+}
+.hero-deck > .hero-card.poster:hover,
+.hero-deck > .hero-card.poster:active {
+  transform: none;
+  box-shadow: none;
+}
+.hero-deck > .hero-card.is-active { opacity: 1; pointer-events: auto; }
+
+/* Ảnh đẩy nhẹ vào lúc tấm hiện ra. Scale đặt ở khung ảnh chứ không đặt ở
+   từng thẻ img: hai lớp nhoè đã có scale(1.08) riêng để giấu mép, đè lên
+   là mất luôn phần đó và viền sáng hiện ra ở rìa. */
+.hero-deck > .hero-card .card-pic {
+  transform: scale(1.045);
+  transition: transform 900ms var(--ease-out);
+}
+.hero-deck > .hero-card.is-active .card-pic { transform: scale(1); }
+
+/* Vạch chạy hết bề ngang đúng bằng nhịp đổi tấm. */
+.hero-progress {
+  position: absolute;
+  top: 0; left: 0; z-index: 3;
+  height: 2px;
+  background: var(--accent-gradient);
+  animation: hero-progress var(--slide-ms, 7000ms) linear both;
+}
+.hero-progress.held { animation-play-state: paused; }
+@keyframes hero-progress { from { width: 0; } to { width: 100%; } }
+
+/* Chấm chỉ vị trí đặt ở góc trên phải, trên nền ảnh chứ không trên tấm kính:
+   góc dưới đã có dòng nguồn, mà dòng đó dài ngắn tuỳ tin nên sớm muộn cũng
+   chạy vào chỗ mấy chấm này. Đổ bóng để chấm còn đọc được trên ảnh sáng. */
+.hero-dots {
+  position: absolute;
+  top: 16px; right: 16px; z-index: 3;
+  display: flex;
+  gap: 6px;
+}
+/* Vòng viền tối mảnh chứ không chỉ đổ bóng: chấm trắng nằm trên ảnh, mà ảnh
+   tin thì sáng tối tuỳ tấm — gặp ảnh sáng là chấm biến mất. */
+.hero-dot {
+  width: 7px; height: 7px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.62);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.28), 0 1px 3px rgba(0, 0, 0, 0.4);
+  transition: width var(--dur-base) var(--ease-out), background var(--dur-fast) ease;
+}
+.hero-dot:hover { background: rgba(255, 255, 255, 0.85); }
+.hero-dot.on { width: 22px; background: #fff; }
+
 .hero-card .card-pic .glyph svg { width: 60px; height: 60px; }
 
 .feature-card.poster {

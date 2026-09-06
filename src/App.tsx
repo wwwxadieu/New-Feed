@@ -10,7 +10,7 @@ import { TitleBar } from "./components/TitleBar";
 import { ClusterCard } from "./components/ClusterCard";
 import { HotStrip } from "./components/HotStrip";
 import { WeatherClock } from "./components/WeatherClock";
-import { FEATURE_COUNT, MAGAZINE_MIN, MagazineHead } from "./components/MagazineHead";
+import { FEATURE_COUNT, HERO_SLIDES, MAGAZINE_MIN, MagazineHead } from "./components/MagazineHead";
 import { ReaderSheet } from "./components/ReaderSheet";
 import { SourceManager } from "./components/SourceManager";
 import { SourcesContext } from "./components/SourceLogo";
@@ -322,6 +322,9 @@ export default function App() {
   const articlesInView = clusters.reduce((sum, c) => sum + c.articles.length, 0);
   // Ít tin quá thì không đủ để dựng phân cấp, quay về lưới thường.
   const magazine = shown.length >= MAGAZINE_MIN;
+  // Tấm hero chạy luân phiên vài tin, nhưng không được ăn hết phần của hàng
+  // đặc tả: kho tin ít thì thà hero ít tấm còn hơn hàng dưới trống chỗ.
+  const heroCount = Math.min(HERO_SLIDES, Math.max(1, shown.length - FEATURE_COUNT));
 
   return (
     <SourcesContext.Provider value={sourceMap}>
@@ -439,11 +442,11 @@ export default function App() {
                   ) : magazine ? (
                     <>
                       <MagazineHead
-                        hero={shown[0]}
-                        features={shown.slice(1, 1 + FEATURE_COUNT)}
+                        heroes={shown.slice(0, heroCount)}
+                        features={shown.slice(heroCount, heroCount + FEATURE_COUNT)}
                         onOpen={setReader}
                       />
-                      {shown.slice(1 + FEATURE_COUNT).map((cluster, index) => (
+                      {shown.slice(heroCount + FEATURE_COUNT).map((cluster, index) => (
                         <ClusterCard
                           key={cluster.id}
                           cluster={cluster}
