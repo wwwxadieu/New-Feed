@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import type { Cluster } from "../lib/types";
 import { TOPIC_LABEL } from "../lib/types";
 import { hoursSince, relativeTime } from "../lib/format";
@@ -7,6 +8,15 @@ import { TopicIcon } from "./TopicIcons";
 
 /** Số tin đặc tả xếp dưới tin hero. */
 export const FEATURE_COUNT = 3;
+/** Số tin thay nhau chạy ở tấm hero. */
+export const HERO_SLIDES = 5;
+/**
+ * Nhịp đổi tin ở tấm hero.
+ *
+ * Đủ dài để đọc hết tiêu đề và ba dòng tóm tắt rồi còn kịp quyết định có mở
+ * hay không; đủ ngắn để tấm lớn nhất màn hình không đứng im như ảnh dán.
+ */
+const SLIDE_MS = 7000;
 /** Dưới mức này thì không đủ tin để dựng phân cấp, dùng lưới thường. */
 export const MAGAZINE_MIN = FEATURE_COUNT + 2;
 
@@ -104,8 +114,104 @@ function Picture({ cluster, className }: { cluster: Cluster; className: string }
   );
 }
 
+/**
+ * Tấm hero chạy luân phiên vài tin đầu bảng.
+ *
+ * Các tấm nằm chồng lên nhau trong cùng một khung và đổi bằng cách mờ chồng,
+ * không trượt ngang: tấm này cao 21/9 chiếm gần trọn bề ngang dòng tin, cho
+ * nó trượt qua lại là kéo theo cả một dải ảnh lớn di chuyển mỗi bảy giây,
+ * đúng thứ làm người đọc mỏi mắt ở những trang tin đặt băng chuyền.
+ */
+function HeroDeck({ slides, onOpen }: { slides: Cluster[]; onOpen: (c: Cluster) => void }) {
+  const [index, setIndex] = useState(0);
+  const [held, setHeld] = useState(false);
+  // Mốc xa nhất đã tới. Tấm đã dựng thì giữ luôn, không tháo ra: quay vòng
+  // mà tháo thì mỗi vòng lại tải và giải mã lại từng ấy ảnh khổ lớn.
+  const [reach, setReach] = useState(1);
+
+  useEffect(() => {
+    setReach((current) => Math.max(current, index + 1));
+  }, [index]);
+
+  // Danh sách có thể ngắn lại sau một lượt làm mới.
+  useEffect(() => {
+    setIndex((current) => (current < slides.length ? current : 0));
+  }, [slides.length]);
+
+  // Hẹn giờ theo từng tấm chứ không phải một nhịp chạy suốt: bấm sang tấm
+  // khác thì tấm đó cũng được trọn bảy giây, không bị cắt ngang giữa chừng.
+  useEffect(() => {
+    if (held || slides.length < 2) return;
+    const timer = window.setTimeout(
+      () => setIndex((current) => (current + 1) % slides.length),
+      SLIDE_MS,
+    );
+    return () => window.clearTimeout(timer);
+  }, [index, held, slides.length]);
+
+  return (
+    <div
+      className="hero-deck"
+      style={{ "--slide-ms": `${SLIDE_MS}ms` } as React.CSSProperties}
+      // Dừng khi con trỏ đang ở trên tấm hoặc khi bàn phím vừa nhảy vào:
+      // đổi tin ngay lúc người ta đang đọc hoặc sắp bấm là cướp mất thao tác.
+      onMouseEnter={() => setHeld(true)}
+      onMouseLeave={() => setHeld(false)}
+      onFocusCapture={() => setHeld(true)}
+      onBlurCapture={() => setHeld(false)}
+    >
+      {slides.map((cluster, i) => {
+        // Lượt vẽ đầu chỉ dựng tấm đang xem và tấm kế tiếp, rồi mở dần theo
+        // nhịp chạy. Dựng sẵn cả năm ngay từ đầu là năm tấm ảnh khổ lớn cùng
+        // hai lớp nhoè mỗi tấm phải tải và giải mã trước khi thấy tin đầu.
+        if (i > reach) return null;
+        const active = i === index;
+        const title = cluster.titleVi?.trim() || cluster.title;
+        const summary = (cluster.titleVi?.trim() && cluster.summaryVi?.trim()) || cluster.summary;
+        return (
+          <button
+            key={cluster.id}
+            className={`hero-card poster${active ? " is-active" : ""}`}
+            onClick={() => onOpen(cluster)}
+            aria-hidden={!active}
+            tabIndex={active ? 0 : -1}
+          >
+            <Picture cluster={cluster} className="card-pic" />
+            <span className="card-body">
+              <Meta cluster={cluster} />
+              <h2 className="hero-title">{title}</h2>
+              {summary && <p className="hero-summary">{summary}</p>}
+              <Foot cluster={cluster} />
+            </span>
+          </button>
+        );
+      })}
+
+      {slides.length > 1 && (
+        <>
+          {/* Vạch chạy hết bề ngang đúng bằng nhịp đổi tấm, để người đọc biết
+              sắp tới lượt đổi chứ không bị đổi bất ngờ. Đổi khoá theo tấm nên
+              nó chạy lại từ đầu mỗi lượt. */}
+          <i className={`hero-progress${held ? " held" : ""}`} key={index} />
+          <div className="hero-dots">
+            {slides.map((cluster, i) => (
+              <button
+                key={cluster.id}
+                className={`hero-dot${i === index ? " on" : ""}`}
+                aria-label={`Tin ${i + 1} trong ${slides.length}`}
+                aria-current={i === index}
+                onClick={() => setIndex(i)}
+              />
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
 interface Props {
-  hero: Cluster;
+  heroes: Cluster[];
   features: Cluster[];
   onOpen: (cluster: Cluster) => void;
 }
@@ -120,21 +226,10 @@ interface Props {
  * thì điểm gần bằng nhau, lúc đó thẻ to nhỏ khác nhau không còn là phân cấp
  * mà thành lộn xộn.
  */
-export function MagazineHead({ hero, features, onOpen }: Props) {
-  const heroTitle = hero.titleVi?.trim() || hero.title;
-  const heroSummary = (hero.titleVi?.trim() && hero.summaryVi?.trim()) || hero.summary;
-
+export function MagazineHead({ heroes, features, onOpen }: Props) {
   return (
     <div className="magazine">
-      <button className="hero-card poster" onClick={() => onOpen(hero)}>
-        <Picture cluster={hero} className="card-pic" />
-        <span className="card-body">
-          <Meta cluster={hero} />
-          <h2 className="hero-title">{heroTitle}</h2>
-          {heroSummary && <p className="hero-summary">{heroSummary}</p>}
-          <Foot cluster={hero} />
-        </span>
-      </button>
+      <HeroDeck slides={heroes} onOpen={onOpen} />
 
       <div className="feature-row">
         {features.map((cluster, index) => {
