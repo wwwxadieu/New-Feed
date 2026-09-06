@@ -533,14 +533,14 @@
   pointer-events: none;
 }
 .card-pic img.blur.soft {
-  filter: blur(9px) saturate(155%);
+  filter: blur(11px) saturate(155%);
   -webkit-mask-image: linear-gradient(to top, #000 0 34%, rgba(0, 0, 0, 0.55) 58%, transparent 80%);
   mask-image: linear-gradient(to top, #000 0 34%, rgba(0, 0, 0, 0.55) 58%, transparent 80%);
 }
 .card-pic img.blur.deep {
-  filter: blur(28px) saturate(170%);
-  -webkit-mask-image: linear-gradient(to top, #000 0 18%, rgba(0, 0, 0, 0.5) 36%, transparent 56%);
-  mask-image: linear-gradient(to top, #000 0 18%, rgba(0, 0, 0, 0.5) 36%, transparent 56%);
+  filter: blur(34px) saturate(170%);
+  -webkit-mask-image: linear-gradient(to top, #000 0 22%, rgba(0, 0, 0, 0.5) 42%, transparent 62%);
+  mask-image: linear-gradient(to top, #000 0 22%, rgba(0, 0, 0, 0.5) 42%, transparent 62%);
 }
 .card-pic .fallback {
   position: absolute; inset: 0;
@@ -553,30 +553,29 @@
   opacity: 0.6;
 }
 
-/* Tấm kính sáng, chữ tối. Giữ nguyên một chất liệu ở cả giao diện sáng lẫn
-   tối: nền của nó là ảnh bài chứ không phải nền của ứng dụng, nên nó không
-   có lý do gì để đổi theo chủ đề. */
 /* Tấm kính không phải một khối chữ nhật có viền, mà là một dải chuyển sắc:
    đục nhất ở đáy rồi nhạt dần lên trên cho tới trong suốt. Nhờ vậy nó tan
    vào tấm ảnh thay vì nằm đè lên như một thẻ riêng.
-   Đỉnh dải giữ ở 0,6 chứ không đục hơn: phải nhìn xuyên qua thấy phần ảnh đã
-   nhoè thì mới ra chất kính, đục quá thì thành một lớp sơn trắng. Đổi lại,
-   chữ phụ phải tự đậm lên để gánh phần tương phản mà tấm không còn gánh.
-   Đệm trên dày để phần nhạt nhất của dải rơi vào khoảng trống chứ không phải
-   vào dòng chữ đầu tiên. */
+
+   Dải phải trong tới mức còn nhìn thấy phần ảnh đã nhoè phía sau — đó mới là
+   chất kính; đục hơn thì thành một lớp sơn phủ lên ảnh. Đổi lại chữ phụ phải
+   tự đậm lên để gánh phần tương phản mà tấm không còn gánh.
+
+   Màu và độ đục nằm ở tokens vì chúng đổi theo chủ đề. Đệm trên dày để phần
+   nhạt nhất của dải rơi vào khoảng trống chứ không phải vào dòng chữ đầu. */
 .card-body {
   position: relative;
   z-index: 1;
   margin: 0;
   padding: 46px 18px 16px;
-  color: #16161a;
+  color: var(--pane-ink);
   background: linear-gradient(
     to top,
-    rgba(255, 255, 255, 0.6) 0%,
-    rgba(255, 255, 255, 0.58) 55%,
-    rgba(255, 255, 255, 0.54) 80%,
-    rgba(255, 255, 255, 0.28) 93%,
-    rgba(255, 255, 255, 0) 100%
+    var(--pane-veil-1) 0%,
+    var(--pane-veil-2) 55%,
+    var(--pane-veil-3) 80%,
+    var(--pane-veil-4) 93%,
+    transparent 100%
   );
 }
 
@@ -585,27 +584,29 @@
 .hero-card .card-body { padding: 78px 22px 20px; }
 .feature-card .card-body { padding: 58px 18px 16px; }
 
-/* Mọi màu chữ bên trong tấm kính đều phải tự khai lại: token của ứng dụng
-   được tính cho nền sáng hoặc nền tối của app, không phải cho nền ảnh. */
+/* Mọi màu chữ bên trong tấm kính đều phải tự khai lại: token thường của ứng
+   dụng được tính cho nền sáng hoặc nền tối của app, không phải cho nền ảnh. */
 .card-body .c-title,
 .card-body .hero-title,
-.card-body .feature-title { color: #101014; }
+.card-body .feature-title { color: var(--pane-ink); }
 .card-body .c-summary,
-.card-body .hero-summary { color: rgba(0, 0, 0, 0.84); }
+.card-body .hero-summary { color: var(--pane-ink-2); }
 /* Đậm hơn các chữ phụ khác: dòng này nằm ở đỉnh dải chuyển sắc, chỗ nền
-   nhạt nhất. Đo trên ảnh đen tuyền, để 0,6 thì chỉ đạt 3,5:1. */
-.card-body .stamp { color: rgba(0, 0, 0, 0.84); }
-.card-body .source-line { color: rgba(0, 0, 0, 0.8); }
-.card-body .source-line b { color: #101014; }
-.card-body .pill { background: rgba(0, 82, 204, 0.12); color: #0a52c4; }
-.card-body .pill.hot { background: rgba(214, 92, 0, 0.14); color: #b8500a; }
-.card-body .pill.quiet { background: rgba(0, 0, 0, 0.07); color: rgba(0, 0, 0, 0.58); }
-/* Huy hiệu nguồn: viền sáng để tách khỏi tấm kính, chữ viết tắt màu tối. */
+   nhạt nhất, nên nó gánh phần tương phản mà dải không gánh nổi. */
+.card-body .stamp { color: var(--pane-ink-2); }
+.card-body .source-line { color: var(--pane-ink-3); }
+.card-body .source-line b { color: var(--pane-ink); }
+.card-body .pill { background: var(--pane-pill); color: var(--pane-pill-ink); }
+.card-body .pill.hot { background: var(--pane-pill-hot); color: var(--pane-pill-hot-ink); }
+.card-body .pill.quiet { background: var(--pane-pill-quiet); color: var(--pane-pill-quiet-ink); }
+/* Huy hiệu nguồn: viền tương phản để tách khỏi tấm kính. */
 .card-body .avatar {
-  background: rgba(255, 255, 255, 0.95);
-  color: #1c1c1e;
-  border-color: rgba(255, 255, 255, 0.9);
+  background: var(--pane-avatar);
+  color: var(--pane-avatar-ink);
+  border-color: var(--pane-avatar-border);
 }
+/* Logo thật luôn nằm trên nền trắng, kể cả ở chủ đề tối: phần lớn logo báo
+   được vẽ để đặt trên giấy trắng, đổi nền là mất luôn nét chữ trong logo. */
 .card-body .avatar.has-logo { background: #fff; }
 
 /* Thẻ trong lưới. Tỷ lệ 16:9 là khổ ảnh phổ biến nhất của báo nên ảnh ít bị

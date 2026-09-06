@@ -39,6 +39,34 @@
   --surface-accent: linear-gradient(158deg, #e7f0ff, #ffffff 64%);
   --surface-accent-border: rgba(0, 122, 255, 0.24);
 
+  /* ---- Tấm kính trên ảnh bài ----
+     Nền của tấm này là ảnh của bài chứ không phải nền ứng dụng, nên nó phải
+     tự khai lại mọi màu. Nhưng nó vẫn đổi theo chủ đề: chọn nền tối là để
+     màn hình bớt chói, mà mỗi thẻ tin lại cắm một mảng trắng vào giữa ảnh
+     thì đúng chỗ mắt dừng lâu nhất lại hoá chỗ sáng nhất màn hình.
+
+     Độ đục của dải là chỗ phải cân: đục thì đọc dễ nhưng thành sơn phủ, trong
+     thì ra chất kính nhưng chữ chìm vào ảnh. Mức dưới đây là mức trong nhất
+     còn giữ được 4,5:1 ở trường hợp xấu nhất — ảnh đen tuyền với chủ đề sáng,
+     ảnh trắng tuyền với chủ đề tối. Đo được 5,3:1 cho chữ chính ở cả hai.
+     Nền tối cần đục hơn nền sáng vì trắng tuyền chói hơn đen tuyền tối. */
+  --pane-veil-1: rgba(250, 251, 255, 0.52);
+  --pane-veil-2: rgba(250, 251, 255, 0.5);
+  --pane-veil-3: rgba(250, 251, 255, 0.45);
+  --pane-veil-4: rgba(250, 251, 255, 0.22);
+  --pane-ink: #0b0b0e;
+  --pane-ink-2: rgba(0, 0, 0, 0.86);
+  --pane-ink-3: rgba(0, 0, 0, 0.82);
+  --pane-pill: rgba(0, 82, 204, 0.14);
+  --pane-pill-ink: #084bb4;
+  --pane-pill-hot: rgba(214, 92, 0, 0.16);
+  --pane-pill-hot-ink: #a94800;
+  --pane-pill-quiet: rgba(0, 0, 0, 0.08);
+  --pane-pill-quiet-ink: rgba(0, 0, 0, 0.6);
+  --pane-avatar: rgba(255, 255, 255, 0.95);
+  --pane-avatar-ink: #1c1c1e;
+  --pane-avatar-border: rgba(255, 255, 255, 0.9);
+
   /* Gradient nhấn, chỉ dùng cho chi tiết nhỏ: cột biểu đồ, nhãn, thanh tiến độ. */
   --accent-gradient: linear-gradient(135deg, #007aff, #5856d6);
   --accent-gradient-soft: linear-gradient(135deg, rgba(0, 122, 255, 0.16), rgba(88, 86, 214, 0.11));
@@ -120,6 +148,26 @@
 
   --surface-accent: linear-gradient(158deg, #1e2c48, #1c1e27 64%);
   --surface-accent-border: rgba(10, 132, 255, 0.34);
+
+  /* Nhãn trên tấm kính tối lấy mực gần trắng chứ không lấy màu chủ đề: nền
+     sau nhãn là ảnh đã bị dải tối phủ, tức một vùng trung tính — chữ xanh
+     hay cam trên nền đó chỉ đạt hơn 3:1, mực gần trắng mới qua 4,5:1. */
+  --pane-veil-1: rgba(10, 11, 16, 0.62);
+  --pane-veil-2: rgba(10, 11, 16, 0.6);
+  --pane-veil-3: rgba(10, 11, 16, 0.54);
+  --pane-veil-4: rgba(10, 11, 16, 0.26);
+  --pane-ink: #f7f7fa;
+  --pane-ink-2: rgba(255, 255, 255, 0.88);
+  --pane-ink-3: rgba(255, 255, 255, 0.84);
+  --pane-pill: rgba(64, 140, 255, 0.26);
+  --pane-pill-ink: #e8f2ff;
+  --pane-pill-hot: rgba(255, 140, 40, 0.26);
+  --pane-pill-hot-ink: #ffecd8;
+  --pane-pill-quiet: rgba(255, 255, 255, 0.13);
+  --pane-pill-quiet-ink: rgba(255, 255, 255, 0.68);
+  --pane-avatar: rgba(24, 25, 31, 0.92);
+  --pane-avatar-ink: #f2f2f5;
+  --pane-avatar-border: rgba(255, 255, 255, 0.3);
 
   --accent-gradient: linear-gradient(135deg, #0a84ff, #5e5ce6);
   --accent-gradient-soft: linear-gradient(135deg, rgba(10, 132, 255, 0.24), rgba(94, 92, 230, 0.16));
