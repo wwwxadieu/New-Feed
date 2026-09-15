@@ -41,8 +41,20 @@ export function Sidebar({
   translate,
   onTranslate,
 }: Props) {
+  // Mọi con số ở đây đếm trên cùng một tập: những cụm đang trong tầm nhìn.
+  // Huy hiệu phải nói đúng số tin sẽ hiện ra sau cú bấm, nếu không nó thành
+  // lời hứa suông — bấm vào thấy ít hơn hẳn thì người dùng tưởng app hỏng.
   const counts = clusters.reduce<Record<string, number>>((acc, cluster) => {
     acc[cluster.topic] = (acc[cluster.topic] ?? 0) + 1;
+    return acc;
+  }, {});
+
+  // Đếm theo cụm chứ không theo bài, cho khớp với con số của chủ đề ngay
+  // phía trên. Một cụm có thể gom nhiều bài của cùng một báo, chỉ tính một.
+  const sourceCounts = clusters.reduce<Record<string, number>>((acc, cluster) => {
+    for (const id of new Set(cluster.articles.map((a) => a.sourceId))) {
+      acc[id] = (acc[id] ?? 0) + 1;
+    }
     return acc;
   }, {});
 
@@ -105,7 +117,7 @@ export function Sidebar({
                 <SourceLogo sourceId={source.id} name={source.title} size={16} radius={5} />
               </span>
               <span className="nav-label">{source.title}</span>
-              <span className="count">{formatNumber(source.articleCount)}</span>
+              <span className="count">{formatNumber(sourceCounts[source.id] ?? 0)}</span>
             </button>
           ))
         )}

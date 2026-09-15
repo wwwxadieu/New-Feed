@@ -256,15 +256,21 @@ export default function App() {
     [snapshot, notify],
   );
 
-  const clusters = useMemo(() => {
+  /**
+   * Những cụm đang trong tầm nhìn: đúng khoảng thời gian và đúng từ khoá
+   * tìm kiếm, nhưng chưa lọc theo chủ đề hay nguồn.
+   *
+   * Tách riêng vì đây mới là tập mà thanh bên phải đếm. Bấm vào một chủ đề
+   * chỉ thêm điều kiện chủ đề chứ không đụng tới khoảng thời gian lẫn từ
+   * khoá, nên con số trên huy hiệu phải đúng bằng số tin hiện ra sau cú bấm.
+   */
+  const scopedClusters = useMemo(() => {
     if (!snapshot) return [];
     const limit = Number(windowHours);
     const needle = query.trim().toLowerCase();
 
-    const filtered = snapshot.clusters.filter((cluster) => {
+    return snapshot.clusters.filter((cluster) => {
       if (hoursSince(cluster.newest) > limit) return false;
-      if (topic !== "all" && cluster.topic !== topic) return false;
-      if (sourceId && !cluster.articles.some((a) => a.sourceId === sourceId)) return false;
       if (!needle) return true;
       return (
         cluster.title.toLowerCase().includes(needle) ||
@@ -272,13 +278,21 @@ export default function App() {
         cluster.articles.some((a) => a.sourceTitle.toLowerCase().includes(needle))
       );
     });
+  }, [snapshot, windowHours, query]);
+
+  const clusters = useMemo(() => {
+    const filtered = scopedClusters.filter((cluster) => {
+      if (topic !== "all" && cluster.topic !== topic) return false;
+      if (sourceId && !cluster.articles.some((a) => a.sourceId === sourceId)) return false;
+      return true;
+    });
 
     const sorted = [...filtered];
     if (sort === "sources") sorted.sort((a, b) => b.sourceCount - a.sourceCount);
     else if (sort === "new") sorted.sort((a, b) => Date.parse(b.newest) - Date.parse(a.newest));
     else sorted.sort((a, b) => b.score - a.score);
     return sorted;
-  }, [snapshot, topic, sourceId, sort, windowHours, query]);
+  }, [scopedClusters, topic, sourceId, sort]);
 
   const sourceMap = useMemo(
     () => new Map((snapshot?.sources ?? []).map((source) => [source.id, source])),
@@ -336,7 +350,7 @@ export default function App() {
         <div className="shell">
           {snapshot && (
             <Sidebar
-              clusters={snapshot.clusters}
+              clusters={scopedClusters}
               sources={snapshot.sources}
               topic={topic}
               sourceId={sourceId}
