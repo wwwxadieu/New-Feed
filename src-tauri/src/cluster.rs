@@ -56,10 +56,48 @@ fn similarity(a: &HashSet<String>, b: &HashSet<String>, weights: &HashMap<String
     intersection / smaller
 }
 
+/// Byte này còn nằm trong một từ hay không.
+///
+/// Mọi byte ngoài ASCII đều tính là chữ: tiếng Việt có dấu nên một chữ cái
+/// chiếm nhiều byte, xét theo ASCII thôi thì cắt nhầm vào giữa một chữ.
+fn is_word_byte(b: u8) -> bool {
+    b.is_ascii_alphanumeric() || b >= 0x80
+}
+
+/// Có chứa mẩu này như một từ trọn vẹn không, chấp nhận thêm "s" số nhiều.
+///
+/// Dành cho những mẩu ngắn nằm lọt bên trong từ khác. Đo trên kho tin thật:
+/// "intel" nằm trong "intelligence", "intellectual", "superintelligence" và
+/// bắt nhầm 28 lần — đủ để kéo cả tin tình báo lẫn tin AI vào nhóm phần cứng;
+/// "oppo" nằm trong "opportunity", "opponents", "opposite"; "llm" nằm trong
+/// "installment"; "chip" nằm trong "chipper".
+///
+/// Vẫn cho qua dạng số nhiều, vì "chips", "llms" đều là tin đúng nhóm.
+fn has_word(text: &str, needle: &str) -> bool {
+    let bytes = text.as_bytes();
+    let mut from = 0;
+    while let Some(offset) = text[from..].find(needle) {
+        let start = from + offset;
+        let mut end = start + needle.len();
+        if bytes.get(end) == Some(&b's') {
+            end += 1;
+        }
+        let opens = start == 0 || !is_word_byte(bytes[start - 1]);
+        let closes = end >= bytes.len() || !is_word_byte(bytes[end]);
+        if opens && closes {
+            return true;
+        }
+        // Mẩu tìm luôn là ASCII nên bước một byte vẫn rơi đúng ranh giới ký tự.
+        from = start + 1;
+    }
+    false
+}
+
 pub fn classify(title: &str, summary: &str) -> &'static str {
     // Thêm khoảng trắng hai đầu để mẫu như " ai " khớp được cả khi từ đứng đầu câu.
     let text = format!(" {} {} ", title.to_lowercase(), summary.to_lowercase());
     let has = |keys: &[&str]| keys.iter().any(|k| text.contains(k));
+    let word = |keys: &[&str]| keys.iter().any(|k| has_word(&text, k));
 
     // Thứ tự quan trọng. Gần như mọi tin công nghệ bây giờ đều nhắc tới AI, nên
     // các chủ đề có dấu hiệu cụ thể hơn phải được xét trước, nếu không mọi thứ
@@ -85,6 +123,8 @@ pub fn classify(title: &str, summary: &str) -> &'static str {
         "james webb", "solar eclipse", "lunar", "comet", "meteor", " esa ", " iss ",
         "phi hành gia", "tiểu hành tinh", "thiên thạch", "nhật thực", "trạm vũ trụ",
         "sao mộc", "sao thổ", "sao kim",
+        "supernova", "siêu tân tinh", "light-year", "năm ánh sáng", "black hole",
+        "hố đen", "thiên văn", "nebula", "tinh vân",
     ]) {
         return "space";
     }
@@ -116,37 +156,51 @@ pub fn classify(title: &str, summary: &str) -> &'static str {
     ]) {
         return "games";
     }
-    if has(&[
+    // "oppo" và "vivo" phải khớp nguyên từ: chúng nằm trong "opportunity",
+    // "opponents", "opposite", "in vivo".
+    // "vr" cũng phải khớp nguyên từ, nếu không nó nằm trong vô số chữ khác.
+    if word(&["oppo", "vivo", "vr"])
+        || has(&[
         "iphone", "ipad", "macbook", "mac mini", "mac studio", "apple watch", "airpods",
-        "samsung", "xiaomi", "oppo", "vivo", "realme", "pixel", "galaxy",
+        "samsung", "xiaomi", "realme", "pixel", "galaxy",
         "điện thoại", "smartphone", "laptop", "máy tính bảng", "tai nghe", "smartwatch",
         "đồng hồ thông minh", "máy ảnh", "mirrorless", "android", " ios ",
         "oneplus", "nothing phone", "foldable", "máy gập", "vision pro", "quest 3",
         "smart glasses", "kính thông minh", "chromebook", "surface pro", "wearable",
+        "virtual reality", "thực tế ảo", "vr headset", "kính thực tế ảo",
         "ipados", "watchos", "macos", "windows 11", "tablet", "earbuds",
         "nhà thông minh", "smart home", "sạc dự phòng",
-    ]) {
+    ])
+    {
         return "device";
     }
-    if has(&[
+    // "llm" phải khớp nguyên từ: nó nằm trong "installment".
+    if word(&["llm"])
+        || has(&[
         " ai ", " ai,", " ai.", " ai:", " ai-", " ai’s", " ai's", "trí tuệ nhân tạo",
-        "mô hình ngôn ngữ", "llm", "chatgpt", "openai", "anthropic", "gemini", "claude",
+        "mô hình ngôn ngữ", "chatgpt", "openai", "anthropic", "gemini", "claude",
         "copilot", "học máy", "machine learning", "deep learning", "mạng nơ-ron",
         "chatbot", "tạo sinh", "generative", "gpt-", "llama", "mistral", "deepseek",
         "midjourney", "stable diffusion", "hugging face", "perplexity", "grok",
         "fine-tuning", "agentic", "neural network", "mô hình nền tảng",
-    ]) {
+    ])
+    {
         return "ai";
     }
-    if has(&[
-        "chip", "cpu", "gpu", "bán dẫn", "semiconductor", "wafer", "vi xử lý", "nvidia",
-        "intel", "amd", "tsmc", "snapdragon", "nanomet", "2nm", "3nm", " ram ", " ssd ",
+    if word(&["chip", "intel"])
+        || has(&[
+        // "chipset", "chipmaker" là tin phần cứng thật nhưng không phải dạng
+        // số nhiều của "chip", nên phải kể riêng.
+        "chipset", "chipmaker", "chip maker", "chipmaking",
+        "cpu", "gpu", "bán dẫn", "semiconductor", "wafer", "vi xử lý", "nvidia",
+        "amd", "tsmc", "snapdragon", "nanomet", "2nm", "3nm", " ram ", " ssd ",
         "card đồ hoạ", "trung tâm dữ liệu", "máy chủ", "siêu máy tính", "bộ nhớ",
         "qualcomm", "mediatek", "micron", "sk hynix", " asml ", "lithography", " hbm",
         "ddr5", "geforce", "radeon", "rtx ", "ryzen", "core ultra", "apple silicon",
         "risc-v", " arm ", "motherboard", "bo mạch chủ", "tản nhiệt", "data center",
         "bán dẫn", "đúc chip",
-    ]) {
+    ])
+    {
         return "hardware";
     }
     if has(&[
@@ -400,6 +454,51 @@ mod tests {
             "ai"
         );
         assert_eq!(classify("iPhone 18 ra mắt với camera nâng cấp", ""), "device");
+    }
+
+    /// Mẩu từ khoá ngắn không được bắt nhầm từ dài hơn chứa nó.
+    ///
+    /// Đo trên kho tin thật của một máy đang dùng: "intel" bắt nhầm 28 lần
+    /// qua "intelligence", "intellectual", "superintelligence" — đủ để tin
+    /// tình báo và tin AI cùng rơi vào nhóm phần cứng.
+    #[test]
+    fn tu_khoa_ngan_khong_bat_nham_tu_dai_hon() {
+        // Tin tình báo, không phải tin phần cứng.
+        assert_eq!(
+            classify(
+                "New White House council chair on UAP",
+                "He was working at the Office of the Director of National Intelligence."
+            ),
+            "other"
+        );
+        // Tin AI, cũng không phải tin phần cứng.
+        assert_eq!(
+            classify(
+                "Reddit shares holiday shopping insights",
+                "Reddit highlights AI-generated reviews as well as artificial intelligence citations."
+            ),
+            "ai"
+        );
+        // Nhưng tin Intel thật thì vẫn phải vào phần cứng.
+        assert_eq!(classify("Intel revives One Mono font", "A typeface built for code."), "hardware");
+
+        // "chip" nằm trong "chipper".
+        assert_eq!(
+            classify(
+                "Bốn giờ phim tài liệu về Elon Musk",
+                "Từ triệu phú dot-com tới chuyện đưa cả bộ máy công quyền vào máy nghiền gỗ, wood chipper."
+            ),
+            "other"
+        );
+        assert_eq!(classify("Một con chip mới cho máy chơi game cầm tay", ""), "games");
+        assert_eq!(classify("Con chip mới hạ điện năng xuống 1 W", ""), "hardware");
+        assert_eq!(classify("The flagship chipset Google wishes it had", ""), "hardware");
+
+        // "oppo" nằm trong "opportunity", "llm" nằm trong "installment".
+        assert_eq!(classify("A rare opportunity for opponents", "Opposite views."), "other");
+        assert_eq!(classify("Oppo ra mắt máy mới", ""), "device");
+        assert_eq!(classify("The next installment arrives in spring", ""), "other");
+        assert_eq!(classify("New open-weight LLMs released", ""), "ai");
     }
 
     /// Phần lớn nguồn mặc định là báo tiếng Anh, nên mỗi nhóm phải bắt được

@@ -285,12 +285,26 @@ mod tests {
     #[tokio::test]
     async fn hong_mang_thi_dung_lai_so_lieu_cu() {
         let cu = Weather { temp_c: 27, code: 3, is_day: true, place: "Hà Nội".into() };
+
+        // Instant đếm từ lúc máy khởi động, nên trên máy vừa bật không tồn tại
+        // mốc nào cũ hơn PLACE_TTL * 2 (mười hai tiếng) — trừ thẳng là hoảng
+        // chứ không phải trả về số âm. Dùng checked_sub và bỏ qua khi máy chưa
+        // chạy đủ lâu, thay vì để kiểm thử đổ vì một lý do không liên quan gì
+        // tới thứ nó đang kiểm.
+        let (Some(het_han_place), Some(het_han_weather)) = (
+            Instant::now().checked_sub(PLACE_TTL * 2),
+            Instant::now().checked_sub(WEATHER_TTL * 2),
+        ) else {
+            eprintln!("bỏ qua: máy mới bật, chưa có mốc thời gian nào đủ cũ để làm bộ đệm quá hạn");
+            return;
+        };
+
         let cache = tokio::sync::Mutex::new(Cache {
             // Đặt mốc thời gian đã quá hạn để buộc đi lấy lượt mới.
-            place: Some((Instant::now() - PLACE_TTL * 2, String::new(), Place {
+            place: Some((het_han_place, String::new(), Place {
                 lat: 21.03, lon: 105.85, name: "Hà Nội".into(),
             })),
-            weather: Some((Instant::now() - WEATHER_TTL * 2, cu.clone())),
+            weather: Some((het_han_weather, cu.clone())),
         });
         // Không dùng timeout ngắn để ép hỏng: current() đặt .timeout() cho
         // từng lượt gọi, và mức đó đè lên mức của client, nên lượt gọi vẫn
